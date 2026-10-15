@@ -109,10 +109,10 @@ begin
   if v_n<2 or v_n>10 or array_ndims(p_options)<>1 then
     raise exception 'Es müssen 2 bis 10 Antwortoptionen angegeben werden.';
   end if;
-  if exists(select 1 from unnest(p_options) x where x is null or char_length(btrim(x)) not between 1 and 100) then
+  if exists(select 1 from unnest(p_options) as v(choice) where v.choice is null or char_length(btrim(v.choice)) not between 1 and 100) then
     raise exception 'Antwortoptionen müssen zwischen 1 und 100 Zeichen lang sein.';
   end if;
-  if (select count(distinct lower(btrim(x))) from unnest(p_options) x)<>v_n then
+  if (select count(distinct lower(btrim(v.choice))) from unnest(p_options) as v(choice))<>v_n then
     raise exception 'Doppelte Antwortoptionen sind nicht erlaubt.';
   end if;
   insert into public.polls(title,description,created_by)
