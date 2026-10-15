@@ -124,3 +124,7 @@ Der Quellcode ist gespeichert, aber noch **nicht produktiv in Betrieb**: Es gibt
 ### Kamera und Einbindung in die Schulwebseite
 
 Die Projektplattform sollte als **echter HTTPS-Unterpfad** oder über eine eigene Subdomain ausgeliefert werden, **nicht** über ein eingebettetes iframe. Ein iframe kann Browser-Kamerarechte durch seine Permissions-Policy blockieren. Falls ein iframe unvermeidbar ist, muss die Schul-IT sowohl die übergeordnete Permissions-Policy als auch das iframe-Attribut für die Kamera korrekt konfigurieren; ansonsten darf die App weiterhin QR-Bild und Zahlungslink als Alternative anbieten. Der Browser fragt seine Kameraberechtigung stets beim Benutzer an – sie kann nicht administrativ per JavaScript erzwungen werden.
+
+## Cloudflare Pages und Cloudflare-Agent
+
+Die geprüften, projektspezifischen Einrichtungsschritte stehen in [Cloudflare-Setup](docs/CLOUDFLARE_SETUP.md). Für Codex wurden zusätzlich im Repository [AGENTS.md](AGENTS.md) Cloudflare-Skills, MCP, Build-Einstellungen und Sicherheitsgrenzen dokumentiert. Das Cloudflare-Konto muss vom Inhaber per OAuth beziehungsweise über das Cloudflare-Dashboard verbunden werden; es liegt noch keine bestätigte Cloudflare-Deployment-URL vor.
