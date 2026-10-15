@@ -120,3 +120,7 @@ Alternativ das private Repository mit einem statischen HTTPS-Host verbinden oder
 ## Verifizierungsstand
 
 Der Quellcode ist gespeichert, aber noch **nicht produktiv in Betrieb**: Es gibt keine angeschlossene Supabase-Instanz, keine ausgeführten SQL-Skripte, keinen End-to-End-Test mit echten Browsern und noch keine öffentliche URL. Zahlungen und Abstimmungen dürfen erst nach diesen Schritten als funktionierend bezeichnet werden.
+
+### Kamera und Einbindung in die Schulwebseite
+
+Die Projektplattform sollte als **echter HTTPS-Unterpfad** oder über eine eigene Subdomain ausgeliefert werden, **nicht** über ein eingebettetes iframe. Ein iframe kann Browser-Kamerarechte durch seine Permissions-Policy blockieren. Falls ein iframe unvermeidbar ist, muss die Schul-IT sowohl die übergeordnete Permissions-Policy als auch das iframe-Attribut für die Kamera korrekt konfigurieren; ansonsten darf die App weiterhin QR-Bild und Zahlungslink als Alternative anbieten. Der Browser fragt seine Kameraberechtigung stets beim Benutzer an – sie kann nicht administrativ per JavaScript erzwungen werden.
