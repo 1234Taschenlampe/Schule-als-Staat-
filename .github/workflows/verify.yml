@@ -1,0 +1,32 @@
+name: V4 source checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: JavaScript syntax and source invariants
+        run: |
+          node --check app.js
+          node --check config.js
+          node --test tests/v4-source-check.mjs
+      - name: Verify static hosting bundle
+        run: |
+          sh scripts/build-static.sh
+          test -s _site/index.html
+          test -s _site/app.js
+          test -s _site/config.js
+          test -s _site/styles.css
