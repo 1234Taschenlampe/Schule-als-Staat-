@@ -216,3 +216,40 @@ grant execute on function public.create_payment_request(integer,text),
   public.record_cash_sale(integer,text),public.issue_credits(uuid,integer,text)
   to authenticated;
 -- No direct UPDATE/INSERT/DELETE grants for app users.
+
+
+-- Administrator-only directory and role assignment, without broad public table access.
+create or replace function public.admin_list_users()
+returns jsonb language plpgsql stable security definer set search_path = ''
+as $$
+declare v_uid uuid := auth.uid(); v_list jsonb;
+begin
+  if v_uid is null or not exists (select 1 from public.profiles where id=v_uid and role='admin') then
+    raise exception 'Keine Administratorberechtigung.';
+  end if;
+  select coalesce(jsonb_agg(jsonb_build_object('id',id,'name',display_name,'role',role) order by display_name),'[]'::jsonb)
+    into v_list from public.profiles;
+  return v_list;
+end;
+$$;
+
+create or replace function public.admin_set_cashier(p_user_id uuid, p_enabled boolean)
+returns boolean language plpgsql security definer set search_path = ''
+as $$
+declare v_uid uuid := auth.uid();
+begin
+  if v_uid is null or not exists (select 1 from public.profiles where id=v_uid and role='admin') then
+    raise exception 'Keine Administratorberechtigung.';
+  end if;
+  if p_user_id=v_uid then raise exception 'Eigene Rolle nicht ändern.'; end if;
+  update public.profiles set role=case when p_enabled then 'cashier' else 'member' end
+    where id=p_user_id and role<>'admin';
+  if not found then raise exception 'Mitglied nicht gefunden oder Administrator.'; end if;
+  return true;
+end;
+$$;
+
+revoke all on function public.admin_list_users(),public.admin_set_cashier(uuid,boolean)
+  from public,anon,authenticated;
+grant execute on function public.admin_list_users(),public.admin_set_cashier(uuid,boolean)
+  to authenticated;
