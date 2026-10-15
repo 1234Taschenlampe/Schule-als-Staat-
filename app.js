@@ -4,7 +4,7 @@
   var cfg=window.NV_CONFIG||{}, root=document.getElementById("app"), toasts=document.getElementById("toast-root");
   var ready=Boolean(cfg.supabaseUrl&&cfg.supabaseAnonKey&&window.supabase&&window.supabase.createClient);
   var api=ready?window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey):null;
-  var state={user:null,profile:null,wallet:null,ledger:[],cash:[],requests:[],page:"home",active:null,invoice:null,scanner:null,scanning:false,busy:false};
+  var state={user:null,profile:null,wallet:null,ledger:[],cash:[],requests:[],users:[],page:"home",active:null,invoice:null,scanner:null,scanning:false,busy:false};
   var deepLink=new URLSearchParams(location.search).get("pay");
   if(deepLink)state.page="pay";
   var units=String(cfg.currencyLabel||"Einheiten");
@@ -38,6 +38,7 @@
     rows.forEach(function(row){if(row.error)throw row.error;});
     state.profile=rows[0].data;state.wallet=rows[1].data;state.ledger=rows[2].data||[];state.cash=rows[3].data||[];state.requests=rows[4].data||[];
     if(state.active)state.active=state.requests.find(function(x){return x.id===state.active.id;})||state.active;
+    state.users=state.profile.role==="admin"?await rpc("admin_list_users",{}):[];
   }
   async function refresh(silent){
     if(!state.user||state.busy||state.scanning)return;
@@ -121,8 +122,10 @@
       (adminOrCashier()?'<h2 class="section-title">Bargeldumsätze</h2><section class="card">'+(cashRows?'<div class="table-wrap"><table class="simple-table"><thead><tr><th>Zeit</th><th>Beschreibung</th><th>Betrag</th></tr></thead><tbody>'+cashRows+'</tbody></table></div>':empty("Keine Bargeldumsätze."))+'</section><h2 class="section-title">QR-Anforderungen</h2><section class="card">'+(reqRows?'<div class="list">'+reqRows+'</div>':empty("Keine QR-Anforderungen."))+'</section>':"");
   }
   function settingsPage(){
+    var memberOptions=(state.users||[]).map(function(u){return '<option value="'+esc(u.id)+'">'+esc(u.name)+' ('+esc(u.role)+')</option>';}).join("");
+    var adminPanel=state.profile.role!=="admin"?"":'<h2 class="section-title">Administration</h2><div class="grid two"><section class="card"><div class="card-header"><h2>Guthaben ausgeben</h2><span class="pill blue">Nur Admin</span></div><form id="credit-form"><div class="form-group"><label for="credit-user">Mitglied</label><select id="credit-user" name="user_id" class="field" required>'+memberOptions+'</select></div><div class="form-group"><label for="credit-amount">Betrag in '+esc(units)+'</label><input id="credit-amount" name="amount" class="field" type="number" min=".01" max="10000" step=".01" required></div><div class="form-group"><label for="credit-note">Grund</label><input class="field" id="credit-note" name="note" maxlength="140" placeholder="z. B. Startguthaben"></div><button class="btn primary full" type="submit">Guthaben zuweisen</button></form><p class="field-help">Jede Ausgabe wird im digitalen Buchungsverlauf dokumentiert.</p></section><section class="card"><div class="card-header"><h2>Kassenberechtigung</h2><span class="pill">Rollen</span></div><form id="permission-form"><div class="form-group"><label for="permission-user">Mitglied</label><select class="field" id="permission-user" name="user_id" required>'+memberOptions+'</select></div><div class="form-group"><label for="permission-role">Berechtigung</label><select class="field" id="permission-role" name="enabled"><option value="true">Kassenpersonal</option><option value="false">Normales Mitglied</option></select></div><button class="btn dark full" type="submit">Berechtigung speichern</button></form><p class="field-help">Administratorrollen können hier nicht vergeben oder entfernt werden.</p></section></div>';
     return header("PROFIL","Einstellungen.","Deine Berechtigungen und Browserdiagnose.")+
-      '<div class="grid two"><section class="card"><h2>Benutzerkonto</h2><div class="divider"></div><div class="settings-row"><div><strong>Name</strong><p>'+esc(state.profile.display_name)+'</p></div></div><div class="settings-row"><div><strong>E-Mail</strong><p>'+esc(state.user.email)+'</p></div></div><div class="settings-row"><div><strong>Rolle</strong><p>'+roleLabel()+'</p></div></div><div class="divider"></div>'+btn("Abmelden","logout","")+'</section><section class="card"><h2>Kameraberechtigung</h2><div class="divider"></div><p class="details">HTTPS-Status: '+(window.isSecureContext?"Sicherer Kontext":"Unsicherer Kontext")+'. Kamera wird nur auf deinen Wunsch aktiviert und niemals aufgezeichnet.</p>'+btn("Kamerazugriff testen","camera-test")+'<div class="divider"></div><p class="details">Kontoeinheit: '+esc(units)+'. Kein Bank- oder Echtgeldsystem.</p></section></div>';
+      '<div class="grid two"><section class="card"><h2>Benutzerkonto</h2><div class="divider"></div><div class="settings-row"><div><strong>Name</strong><p>'+esc(state.profile.display_name)+'</p></div></div><div class="settings-row"><div><strong>E-Mail</strong><p>'+esc(state.user.email)+'</p></div></div><div class="settings-row"><div><strong>Rolle</strong><p>'+roleLabel()+'</p></div></div><div class="divider"></div>'+btn("Abmelden","logout","")+'</section><section class="card"><h2>Kameraberechtigung</h2><div class="divider"></div><p class="details">HTTPS-Status: '+(window.isSecureContext?"Sicherer Kontext":"Unsicherer Kontext")+'. Kamera wird nur auf deinen Wunsch aktiviert und niemals aufgezeichnet.</p>'+btn("Kamerazugriff testen","camera-test")+'<div class="divider"></div><p class="details">Kontoeinheit: '+esc(units)+'. Kein Bank- oder Echtgeldsystem.</p></section></div>'+adminPanel;
   }
   function render(){
     if(!api)return setup();
@@ -231,6 +234,16 @@
         showToast("Bitte E-Mail prüfen und den Anmeldelink öffnen.");
       }
       if(form.id==="manual-form")await openInvoice(data.get("code"));
+      if(form.id==="credit-form"){
+        if(state.profile.role!=="admin")throw Error("Keine Administratorrechte.");
+        await rpc("issue_credits",{p_user_id:String(data.get("user_id")),p_amount_cents:amount(data.get("amount")),p_note:String(data.get("note")||"").slice(0,140)});
+        await fetchData();render();showToast("Guthaben sicher zugeteilt.");
+      }
+      if(form.id==="permission-form"){
+        if(state.profile.role!=="admin")throw Error("Keine Administratorrechte.");
+        await rpc("admin_set_cashier",{p_user_id:String(data.get("user_id")),p_enabled:data.get("enabled")==="true"});
+        await fetchData();render();showToast("Kassenberechtigung geändert.");
+      }
       if(form.id==="request-form"){
         if(!adminOrCashier())throw Error("Keine Kassenberechtigung");
         var id=await rpc("create_payment_request",{p_amount_cents:amount(data.get("amount")),p_note:String(data.get("note")||"").slice(0,140)});
@@ -257,7 +270,7 @@
   });
   document.addEventListener("visibilitychange",function(){if(document.hidden)void stopScanner();});
   window.addEventListener("pagehide",function(){void stopScanner();});
-  setInterval(function(){if(state.user&&!document.hidden&&!state.busy&&!state.scanning)void refresh(true);},5500);
+  setInterval(function(){var a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))return;if(state.user&&!document.hidden&&!state.busy&&!state.scanning)void refresh(true);},5500);
   async function start(){
     if(!api)return render();
     var session=await api.auth.getSession();
@@ -269,7 +282,7 @@
     api.auth.onAuthStateChange(function(event,session){
       var next=session&&session.user||null;
       if(next&&state.user&&next.id===state.user.id)return;
-      state.user=next;state.profile=null;state.wallet=null;state.ledger=[];state.cash=[];state.requests=[];state.active=null;state.invoice=null;
+      state.user=next;state.profile=null;state.wallet=null;state.ledger=[];state.cash=[];state.requests=[];state.users=[];state.active=null;state.invoice=null;
       void stopScanner().then(async function(){
         try{if(state.user)await fetchData();render();if(deepLink&&state.user)await openInvoice(deepLink);}
         catch(e){fail(e);render();}
