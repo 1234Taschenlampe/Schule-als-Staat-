@@ -61,3 +61,18 @@ Dateien über einen lokalen Webserver öffnen, z. B. `python -m http.server 8080
 - [ ] Fallback über Fotoupload, Link und manuelle Eingabe
 - [ ] Smartphone klein/groß, Tablet, Desktop, Hoch-/Querformat, Zoom 200 %
 - [ ] Supabase E-Mail-Zustellbarkeit, Limits, Backup- und Ausfallkonzept geklärt
+
+
+## Empfohlenes öffentliches Hosting bei privatem GitHub-Repository
+
+**Cloudflare Pages** kann GitHub-Repositorys auch dann verarbeiten, wenn der GitHub-Quellcode privat bleibt.
+
+1. Cloudflare Dashboard > **Workers & Pages** > **Create application** > **Pages** > **Connect to Git**.
+2. GitHub-Zugriff auf \`1234Taschenlampe/Schule-als-Staat-\` freigeben.
+3. Produktionsbranch \`main\`, Framework **None**, Build Command \`sh scripts/build-static.sh\`, Build Output Directory \`_site\` wählen.
+4. **Save and Deploy**. Cloudflare gibt eine öffentliche HTTPS-URL unter \`*.pages.dev\` aus.
+5. Diese URL in Supabase Auth als Site URL und Redirect URL konfigurieren.
+
+Der Veröffentlichungsprozess erstellt absichtlich nur \`index.html\`, \`app.js\`, \`config.js\` und \`styles.css\` als öffentliche Dateien. Das SQL-Schema und andere Repositorydateien werden nicht als Website ausgeliefert.
+
+**Ohne Cloudflare-Verbindung, Pages-Aktivierung und Supabase-Einrichtung ist die Seite noch nicht öffentlich produktiv.**
