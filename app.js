@@ -4,11 +4,11 @@
   var cfg=window.NV_CONFIG||{}, root=document.getElementById("app"), toasts=document.getElementById("toast-root");
   var ready=Boolean(cfg.supabaseUrl&&cfg.supabaseAnonKey&&window.supabase&&window.supabase.createClient);
   var api=ready?window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey):null;
-  var state={user:null,profile:null,wallet:null,ledger:[],cash:[],requests:[],users:[],page:"home",active:null,invoice:null,scanner:null,scanning:false,busy:false};
+  var state={user:null,profile:null,wallet:null,ledger:[],cash:[],requests:[],users:[],polls:[],pollResults:[],page:"home",active:null,invoice:null,scanner:null,scanning:false,busy:false};
   var deepLink=new URLSearchParams(location.search).get("pay");
   if(deepLink)state.page="pay";
   var units=String(cfg.currencyLabel||"Einheiten");
-  var navs=[["home","Übersicht"],["wallet","Mein Konto"],["pay","Bezahlen"],["register","Kasse"],["history","Verlauf"],["settings","Einstellungen"]];
+  var navs=[["home","Übersicht"],["wallet","Mein Konto"],["pay","Bezahlen"],["register","Kasse"],["history","Verlauf"],["votes","Abstimmungen"],["settings","Einstellungen"]];
   function esc(v){return String(v==null?"":v).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
   function cashFmt(v){return new Intl.NumberFormat("de-DE",{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(v||0)/100)+" "+esc(units);}
   function time(v){return new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeStyle:"short"}).format(new Date(v));}
@@ -29,7 +29,7 @@
     if(!state.user)return;
     var id=state.user.id;
     var rows=await Promise.all([
-      api.from("profiles").select("id,display_name,role").eq("id",id).single(),
+      api.from("profiles").select("id,display_name,role,vote_eligible").eq("id",id).single(),
       api.from("wallets").select("balance_cents").eq("user_id",id).single(),
       api.from("wallet_ledger").select("*").order("created_at",{ascending:false}).limit(60),
       api.from("cash_sales").select("*").order("created_at",{ascending:false}).limit(50),
@@ -39,6 +39,8 @@
     state.profile=rows[0].data;state.wallet=rows[1].data;state.ledger=rows[2].data||[];state.cash=rows[3].data||[];state.requests=rows[4].data||[];
     if(state.active)state.active=state.requests.find(function(x){return x.id===state.active.id;})||state.active;
     state.users=state.profile.role==="admin"?await rpc("admin_list_users",{}):[];
+    state.polls=await rpc("poll_catalog",{});
+    state.pollResults=state.profile.role==="admin"?await rpc("admin_poll_results",{}):[];
   }
   async function refresh(silent){
     if(!state.user||state.busy||state.scanning)return;
@@ -46,8 +48,8 @@
     catch(e){if(!silent)fail(e);}
   }
   function nav(isMobile){
-    var list=navs.filter(function(n){return (adminOrCashier()||n[0]!=="register")&&(!isMobile||n[0]!=="history");});
-    var paths=["M3 3h8v8H3z M13 3h8v5h-8z M3 13h8v8H3z M13 10h8v11h-8z","M3 6h18v14H3z M3 10h18 M16 15h2","M4 8V4h4 M16 4h4v4 M20 16v4h-4 M8 20H4v-4 M4 12h16","M2 5h20v14H2z M2 10h20","M3 12a9 9 0 1 0 3-6 M3 3v5h5 M12 7v5l3 2","M12 2v3 M12 19v3 M2 12h3 M19 12h3 M5 5l2 2 M17 17l2 2 M5 19l2-2 M17 7l2-2"];
+    var list=navs.filter(function(n){return (adminOrCashier()||n[0]!=="register")&&(!isMobile||(n[0]!=="history"&&(n[0]!=="wallet"||!adminOrCashier())));});
+    var paths=["M3 3h8v8H3z M13 3h8v5h-8z M3 13h8v8H3z M13 10h8v11h-8z","M3 6h18v14H3z M3 10h18 M16 15h2","M4 8V4h4 M16 4h4v4 M20 16v4h-4 M8 20H4v-4 M4 12h16","M2 5h20v14H2z M2 10h20","M3 12a9 9 0 1 0 3-6 M3 3v5h5 M12 7v5l3 2","M3 12h18 M5 4h14v16H5z M9 9h6 M9 14h4","M12 2v3 M12 19v3 M2 12h3 M19 12h3 M5 5l2 2 M17 17l2 2 M5 19l2-2 M17 7l2-2"];
     return list.map(function(n){
       var idx=navs.findIndex(function(x){return x[0]===n[0];});
       return '<button class="'+(isMobile?"bottom-button":"nav-button")+(state.page===n[0]?" active":"")+'" data-nav="'+n[0]+'" aria-current="'+(state.page===n[0]?"page":"false")+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+paths[idx]+'"/></svg><span>'+(isMobile&&n[0]==="home"?"Start":n[1])+'</span></button>';
@@ -56,7 +58,7 @@
   function mount(content){
     var current=navs.find(function(n){return n[0]===state.page;});
     var first=(state.profile&&state.profile.display_name||"NV").slice(0,2).toUpperCase();
-    root.innerHTML='<div class="app-shell"><aside class="sidebar"><div class="brand"><div class="brand-mark">N/V</div><div><div class="brand-name">Neß Vegas</div><div class="brand-sub">SCHULE ALS STAAT</div></div></div><div class="nav-kicker">MENÜ</div><nav class="nav-links">'+nav(false)+'</nav><div class="sidebar-foot"><span class="status"><i class="dot connected"></i> Sicher verbunden</span><div class="subinfo">V4 · Digitale Schulwährung</div></div></aside><div class="main-area"><header class="topbar"><div class="topbar-left">Neß Vegas <b>/ '+(current?current[1]:"Übersicht")+'</b></div><div class="topbar-right"><span class="role">'+roleLabel()+'</span><div class="avatar">'+esc(first)+'</div></div></header><main class="content">'+content+'</main></div><nav class="bottom-nav">'+nav(true)+'</nav></div>';
+    root.innerHTML='<div class="app-shell"><aside class="sidebar"><div class="brand"><div class="brand-mark">N/V</div><div><div class="brand-name">Schule als Staat</div><div class="brand-sub">PROJEKTPLATTFORM</div></div></div><div class="nav-kicker">MENÜ</div><nav class="nav-links">'+nav(false)+'</nav><div class="sidebar-foot"><span class="status"><i class="dot connected"></i> Sicher verbunden</span><div class="subinfo">V4 · Digitale Schulwährung</div></div></aside><div class="main-area"><header class="topbar"><div class="topbar-left">Neß Vegas <b>/ '+(current?current[1]:"Übersicht")+'</b></div><div class="topbar-right"><span class="role">'+roleLabel()+'</span><div class="avatar">'+esc(first)+'</div></div></header><main class="content">'+content+'</main></div><nav class="bottom-nav">'+nav(true)+'</nav></div>';
     if(state.page==="register")renderQRCode();
   }
   function setup(){
@@ -121,17 +123,51 @@
       '<section class="card"><div class="card-header"><h2>Digitales Konto</h2>'+btn("Aktualisieren","reload","")+'</div>'+ledger+'</section>'+
       (adminOrCashier()?'<h2 class="section-title">Bargeldumsätze</h2><section class="card">'+(cashRows?'<div class="table-wrap"><table class="simple-table"><thead><tr><th>Zeit</th><th>Beschreibung</th><th>Betrag</th></tr></thead><tbody>'+cashRows+'</tbody></table></div>':empty("Keine Bargeldumsätze."))+'</section><h2 class="section-title">QR-Anforderungen</h2><section class="card">'+(reqRows?'<div class="list">'+reqRows+'</div>':empty("Keine QR-Anforderungen."))+'</section>':"");
   }
+  function votesPage(){
+    var polls=state.polls||[];
+    var enabled=Boolean(state.profile.vote_eligible);
+    var admin=state.profile.role==="admin";
+    var notice=enabled?"":info("Für eine gültige Stimme muss die Schule dein Benutzerkonto zuerst freischalten. So werden unberechtigte Mehrfachkonten begrenzt.",true);
+    var blocks=polls.map(function(p){
+      var open=p.status==="open", voted=p.has_voted;
+      var options=(p.options||[]).map(function(o,i){
+        return '<label class="poll-option"><input type="radio" name="choice" value="'+esc(o.id)+'" '+(open&&!voted&&enabled?"required":"disabled")+'><span class="poll-option-text">'+esc(o.label)+'</span></label>';
+      }).join("");
+      var controls=!open?'<span class="pill">Abgeschlossen</span>':
+        voted?'<span class="pill green">Stimme bereits abgegeben</span>':
+        !enabled?'<span class="pill">Freigabe erforderlich</span>':
+        '<button type="submit" class="btn primary">Stimme abgeben</button>';
+      var form='<form id="vote-form" data-poll-id="'+esc(p.id)+'"><fieldset class="poll-fieldset" '+(open&&!voted&&enabled?'':'disabled')+'><legend class="sr-only">Wähle eine Option</legend>'+options+'</fieldset><div class="poll-footer">'+controls+'</div></form>';
+      return '<section class="card poll-card"><div class="card-header"><h2>'+esc(p.title)+'</h2><span class="pill '+(open?"blue":"")+'">'+(open?"Läuft":"Beendet")+'</span></div>'+(p.description?'<p class="details">'+esc(p.description)+'</p>':"")+form+'</section>';
+    }).join("");
+    var adminResults="";
+    if(admin){
+      var cards=(state.pollResults||[]).map(function(p){
+        var total=Number(p.total||0);
+        var data=(p.options||[]).map(function(o){
+          var c=Number(o.count||0),pct=total?Math.round(100*c/total):0;
+          return '<div class="result-row"><div class="result-heading"><span>'+esc(o.label)+'</span><strong>'+c+' · '+pct+' %</strong></div><div class="result-track"><div class="result-bar" style="width:'+pct+'%"></div></div></div>';
+        }).join("");
+        return '<section class="card"><div class="card-header"><h2>'+esc(p.title)+'</h2><span class="pill '+(p.status==="open"?"blue":"")+'">'+(p.status==="open"?"Live":"Beendet")+'</span></div><p class="details">'+total+' abgegebene Stimme'+(total===1?"":"n")+'</p>'+data+'<div class="poll-footer">'+(p.status==="open"?'<button type="button" class="btn" data-action="close-poll" data-poll-id="'+esc(p.id)+'">Abstimmung schließen</button>':"")+'</div></section>';
+      }).join("");
+      adminResults='<h2 class="section-title">Live-Auswertung · nur Administration</h2><p class="details">Aggregierte Stimmen, automatische Aktualisierung etwa alle 6 Sekunden. Keine einzelnen Stimmzettel werden hier angezeigt.</p><div class="grid two">'+(cards||empty("Noch keine Abstimmungen vorhanden."))+'</div>'+
+        '<h2 class="section-title">Neue Abstimmung erstellen</h2><section class="card"><form id="poll-create"><div class="form-group"><label for="poll-title">Frage oder Abstimmungstitel</label><input class="field" id="poll-title" name="title" maxlength="160" required placeholder="Wie soll unser Schulstaat heißen?"></div><div class="form-group"><label for="poll-description">Beschreibung (optional)</label><input class="field" id="poll-description" name="description" maxlength="500" placeholder="Wähle deinen Favoriten."></div><div class="form-group"><label for="poll-options">Antwortmöglichkeiten · eine pro Zeile (2–10)</label><textarea class="field poll-textarea" id="poll-options" name="options" rows="5" required placeholder="Vorschlag A&#10;Vorschlag B&#10;Vorschlag C"></textarea><p class="field-help">Die Antwortmöglichkeiten stehen nach Veröffentlichung fest. Bitte vorab prüfen.</p></div><button type="submit" class="btn primary">Abstimmung veröffentlichen</button></form></section>';
+    }
+    return header("MITBESTIMMUNG","Abstimmungen.","Der Name unseres Schulstaats steht noch nicht fest. Darüber und über weitere Entscheidungen stimmen wir gemeinsam ab.")+
+      notice+'<div class="grid two">'+(blocks||'<section class="card">'+empty("Noch keine Abstimmungen veröffentlicht. Die Administration kann die erste Namensabstimmung erstellen.")+'</section>')+'</div>'+adminResults;
+  }
   function settingsPage(){
     var memberOptions=(state.users||[]).map(function(u){return '<option value="'+esc(u.id)+'">'+esc(u.name)+' ('+esc(u.role)+')</option>';}).join("");
     var adminPanel=state.profile.role!=="admin"?"":'<h2 class="section-title">Administration</h2><div class="grid two"><section class="card"><div class="card-header"><h2>Guthaben ausgeben</h2><span class="pill blue">Nur Admin</span></div><form id="credit-form"><div class="form-group"><label for="credit-user">Mitglied</label><select id="credit-user" name="user_id" class="field" required>'+memberOptions+'</select></div><div class="form-group"><label for="credit-amount">Betrag in '+esc(units)+'</label><input id="credit-amount" name="amount" class="field" type="number" min=".01" max="10000" step=".01" required></div><div class="form-group"><label for="credit-note">Grund</label><input class="field" id="credit-note" name="note" maxlength="140" placeholder="z. B. Startguthaben"></div><button class="btn primary full" type="submit">Guthaben zuweisen</button></form><p class="field-help">Jede Ausgabe wird im digitalen Buchungsverlauf dokumentiert.</p></section><section class="card"><div class="card-header"><h2>Kassenberechtigung</h2><span class="pill">Rollen</span></div><form id="permission-form"><div class="form-group"><label for="permission-user">Mitglied</label><select class="field" id="permission-user" name="user_id" required>'+memberOptions+'</select></div><div class="form-group"><label for="permission-role">Berechtigung</label><select class="field" id="permission-role" name="enabled"><option value="true">Kassenpersonal</option><option value="false">Normales Mitglied</option></select></div><button class="btn dark full" type="submit">Berechtigung speichern</button></form><p class="field-help">Administratorrollen können hier nicht vergeben oder entfernt werden.</p></section></div>';
+    var approvePanel=state.profile.role==="admin"?'<h2 class="section-title">Stimmberechtigungen</h2><section class="card"><h2>Teilnahme freischalten</h2><p class="details" style="margin-top:12px">Prüfe vor Freigabe anhand der Schulunterlagen, dass genau eine Person hinter dem Benutzerkonto steht.</p><form id="vote-permission-form"><div class="form-group"><label for="vote-user">Nutzer</label><select class="field" id="vote-user" name="user_id" required>'+(state.users||[]).map(function(u){return '<option value="'+esc(u.id)+'">'+esc(u.name)+' · '+esc(u.email||"ohne E-Mail")+(u.vote_eligible?" · freigegeben":" · gesperrt")+'</option>';}).join("")+'</select></div><div class="form-group"><label for="vote-permission">Stimmrecht</label><select class="field" id="vote-permission" name="enabled"><option value="true">Freigeben</option><option value="false">Sperren</option></select></div><button type="submit" class="btn dark">Berechtigung speichern</button></form><p class="field-help">Eine nachträgliche Sperre löscht keine bereits abgegebenen Stimmen.</p></section>':"";
     return header("PROFIL","Einstellungen.","Deine Berechtigungen und Browserdiagnose.")+
-      '<div class="grid two"><section class="card"><h2>Benutzerkonto</h2><div class="divider"></div><div class="settings-row"><div><strong>Name</strong><p>'+esc(state.profile.display_name)+'</p></div></div><div class="settings-row"><div><strong>E-Mail</strong><p>'+esc(state.user.email)+'</p></div></div><div class="settings-row"><div><strong>Rolle</strong><p>'+roleLabel()+'</p></div></div><div class="divider"></div>'+btn("Abmelden","logout","")+'</section><section class="card"><h2>Kameraberechtigung</h2><div class="divider"></div><p class="details">HTTPS-Status: '+(window.isSecureContext?"Sicherer Kontext":"Unsicherer Kontext")+'. Kamera wird nur auf deinen Wunsch aktiviert und niemals aufgezeichnet.</p>'+btn("Kamerazugriff testen","camera-test")+'<div class="divider"></div><p class="details">Kontoeinheit: '+esc(units)+'. Kein Bank- oder Echtgeldsystem.</p></section></div>'+adminPanel;
+      '<div class="grid two"><section class="card"><h2>Benutzerkonto</h2><div class="divider"></div><div class="settings-row"><div><strong>Name</strong><p>'+esc(state.profile.display_name)+'</p></div></div><div class="settings-row"><div><strong>E-Mail</strong><p>'+esc(state.user.email)+'</p></div></div><div class="settings-row"><div><strong>Rolle</strong><p>'+roleLabel()+'</p></div></div><div class="divider"></div>'+btn("Abmelden","logout","")+'</section><section class="card"><h2>Kameraberechtigung</h2><div class="divider"></div><p class="details">HTTPS-Status: '+(window.isSecureContext?"Sicherer Kontext":"Unsicherer Kontext")+'. Kamera wird nur auf deinen Wunsch aktiviert und niemals aufgezeichnet.</p>'+btn("Kamerazugriff testen","camera-test")+'<div class="divider"></div><p class="details">Kontoeinheit: '+esc(units)+'. Kein Bank- oder Echtgeldsystem.</p></section></div>'+adminPanel+approvePanel;
   }
   function render(){
     if(!api)return setup();
     if(!state.user)return login();
     if(!state.profile||!state.wallet){root.textContent="Profil oder Guthaben konnte nicht geladen werden. Bitte Zugang und Datenbankkonfiguration prüfen.";return;}
-    var views={home:dashboard,wallet:wallet,pay:pay,register:register,history:history,settings:settingsPage};
+    var views={home:dashboard,wallet:wallet,pay:pay,register:register,history:history,votes:votesPage,settings:settingsPage};
     if(state.page==="register"&&!adminOrCashier())state.page="home";
     mount((views[state.page]||dashboard)());
   }
@@ -201,11 +237,18 @@
     }finally{if(stream)stream.getTracks().forEach(function(t){t.stop();});}
   }
   async function navigate(id){await stopScanner();state.page=id;render();window.scrollTo(0,0);}
-  async function action(id){
+  async function action(id,pollId){
     if(state.busy)return;
     try{
       if(id.indexOf("to-")===0)return await navigate(id.slice(3));
       if(id==="camera-test")return await cameraTest();
+      if(id==="close-poll"){
+        if(!state.profile||state.profile.role!=="admin")throw Error("Keine Administratorberechtigung");
+        if(!window.confirm("Diese Abstimmung wirklich schließen? Danach sind keine Stimmen mehr möglich."))return;
+        state.busy=true;
+        await rpc("admin_close_poll",{p_poll_id:pollId});
+        await fetchData();render();showToast("Abstimmung geschlossen.");return;
+      }
       if(id==="scan-start")return await scanStart();
       if(id==="scan-stop"){await stopScanner();render();return;}
       if(id==="cancel"){state.invoice=null;render();return;}
@@ -234,6 +277,25 @@
         showToast("Bitte E-Mail prüfen und den Anmeldelink öffnen.");
       }
       if(form.id==="manual-form")await openInvoice(data.get("code"));
+      if(form.id==="vote-form"){
+        if(!state.profile.vote_eligible)throw Error("Zur Abstimmung muss dein Konto von der Schule freigeschaltet sein.");
+        var pollId=form.dataset.pollId;
+        var selected=data.get("choice");
+        if(!selected)throw Error("Wähle zuerst eine Antwort aus.");
+        await rpc("submit_vote",{p_poll_id:pollId,p_option_id:String(selected)});
+        await fetchData();render();showToast("Deine Stimme wurde gezählt.");
+      }
+      if(form.id==="poll-create"){
+        if(state.profile.role!=="admin")throw Error("Keine Administratorberechtigung.");
+        var choices=String(data.get("options")||"").split(/\r?\n/).map(function(x){return x.trim();}).filter(Boolean);
+        await rpc("admin_create_poll",{p_title:String(data.get("title")||"").trim(),p_description:String(data.get("description")||"").trim(),p_options:choices});
+        await fetchData();render();showToast("Abstimmung veröffentlicht.");
+      }
+      if(form.id==="vote-permission-form"){
+        if(state.profile.role!=="admin")throw Error("Keine Administratorberechtigung.");
+        await rpc("admin_set_vote_eligibility",{p_user_id:String(data.get("user_id")),p_enabled:data.get("enabled")==="true"});
+        await fetchData();render();showToast("Wahlberechtigung aktualisiert.");
+      }
       if(form.id==="credit-form"){
         if(state.profile.role!=="admin")throw Error("Keine Administratorrechte.");
         await rpc("issue_credits",{p_user_id:String(data.get("user_id")),p_amount_cents:amount(data.get("amount")),p_note:String(data.get("note")||"").slice(0,140)});
@@ -262,7 +324,7 @@
     if(!target)return;
     e.preventDefault();
     if(target.dataset.nav)void navigate(target.dataset.nav);
-    else void action(target.dataset.action);
+    else void action(target.dataset.action,target.dataset.pollId);
   });
   root.addEventListener("submit",function(e){e.preventDefault();void handleForm(e.target);});
   root.addEventListener("change",function(e){
@@ -282,7 +344,7 @@
     api.auth.onAuthStateChange(function(event,session){
       var next=session&&session.user||null;
       if(next&&state.user&&next.id===state.user.id)return;
-      state.user=next;state.profile=null;state.wallet=null;state.ledger=[];state.cash=[];state.requests=[];state.users=[];state.active=null;state.invoice=null;
+      state.user=next;state.profile=null;state.wallet=null;state.ledger=[];state.cash=[];state.requests=[];state.users=[];state.polls=[];state.pollResults=[];state.active=null;state.invoice=null;
       void stopScanner().then(async function(){
         try{if(state.user)await fetchData();render();if(deepLink&&state.user)await openInvoice(deepLink);}
         catch(e){fail(e);render();}
