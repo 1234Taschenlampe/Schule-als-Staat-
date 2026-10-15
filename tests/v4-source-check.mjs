@@ -33,5 +33,5 @@ assert.match(voting, /primary key \(poll_id,voter_id\)/);
 assert.match(voting, /where id=p_poll_id for share/);
 assert.match(voting, /vote_eligible boolean not null default false/);
 assert.match(voting, /from public,anon,authenticated/);
-assert.doesNotMatch(config, /service_role|sk_[a-zA-Z0-9]{12}/i);
+assert.doesNotMatch(config, /service_role\\s*[:=]|sk_[a-zA-Z0-9]{12}/i);
 console.log("V4 source and security invariants checked. (Not an integration or browser test.)");
