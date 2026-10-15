@@ -1,0 +1,37 @@
+import { readFileSync } from "node:fs";
+import vm from "node:vm";
+import assert from "node:assert/strict";
+
+const file = (name) => readFileSync(new URL("../" + name, import.meta.url), "utf8");
+const app = file("app.js");
+const html = file("index.html");
+const css = file("styles.css");
+const schema = file("supabase/schema.sql");
+const voting = file("supabase/v4_voting.sql");
+const config = file("config.js");
+
+new vm.Script(app, { filename: "app.js" });
+new vm.Script(config, { filename: "config.js" });
+assert.match(html, /app\.js/);
+assert.match(html, /html5-qrcode/);
+assert.match(html, /supabase/);
+assert.match(app, /getUserMedia/);
+assert.match(app, /isSecureContext/);
+assert.match(app, /scanFile/);
+assert.match(app, /settle_payment_request/);
+assert.match(app, /record_cash_sale/);
+assert.match(app, /submit_vote/);
+assert.match(app, /admin_poll_results/);
+assert.match(app, /admin_set_vote_eligibility/);
+assert.match(app, /votesPage/);
+assert.match(app, /polls:.*pollResults:/);
+assert.match(css, /poll-option/);
+assert.match(css, /@media\(max-width:780px\)/);
+assert.match(schema, /for update/);
+assert.match(schema, /check \(balance_cents >= 0\)/);
+assert.match(voting, /primary key \(poll_id,voter_id\)/);
+assert.match(voting, /where id=p_poll_id for share/);
+assert.match(voting, /vote_eligible boolean not null default false/);
+assert.match(voting, /from public,anon,authenticated/);
+assert.doesNotMatch(config, /service_role|sk_[a-zA-Z0-9]{12}/i);
+console.log("V4 source and security invariants checked. (Not an integration or browser test.)");
