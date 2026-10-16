@@ -64,3 +64,11 @@ GitHub Pages can continue as a separate, static preview. Connecting Cloudflare d
 ## Limits
 
 Do not claim production operation until the Cloudflare account has been connected, build succeeded, actual site URL verified, backend configured, and full flow tested.
+
+## Tatsächlich eingerichtete kostenlose Fallback-Veröffentlichung
+
+Verbundene Cloudflare-Instanz: Konto mit Projekt `schule-als-staat` (Pages ohne Deployment) und Worker `schule-als-staat` (Script aktiviert unter `https://schule-als-staat.schule-als-staat-jfe.workers.dev/`). Ursache der fehlenden Pages-Git-Kopplung: Cloudflare-Fehler `8000011`, Installation muss bei Bedarf in GitHub/Cloudflare neu autorisiert werden.
+
+Die statischen Assets wurden direkt vom GitHub-Stand geladen und als Cloudflare Worker publiziert. Dieser Weg erfordert **keine kostenpflichtigen Ressourcen** und keine externe Zahlung. Das Worker-Script kann mit `node scripts/build-worker.mjs` bei Bedarf neu gebaut werden. Anders als die noch defekte Pages-Git-Integration aktualisiert sich diese Worker-Kopie **nicht automatisch bei jedem GitHub-Push**.
+
+Das Backend ist getrennt in Supabase Free eingerichtet; beide SQL-Migrationen wurden angewandt. Die Anmeldung für Massennutzung sowie die administrativen Konten sind noch nicht fertig konfiguriert. Die Schul-IT muss den Redirect-Host in Supabase Auth freigeben. **Nicht** als produktiv getestetes Zahlungssystem bezeichnen.
