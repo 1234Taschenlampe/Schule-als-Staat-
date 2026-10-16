@@ -163,3 +163,12 @@ small,.muted{color:var(--muted)}.small{font-size:13px}.mono{font-variant-numeric
 .portal-tiles a{padding:13px 14px;border-radius:12px;background:white;border:1px solid #e0e8f7;text-decoration:none;color:#23437c;font-weight:650;font-size:13px}
 .portal-tiles a:hover{border-color:#6288e0;background:#f5f8ff}
 @media(max-width:780px){.portal-recovery{padding:20px 17px}.portal-recovery-head{align-items:stretch;flex-direction:column}.portal-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.portal-recovery h2{font-size:22px}}
+
+/* V6: comfortable dense navigation and polished unified shortcuts */
+.sidebar .nav-links{overflow-y:auto;min-height:0;flex:1;padding-right:3px;scrollbar-width:thin;scrollbar-color:#d8e1ec transparent}
+.sidebar .brand{flex:0 0 auto}
+.sidebar .sidebar-foot{flex:0 0 auto}
+.sas-home-shortcut{display:flex;align-items:center;justify-content:space-between;gap:7px;border:1px solid #e0e8f4;border-radius:14px;padding:15px 14px;background:#fff;color:#334b72;text-align:left;font:650 13px/1.45 inherit;cursor:pointer;transition:background .15s,box-shadow .15s,transform .15s}
+.sas-home-shortcut:hover{background:#f7faff;border-color:#acc5f0;box-shadow:0 4px 15px #142f6120;transform:translateY(-1px)}
+.portal-recovery .portal-tiles{grid-template-columns:repeat(3,minmax(0,1fr))}
+@media(max-width:760px){.portal-recovery .portal-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.sas-home-shortcut{font-size:12px}}
