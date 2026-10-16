@@ -1,5 +1,7 @@
 # Canonical V6 direction (supersedes any V3 restoration notes below)
 
+- **Cloudflare is the SOLE official host:** https://schule-als-staat.schule-als-staat-jfe.workers.dev/ — do not publish a second independent GitHub Pages copy. Keep GitHub Pages redirect-only for old links. Repo remains the source of truth; update Cloudflare Worker after approved frontend changes; commits alone do not auto-deploy to Worker.
+
 - **DO NOT restore, publish or link old V3 HTML designs.** Keep the original archived at `archive/SaS_ONE_Prototyp_v3.html` only for feature specification.
 - The only user-facing frontend is `index.html` + `app.js` + `features.js` with `styles.css` + `features.css`. One consistent Apple-inspired responsive system.
 - All user-facing features must use real Supabase storage and authorization, never fabricated demo purchases, IDs, votes, rentals or news. Incomplete features must state exactly what remains.
