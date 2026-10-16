@@ -12,7 +12,7 @@ import { fileURLToPath } from "node:url";
 import { resolve, dirname } from "node:path";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const names = ["index.html", "styles.css", "features.css", "app.js", "features.js", "config.js"];
+const names = ["index.html", "styles.css", "features.css", "verification.css", "app.js", "features.js", "verification.js", "config.js"];
 const files = Object.fromEntries(
   names.map((name) => ["/" + name, readFileSync(resolve(root, name), "utf8")])
 );
@@ -21,8 +21,10 @@ const headers = {
   "/index.html": "text/html; charset=utf-8",
   "/styles.css": "text/css; charset=utf-8",
   "/features.css": "text/css; charset=utf-8",
+  "/verification.css": "text/css; charset=utf-8",
   "/app.js": "application/javascript; charset=utf-8",
   "/features.js": "application/javascript; charset=utf-8",
+  "/verification.js": "application/javascript; charset=utf-8",
   "/config.js": "application/javascript; charset=utf-8"
 };
 
