@@ -10,9 +10,29 @@ const schema = file("supabase/schema.sql");
 const voting = file("supabase/v4_voting.sql");
 const config = file("config.js");
 const adminBootstrap = file("supabase/v4_admin_bootstrap.sql");
+const originalPortal = file("archive/SaS_ONE_Prototyp_v3.html");
+const restoredPortal = file("portal/index.html");
+const restoredPortalAuth = file("portal/portal-auth.js");
 
 new vm.Script(app, { filename: "app.js" });
 new vm.Script(config, { filename: "config.js" });
+new vm.Script(restoredPortalAuth, { filename: "portal-auth.js" });
+const portalInlineScripts = [...restoredPortal.matchAll(/<script(?:\\s[^>]*)?>([\\s\\S]*?)<\\/script>/g)].map(match=>match[1]).filter(Boolean);
+assert.ok(portalInlineScripts.length>=2, "Original embedded V3 QR and app scripts remain intact");
+for(const [index,source] of portalInlineScripts.entries()){
+  new vm.Script(source, {filename:"portal/index.html:script"+index});
+}
+assert.match(originalPortal, /function visaPage\\(\\)/);
+assert.match(originalPortal, /function newsPage\\(\\)/);
+assert.match(originalPortal, /function idPage\\(\\)/);
+assert.match(restoredPortal, /Ausweis-Galerie/);
+assert.match(restoredPortal, /V3-Blog/);
+assert.match(restoredPortal, /function galleryPage\\(\\)/);
+assert.match(restoredPortal, /function blogPage\\(\\)/);
+assert.match(restoredPortalAuth, /api\\.auth\\.getUser\\(\\)/);
+assert.match(restoredPortal, /portal-auth\\.js/);
+assert.match(app, /portal\\/\#gallery/);
+assert.match(app, /openPortalAfterLogin/);
 assert.match(html, /app\.js/);
 assert.match(html, /html5-qrcode/);
 assert.match(html, /supabase/);
