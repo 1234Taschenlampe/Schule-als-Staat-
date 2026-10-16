@@ -36,7 +36,7 @@ async function scenario(noSession){
   class MockFormData{constructor(form){this.form=form;}get(k){return this.form.fields[k];}}
   const sandbox={
     window:{NV_CONFIG:{supabaseUrl:"https://test.invalid",supabaseAnonKey:"public-test",currencyLabel:"Einheiten"},supabase:{createClient:()=>api},addEventListener(){},scrollTo(){}},
-    document,location:{hash:"",search:"",pathname:"/",origin:"https://test.invalid"},
+    document,history:{replaceState(){}},location:{hash:"",search:"",pathname:"/",origin:"https://test.invalid"},
     URLSearchParams,URL,Date,Intl,String,Array,Map,Set,Math,Number,FormData:MockFormData,
     setTimeout(){},setInterval(){},clearInterval(){},console
   };
