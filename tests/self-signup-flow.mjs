@@ -5,7 +5,7 @@ const src=readFileSync(new URL("../app.js",import.meta.url),"utf8");
 async function scenario(noSession){
   const handlers={};
   const root={innerHTML:"",addEventListener:(name,fn)=>handlers[name]=fn};
-  const toasts={appendChild(){},querySelectorAll(){return []}};
+  const errors=[];const toasts={appendChild(el){errors.push(el.textContent);},querySelectorAll(){return []}};
   const user={id:"d06806b7-fd65-4990-8e38-6d8e0ad5f874",email:"student@example.test"};
   const calls=[];
   function from(table){
@@ -52,7 +52,7 @@ async function scenario(noSession){
   };
   handlers.submit({preventDefault(){},target:form});
   for(let i=0;i<120;i++)await Promise.resolve();
-  assert.match(root.innerHTML,/Guten Tag, Testnutzer/,"registration must open account dashboard");
+  assert.match(root.innerHTML,/Guten Tag, Testnutzer/,"registration must open account dashboard: "+errors.join(" | "));
   assert.ok(calls.includes("profiles"));
   assert.ok(calls.includes("wallets"));
   assert.equal(feedback.textContent,"");
