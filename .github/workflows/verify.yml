@@ -22,6 +22,8 @@ jobs:
         run: |
           node --check app.js
           node --check features.js
+          node --check verification.js
+          node --test tests/school-verification.mjs
           node --check config.js
           node --test tests/v4-source-check.mjs
           node --test tests/v6-functional-source-check.mjs
@@ -38,4 +40,6 @@ jobs:
           test -s _site/styles.css
           test -s _site/features.js
           test -s _site/features.css
+          test -s _site/verification.js
+          test -s _site/verification.css
           test ! -e _site/portal/index.html
