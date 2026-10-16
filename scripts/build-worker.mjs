@@ -4,7 +4,7 @@
  * Run: node scripts/build-worker.mjs
  * Output: dist/schule-als-staat-worker.js
  *
- * Cloudflare Pages remains the preferred Git-connected production option.
+ * Cloudflare Workers Free is the sole official live site; GitHub Pages redirects to it.
  * This bundle serves only unified, real V4/V6 assets; old V3 demos are not public.
  */
 import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
@@ -12,7 +12,7 @@ import { fileURLToPath } from "node:url";
 import { resolve, dirname } from "node:path";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const names = ["index.html", "styles.css", "features.css", "verification.css", "app.js", "features.js", "verification.js", "config.js"];
+const names = ["index.html", "styles.css", "features.css", "verification.css", "tutorial.css", "app.js", "features.js", "verification.js", "roles.js", "attendance.js", "tutorial.js", "config.js"];
 const files = Object.fromEntries(
   names.map((name) => ["/" + name, readFileSync(resolve(root, name), "utf8")])
 );
@@ -22,9 +22,13 @@ const headers = {
   "/styles.css": "text/css; charset=utf-8",
   "/features.css": "text/css; charset=utf-8",
   "/verification.css": "text/css; charset=utf-8",
+  "/tutorial.css": "text/css; charset=utf-8",
   "/app.js": "application/javascript; charset=utf-8",
   "/features.js": "application/javascript; charset=utf-8",
   "/verification.js": "application/javascript; charset=utf-8",
+  "/roles.js": "application/javascript; charset=utf-8",
+  "/attendance.js": "application/javascript; charset=utf-8",
+  "/tutorial.js": "application/javascript; charset=utf-8",
   "/config.js": "application/javascript; charset=utf-8"
 };
 
