@@ -253,7 +253,7 @@
     }
     if(window.SAS_FEATURES&&window.SAS_FEATURES.pages[state.page]){
       mount('<div id="sas-live-module" role="region" aria-label="'+esc(window.SAS_FEATURES.pages[state.page])+'"></div>');
-      window.SAS_FEATURES.show({api:api,user:state.user,profile:state.profile,page:state.page,target:document.getElementById("sas-live-module"),navigate:navigate}).catch(fail);
+      window.SAS_FEATURES.show({api:api,user:state.user,profile:state.profile,schoolRoles:state.schoolRoles,page:state.page,target:document.getElementById("sas-live-module"),navigate:navigate}).catch(fail);
       return;
     }
     if(!allowed(state.page))state.page="home";
