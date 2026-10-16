@@ -152,3 +152,16 @@ Zum Aktivieren: Webseite öffnen → **Neues Konto mit Passwort erstellen** → 
 Aktuell existiert in Supabase nur ein zuvor angelegtes, bestätigtes Konto mit einer anderen Mailadresse. Dieses Konto wird **nicht** automatisch zum Administrator gemacht. Frei erfundene Schüler- und Kassen-Adressen sind ausschließlich Offline-Fixtures unter `tests/fictional-identities.mjs` und keine Auth-Benutzer.
 
 Der alternative alte Magic-Link-Login erstellt ab jetzt **keine neuen Benutzerkonten** mehr; er ist nur für bereits vorhandene E-Mail-Konten. Für viele Schüler benötigt das Schulprojekt später ein sicheres, von der Schule genehmigtes Verfahren zur Kontoausgabe mit angemessener Anti-Spam-Kontrolle. Alle Vorgänge müssen innerhalb des kostenlosen Limits bleiben.
+
+## Wiederherstellung SaS ONE V3 (16.10.2026)
+
+Der Originalprototyp `SaS_ONE_Prototyp_v3.html` konnte aus früheren Gesprächsdateien wiederhergestellt werden. Die originalgetreue Datei liegt unter [`archive/SaS_ONE_Prototyp_v3.html`](archive/SaS_ONE_Prototyp_v3.html). Die aktive Fassung liegt unter [`portal/index.html`](portal/index.html) und ist unter `/portal/` erreichbar.
+
+- Übernommene V3-Bereiche: Startseite, Schülerausweis, Demo-Wallet, QR-Shop, Raumreservierung, interaktiver Schulplan, Schwarzes Brett, Veranstaltungskalender, Fundbüro, Demo-Umfragen, ViSA-Onboarding, Profil, Suchfunktion und Bedienmodale.
+- Ergänzte Bereiche, die im gefundenen V3-Prototyp noch nicht vollständig vorhanden waren: **Ausweis-Galerie** mit eindeutig fiktiven Musterkarten und **Projektblog** mit Demo-Beispielbeiträgen.
+- V4 bleibt das **echte** Supabase-Backend für Login, Rolle, virtuelle Zahlungen und Abstimmungen. Das V3-Portal nutzt zur Zugangsprüfung dieselbe Supabase-Anmeldung und verlinkt auf V4.
+- V5 ergänzt die Tabelle `portal_posts` mit Row-Level Security. Bestätigte Mitglieder können veröffentlichte Nachrichten lesen; ausschließlich Admins können im V3-Portal echte Nachrichten des Schwarzen Bretts und Blogs veröffentlichen oder löschen.
+- Die historischen V3-Raumbelegungen, Gegenstände, Shopprodukte, Ausweise, Visa-Vorschauen, Demo-Abstimmungen und Walletbuchungen sind weiterhin **fiktiv**. Sie werden nicht mit echten Schul- oder Bankdaten verwechselt.
+- Für echte Personalausweise, Visa-Anträge und Schülerfotos sind Freigaben der Schule, DSGVO-Prüfung, Berechtigungskonzept und gesonderte serverseitige Speicherung nötig. Dies wird nicht ohne diese Voraussetzungen aktiviert.
+- Statisches GitHub-Pages-Deployment benutzt `sh scripts/build-static.sh` und kopiert `portal/`. Der kostenlose Cloudflare Worker wurde außerdem manuell aktualisiert; er erhält Änderungen nicht automatisch.
+- Keine kostenpflichtigen Upgrades, externen Dienste oder Zahlungen. Gesamtkostenbudget: 0 EUR.
