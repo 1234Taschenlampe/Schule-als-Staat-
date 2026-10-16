@@ -294,6 +294,7 @@
         if(changed.error)throw changed.error;
         state.recovering=false;
         if(location.hash)history.replaceState(null,"",location.pathname+location.search);
+        if(state.user){await claimDesignatedAdmin();await fetchData();}
         showToast("Dein neues Passwort wurde gespeichert.");
         render();
       }
