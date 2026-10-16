@@ -61,3 +61,17 @@
 - Static-Build und Worker-Bundle einschließlich Syntaxprüfung erfolgreich.
 - `tests/live-rollback.sql` auf dem verbundenen Supabase-Projekt ausgeführt: drei fiktive Identitäten innerhalb einer vollständig zurückgerollten Transaktion, fremder Ausweis nicht lesbar/beschreibbar, Adminzugriff verweigert, Zahlung mit korrektem Saldo, idempotente Wiederholung, gültige Stimme, gesperrte Doppelstimme und Adminauswertung für Mitglieder verweigert. Keine Testdaten verbleiben.
 - Dies sind Backendtests unter authentifizierten DB-Rollen, keine Anmelde-End-to-End-Tests mit drei Browserkonten. Geräteabhängige Kamera-/QR-Tests und mobile Browserabnahme bleiben vor Schulbetrieb offen.
+
+
+## Live-Registrierungstest (16.10.2026)
+
+**Bestanden:** Einmaliger echter End-to-End-Backendtest gegen die produktive Supabase-Auth- und REST-API, [GitHub-Actions-Lauf 38890660174](https://github.com/1234Taschenlampe/Schule-als-Staat-/actions/runs/38890660174).
+
+- Testkonto unter reservierter `@example.test`-Adresse mit zufälligem Passwort über `POST /auth/v1/signup` erstellt; Supabase lieferte sofort eine Sitzung ohne E-Mail-Bestätigung zurück.
+- Anschließend echte Anmeldung über `POST /auth/v1/token?grant_type=password` erfolgreich.
+- API mit eigenem Benutzer-JWT: genau ein sichtbares eigenes Profil, Rolle `member`, `vote_eligible=false`; ein Wallet mit 0 Einheiten; ein Schülerausweis mit gespeichertem Testnamen und Testklasse. Der automatische Trigger aus `v8_self_service_signup_test.sql` ist damit über die echte Auth-API verifiziert.
+- Künstliches Testkonto danach gezielt aus `auth.users` gelöscht. Kontrollabfrage: 0 verbleibende Testkonten, unverändert 3 Auth-Konten, 3 Profile, 3 Wallets und 3 Schülerausweise, davon 1 bestehender Administrator.
+- Für bestehende Konten wurden fehlende Entwurfsausweise durch `v9_backfill_student_cards.sql` angelegt, ohne Guthaben, Rollen oder vorhandene Karten zu überschreiben.
+- Separater Rollentest mit echter RLS: Ein Mitglied kann genau ein eigenes Profil/Wallet/eigenen Ausweis lesen und keinerlei Adminprofil; ein Admin kann die Ausweisverwaltung lesen.
+- Fünf zusätzliche simulierte UI-Registrierungsfälle in `tests/self-signup-flow.mjs`: sofortige Anmeldung, fehlende Signup-Session mit Login-Fallback, bereits verwendete Adresse, SMTP-Rate-Limit und noch unbestätigtes Konto. GitHub-CI erfolgreich.
+- Der reale Test bestätigt **Backend-Registrierung und -Login**, nicht die Browserbedienung, das E-Mail-Verfahren, Social Login, geräteabhängige Kamera oder Zahlungs- und Abstimmungsabläufe unter mehreren echten Konten. Diese bleiben vor der Schulfreigabe offen.
