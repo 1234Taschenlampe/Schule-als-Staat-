@@ -2,12 +2,13 @@ import assert from "node:assert/strict";
 import vm from "node:vm";
 import {readFileSync} from "node:fs";
 const src=readFileSync(new URL("../app.js",import.meta.url),"utf8");
-async function scenario(noSession){
+async function scenario(noSession,mode='success'){
   const handlers={};
   const root={innerHTML:"",addEventListener:(name,fn)=>handlers[name]=fn};
   const errors=[];const toasts={appendChild(el){errors.push(el.textContent);},querySelectorAll(){return []}};
   const user={id:"d06806b7-fd65-4990-8e38-6d8e0ad5f874",email:"student@example.test"};
   const calls=[];
+  let capturedSignup=null;
   function from(table){
     calls.push(table);
     const q={
@@ -21,8 +22,19 @@ async function scenario(noSession){
     auth:{
       getSession:async()=>({data:{session:null},error:null}),
       onAuthStateChange(){},
-      signUp:async()=>({data:{user,session:noSession?null:{user}},error:null}),
-      signInWithPassword:async()=>({data:{user,session:{user}},error:null})
+      signUp:async payload=>{
+        capturedSignup=payload;
+        calls.push('auth.signUp');
+        if(mode==='duplicate')return {data:null,error:{code:'user_already_exists',message:'User already registered'}};
+        if(mode==='rate-limit')return {data:null,error:{code:'over_email_send_rate_limit',message:'email rate limit exceeded'}};
+        return {data:{user,session:noSession?null:{user}},error:null};
+      },
+      signInWithPassword:async()=>{
+        calls.push('auth.signInWithPassword');
+        return mode==='confirmation-still-on'
+          ? {data:null,error:{code:'email_not_confirmed',message:'Email not confirmed'}}
+          : {data:{user,session:{user}},error:null};
+      }
     },
     from,
     rpc:async()=>({data:[],error:null})
@@ -47,16 +59,38 @@ async function scenario(noSession){
   const feedback={textContent:"",className:""};
   const form={
     id:"signup-form",
-    fields:{email:user.email,password:"example-for-test-123",repeat:"example-for-test-123"},
+    fields:{email:user.email,password:"example-for-test-123",repeat:"example-for-test-123",display_name:"Alex Muster",class_label:"10a"},
     querySelector(key){return key==="#signup-feedback"?feedback:key==='[type="submit"]'?button:null;}
   };
   handlers.submit({preventDefault(){},target:form});
   for(let i=0;i<120;i++)await Promise.resolve();
-  assert.match(root.innerHTML,/Guten Tag, Testnutzer/,"registration must open account dashboard: "+errors.join(" | "));
-  assert.ok(calls.includes("profiles"));
-  assert.ok(calls.includes("wallets"));
-  assert.equal(feedback.textContent,"");
+  assert.ok(capturedSignup,"Supabase Auth must handle each new account");
+  assert.equal(capturedSignup.email,user.email);
+  assert.equal(capturedSignup.options.data.full_name,"Alex Muster");
+  assert.equal(capturedSignup.options.data.class_label,"10a");
+  if(mode==='duplicate'){
+    assert.match(feedback.textContent,/Konto bereits vergeben/);
+    assert.ok(!calls.includes("auth.signInWithPassword"),"Duplicate must never trigger password login");
+    assert.ok(!calls.includes("profiles"),"Duplicate must not enter member dashboard");
+  }else if(mode==='rate-limit'){
+    assert.ok(errors.some(x=>/Versandlimit|Limit/.test(x)),errors.join(" | "));
+    assert.ok(!calls.includes("profiles"));
+  }else if(mode==='confirmation-still-on'){
+    assert.match(feedback.textContent,/nicht sofort angemeldet|freigeschaltet/);
+    assert.ok(calls.includes("auth.signInWithPassword"));
+    assert.ok(!calls.includes("profiles"));
+  }else{
+    assert.match(root.innerHTML,/Guten Tag, Testnutzer/,"registration must open account dashboard: "+errors.join(" | "));
+    assert.ok(calls.includes("profiles"));
+    assert.ok(calls.includes("wallets"));
+    assert.equal(feedback.textContent,"");
+    if(noSession)assert.ok(calls.includes("auth.signInWithPassword"),"Missing session must use one password login fallback");
+    else assert.ok(!calls.includes("auth.signInWithPassword"),"Existing session must not trigger another login");
+  }
 }
 await scenario(false);
 await scenario(true);
-console.log("Student self-signup integration simulations passed (Supabase mocked).");
+await scenario(false,"duplicate");
+await scenario(false,"rate-limit");
+await scenario(true,"confirmation-still-on");
+console.log("Five student sign-up scenarios passed (Supabase API mocked, no real accounts created).");
