@@ -1,0 +1,40 @@
+/* Intro for first-time users: calm, accessible and friendly to young pupils */
+.sas-onboarding{width:min(640px,calc(100vw - 24px));max-height:92dvh;padding:0;border:1px solid #dee6ef;border-radius:26px;overflow-y:auto;background:#fff;color:#1d2735;box-shadow:0 28px 95px rgba(16,33,55,.24);font-family:inherit;overscroll-behavior:contain}
+.sas-onboarding::backdrop{background:rgba(17,32,52,.56);backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px)}
+.intro-head{padding:24px 33px 0}
+.intro-kicker{font-size:11px;font-weight:800;color:#486787;letter-spacing:.11em;display:flex;align-items:center;gap:10px}
+.intro-spark{background:#eaf1ff;color:#3477da;border-radius:10px;padding:6px 9px;font-size:14px}
+.intro-number{margin-left:auto;font-size:11px;letter-spacing:0;color:#8490a1;font-weight:650}
+.intro-progress{margin:22px 0 0;height:5px;border-radius:8px;overflow:hidden;background:#edf1f7}
+.intro-progress-bar{height:100%;border-radius:8px;background:#377bdc;transition:width .28s ease}
+.intro-main{padding:34px 34px 22px}
+.intro-step-icon{display:grid;place-items:center;width:54px;height:54px;font-size:29px;font-weight:500;color:#2969c2;background:linear-gradient(145deg,#e4efff,#f4f8ff);border-radius:18px;margin-bottom:23px}
+.intro-topic{font-size:11px;letter-spacing:.13em;font-weight:800;color:#4078ca}
+.sas-onboarding h2{font-size:clamp(25px,4vw,33px);font-weight:760;letter-spacing:-.045em;line-height:1.16;margin:8px 0 15px;color:#172336}
+.intro-description{font-size:15px;line-height:1.75;color:#566579;margin:0 0 27px;max-width:550px}
+.intro-practice{border-radius:17px;background:#f6f8fc;padding:21px;border:1px solid #e5ebf4}
+.intro-practice-label{font-size:11px;letter-spacing:.09em;font-weight:800;color:#3d5c86;display:flex;align-items:center;gap:8px}
+.intro-keyboard{display:inline-grid;place-items:center;background:#e7edf8;border-radius:7px;font-size:18px;height:25px;width:29px}
+.intro-practice p{color:#2f3f54;font-size:15px;line-height:1.65;margin:12px 0 20px}
+.intro-practice p strong{color:#125fb5;font-weight:800;letter-spacing:.02em}
+.intro-practice label{display:block;color:#536278;font-size:12px;font-weight:700;margin-bottom:8px}
+.intro-answer-line{display:flex;gap:9px;align-items:stretch}
+.intro-answer-line input{min-width:0;flex:1;border-radius:11px;background:#fff;border:1px solid #cbd7e7;outline:0;min-height:46px;padding:11px 13px;color:#223247;font:700 15px/1.3 inherit;letter-spacing:.01em}
+.intro-answer-line input:focus{border-color:#4282e2;box-shadow:0 0 0 4px rgba(66,130,226,.13)}
+.intro-primary{display:inline-flex;align-items:center;justify-content:center;gap:12px;white-space:nowrap;padding:12px 19px;min-height:46px;color:white;background:#2769c6;border:1px solid #2769c6;border-radius:12px;cursor:pointer;font:700 13px/1.2 inherit;box-shadow:0 6px 16px rgba(38,105,198,.12);transition:background .15s,transform .15s}
+.intro-primary:hover{background:#1659b5;transform:translateY(-1px)}
+.intro-primary:disabled{opacity:.6;cursor:wait}
+.intro-feedback{min-height:18px;font-size:12px!important;color:#16734f!important;font-weight:680;margin:9px 0 0!important}
+.intro-feedback.intro-wrong{color:#aa3b39!important}
+.intro-tip{font-size:12px;line-height:1.6;color:#69788c;margin:21px 0 0}
+.intro-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:11px;border-top:1px solid #edf0f4;background:#fbfcfd;padding:17px 33px}
+.intro-footer-right{display:flex;align-items:center;gap:15px}
+.intro-footer-right span{font-size:11px;color:#8a96a4}
+.intro-text-button{border:0;background:none;padding:8px 2px;color:#617387;font:650 12px/1.3 inherit;cursor:pointer}
+.intro-text-button:hover{text-decoration:underline;color:#245db0}
+.intro-finished{padding:60px 35px 43px;text-align:center}
+.intro-finished .intro-kicker{justify-content:center;margin:25px 0 10px}
+.intro-finished p{color:#627185;line-height:1.7;font-size:14px;max-width:430px;margin:0 auto 23px}
+.intro-success-mark{display:grid;place-items:center;margin:0 auto;width:70px;height:70px;border-radius:21px;background:#e3f5eb;color:#168052;font-size:42px}
+@media(max-width:550px){.sas-onboarding{width:calc(100vw - 16px);max-height:94dvh;border-radius:20px}.intro-head{padding:19px 19px 0}.intro-main{padding:25px 19px 16px}.intro-practice{padding:15px}.intro-answer-line{flex-direction:column}.intro-primary{width:100%}.intro-footer{padding:13px 19px}.intro-footer-right span{display:none}.intro-finished{padding:44px 24px}}
+@media(prefers-reduced-motion:reduce){.intro-progress-bar,.intro-primary{transition:none}}
