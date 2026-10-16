@@ -39,3 +39,9 @@ Maintain and deploy the responsive school project website, digital internal-curr
 - Check the actual connected account plan and current free limits before creating any new resource. Do not rely on static marketing limits.
 - Never interpret an application-internal virtual wallet as authorization for payments to an external provider.
 - Existing Supabase project was confirmed on free tier; Cloudflare Pages project exists but GitHub source connection currently fails with Cloudflare error 8000011. Do not claim successful Cloudflare deployment until verified.
+
+## Aktueller Deployment-Workaround (16.10.2026)
+
+Das GitHub-Sync von Cloudflare Pages ist derzeit durch den Cloudflare-Fehler `8000011` blockiert. Ein statischer Cloudflare Workers Free-Worker namens `schule-als-staat` wurde stattdessen über die Cloudflare-API deployed und auf `https://schule-als-staat.schule-als-staat-jfe.workers.dev/` aktiviert. Die Webseite ist ein GitHub-Snapshot mit vier öffentlichen Dateien. Es erfolgt **kein automatisches Redeployment** auf Worker bei Push; der Generator `node scripts/build-worker.mjs` stellt den gleichen Stand reproduzierbar bereit. Das Cloudflare Pages Projekt `schule-als-staat` bleibt ohne Deployment. Eine unabhängige externe HTTP-Prüfung war in dieser Arbeitsumgebung nicht möglich.
+
+Vor Produktionsnutzung sind echte Kamera-, Login-, Autorisierungs-, Polling- und Zahlungs-End-to-End-Tests sowie schulische Zustimmung erforderlich. Insbesondere reicht das standardmäßige Supabase-Mail-Limit nicht für eine Masseneinschreibung. Die 0-EUR-Grenze ist bindend.
