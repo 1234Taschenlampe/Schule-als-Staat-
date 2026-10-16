@@ -38,7 +38,7 @@ async function scenario(noSession){
     window:{NV_CONFIG:{supabaseUrl:"https://test.invalid",supabaseAnonKey:"public-test",currencyLabel:"Einheiten"},supabase:{createClient:()=>api},addEventListener(){},scrollTo(){}},
     document,location:{hash:"",search:"",pathname:"/",origin:"https://test.invalid"},
     URLSearchParams,URL,Date,Intl,String,Array,Map,Set,Math,Number,FormData:MockFormData,
-    setTimeout(){},console
+    setTimeout(){},setInterval(){},clearInterval(){},console
   };
   vm.runInNewContext(src,sandbox);
   for(let i=0;i<10;i++)await Promise.resolve();
