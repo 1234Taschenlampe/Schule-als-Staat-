@@ -1,0 +1,8 @@
+# Never commit secret keys, local credentials, or test account exports
+.env
+.env.*
+!.env.example
+schule-als-staat-testkonten-*.csv
+node_modules/
+dist/
+_site/
