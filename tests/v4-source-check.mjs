@@ -9,6 +9,7 @@ const css = file("styles.css");
 const schema = file("supabase/schema.sql");
 const voting = file("supabase/v4_voting.sql");
 const config = file("config.js");
+const adminBootstrap = file("supabase/v4_admin_bootstrap.sql");
 
 new vm.Script(app, { filename: "app.js" });
 new vm.Script(config, { filename: "config.js" });
@@ -24,6 +25,12 @@ assert.match(app, /submit_vote/);
 assert.match(app, /admin_poll_results/);
 assert.match(app, /admin_set_vote_eligibility/);
 assert.match(app, /votesPage/);
+assert.match(app, /signUp\(/);
+assert.match(app, /signInWithPassword/);
+assert.match(app, /claim_initial_admin/);
+assert.match(adminBootstrap, /email_confirmed_at is not null/);
+assert.match(adminBootstrap, /auth\.uid\(\)/);
+assert.match(adminBootstrap, /grant execute on function public\.claim_initial_admin\(\) to authenticated/);
 assert.match(app, /polls:.*pollResults:/);
 assert.match(css, /poll-option/);
 assert.match(css, /@media\(max-width:780px\)/);
@@ -35,3 +42,7 @@ assert.match(voting, /vote_eligible boolean not null default false/);
 assert.match(voting, /from public,anon,authenticated/);
 assert.doesNotMatch(config, /service_role\s*[:=]|sk_[a-zA-Z0-9]{12}/i);
 console.log("V4 source and security invariants checked. (Not an integration or browser test.)");
+
+const { demoIdentities } = await import("./fictional-identities.mjs");
+assert.equal(demoIdentities.length,3);
+for(const person of demoIdentities){assert.match(person.email, /@example\\.test$/);}
