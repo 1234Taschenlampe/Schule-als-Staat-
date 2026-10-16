@@ -44,7 +44,7 @@ const worker = [
   "      'Permissions-Policy': 'camera=(self), microphone=()',",
   "      'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',",
   "      'Cache-Control': 'no-store',",
-  "      'Content-Security-Policy': default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://wdebwgcferieedkpqbvk.supabase.co wss://wdebwgcferieedkpqbvk.supabase.co; media-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'",
+  "      'Content-Security-Policy': \"default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://wdebwgcferieedkpqbvk.supabase.co wss://wdebwgcferieedkpqbvk.supabase.co; media-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'\",",
   "    };",
   "    return new Response(event.request.method === 'HEAD' ? null : ASSETS[path], {status:200,headers:responseHeaders});",
   "  })());",
