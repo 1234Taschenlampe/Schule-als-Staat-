@@ -1,5 +1,7 @@
 # Schule als Staat – V4 (Projektname; Staatsname noch offen)
 
+> **Aktueller Stand (16.10.2026): SaS ONE V6.** Die Funktionen aus V3 werden nun in einer einzigen neuen, Apple-inspirierten Oberfläche mit echtem Supabase-Backend bereitgestellt. Das alte V3-Design ist **nicht** Teil der öffentlichen Anwendung. Technische Tests sind bestanden; Schulplan, offizielle Ausweisprüfung, Datenschutzfreigaben und echte Browser-/Mehrbenutzer-End-to-End-Tests bleiben notwendige Abnahmeschritte. Details: [V6 – Funktionsstand und Abnahme](docs/V6_IMPLEMENTATION.md). **Kostenbudget: 0,00 €.**
+
 Responsive Projektplattform mit digitalen Guthaben, QR-Kassenzahlungen, Bargeldbuchungen und Schulabstimmungen.
 
 > **Stand:** V4-Quellcode. Das GitHub-Repository war bei Projektbeginn leer. Die vorherigen Website-Versionen wurden **nicht** automatisch übernommen. Produktion ist erst nach Einrichtung von Supabase, Rollen, Veröffentlichung und Ende-zu-Ende-Tests nutzbar.
