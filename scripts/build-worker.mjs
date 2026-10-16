@@ -5,14 +5,14 @@
  * Output: dist/schule-als-staat-worker.js
  *
  * Cloudflare Pages remains the preferred Git-connected production option.
- * This bundle serves only public V4 assets and the protected V3 portal.
+ * This bundle serves only unified, real V4/V6 assets; old V3 demos are not public.
  */
 import { readFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { resolve, dirname } from "node:path";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const names = ["index.html", "styles.css", "app.js", "config.js", "portal/index.html", "portal/portal-auth.js"];
+const names = ["index.html", "styles.css", "features.css", "app.js", "features.js", "config.js"];
 const files = Object.fromEntries(
   names.map((name) => ["/" + name, readFileSync(resolve(root, name), "utf8")])
 );
@@ -20,10 +20,10 @@ const files = Object.fromEntries(
 const headers = {
   "/index.html": "text/html; charset=utf-8",
   "/styles.css": "text/css; charset=utf-8",
+  "/features.css": "text/css; charset=utf-8",
   "/app.js": "application/javascript; charset=utf-8",
-  "/config.js": "application/javascript; charset=utf-8",
-  "/portal/index.html": "text/html; charset=utf-8",
-  "/portal/portal-auth.js": "application/javascript; charset=utf-8"
+  "/features.js": "application/javascript; charset=utf-8",
+  "/config.js": "application/javascript; charset=utf-8"
 };
 
 const worker = [
@@ -33,7 +33,7 @@ const worker = [
   "addEventListener('fetch', event => {",
   "  event.respondWith((() => {",
   "    const url = new URL(event.request.url);",
-  "    const path = url.pathname === '/' ? '/index.html' : (url.pathname === '/portal/' || url.pathname === '/portal' ? '/portal/index.html' : url.pathname);",
+  "    const path = url.pathname === '/' ? '/index.html' : url.pathname;",
   "    if (!['GET','HEAD'].includes(event.request.method)) return new Response('Method not allowed',{status:405,headers:{Allow:'GET, HEAD'}});",
   "    if (!(path in ASSETS)) return new Response('Not found',{status:404,headers:{'X-Content-Type-Options':'nosniff'}});",
   "    const responseHeaders = {",
@@ -44,7 +44,7 @@ const worker = [
   "      'Permissions-Policy': 'camera=(self), microphone=()',",
   "      'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',",
   "      'Cache-Control': 'no-store',",
-  "      'Content-Security-Policy': path === '/portal/index.html' ? \"default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://wdebwgcferieedkpqbvk.supabase.co wss://wdebwgcferieedkpqbvk.supabase.co; media-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'\" : \"default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://wdebwgcferieedkpqbvk.supabase.co wss://wdebwgcferieedkpqbvk.supabase.co; media-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'\"",
+  "      'Content-Security-Policy': default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://wdebwgcferieedkpqbvk.supabase.co wss://wdebwgcferieedkpqbvk.supabase.co; media-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'",
   "    };",
   "    return new Response(event.request.method === 'HEAD' ? null : ASSETS[path], {status:200,headers:responseHeaders});",
   "  })());",
