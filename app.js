@@ -6,6 +6,7 @@
   var api=ready?window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey):null;
   var state={user:null,profile:null,wallet:null,ledger:[],cash:[],requests:[],users:[],polls:[],pollResults:[],page:"home",active:null,invoice:null,scanner:null,scanning:false,busy:false,recovering:/(?:^|[&#?])type=recovery(?:&|$)/.test(location.hash)};
   var deepLink=new URLSearchParams(location.search).get("pay");
+  var openPortalAfterLogin=new URLSearchParams(location.search).get("after")==="portal";
   if(deepLink)state.page="pay";
   var units=String(cfg.currencyLabel||"Einheiten");
   var navs=[["home","Übersicht"],["wallet","Mein Konto"],["pay","Bezahlen"],["register","Kasse"],["history","Verlauf"],["votes","Abstimmungen"],["settings","Einstellungen"]];
@@ -63,7 +64,7 @@
   function mount(content){
     var current=navs.find(function(n){return n[0]===state.page;});
     var first=(state.profile&&state.profile.display_name||"NV").slice(0,2).toUpperCase();
-    root.innerHTML='<div class="app-shell"><aside class="sidebar"><div class="brand"><div class="brand-mark">S/S</div><div><div class="brand-name">Schule als Staat</div><div class="brand-sub">PROJEKTPLATTFORM</div></div></div><div class="nav-kicker">MENÜ</div><nav class="nav-links">'+nav(false)+'</nav><div class="sidebar-foot"><span class="status"><i class="dot connected"></i> Sicher verbunden</span><div class="subinfo">V4 · Digitale Schulwährung</div><a class="project-social" href="https://www.instagram.com/schule.als.staat_rng/" target="_blank" rel="noopener noreferrer" aria-label="Instagram-Kanal des Schulprojekts öffnen">Instagram ↗</a></div></aside><div class="main-area"><header class="topbar"><div class="topbar-left">Schule als Staat <b>/ '+(current?current[1]:"Übersicht")+'</b></div><div class="topbar-right"><span class="role">'+roleLabel()+'</span><div class="avatar">'+esc(first)+'</div></div></header><main class="content">'+content+'</main></div><nav class="bottom-nav">'+nav(true)+'</nav></div>';
+    root.innerHTML='<div class="app-shell"><aside class="sidebar"><div class="brand"><div class="brand-mark">S/S</div><div><div class="brand-name">Schule als Staat</div><div class="brand-sub">PROJEKTPLATTFORM</div></div></div><div class="nav-kicker">MENÜ</div><nav class="nav-links">'+nav(false)+'<a href="./portal/" class="nav-button v3-link" aria-label="V3-Schulportal mit Ausweis, Galerie, ViSA und Schwarzem Brett">▦ <span>Schulportal · V3</span></a></nav><div class="sidebar-foot"><span class="status"><i class="dot connected"></i> Sicher verbunden</span><div class="subinfo">V4 · Digitale Schulwährung</div><a class="project-social" href="https://www.instagram.com/schule.als.staat_rng/" target="_blank" rel="noopener noreferrer" aria-label="Instagram-Kanal des Schulprojekts öffnen">Instagram ↗</a></div></aside><div class="main-area"><header class="topbar"><div class="topbar-left">Schule als Staat <b>/ '+(current?current[1]:"Übersicht")+'</b></div><div class="topbar-right"><span class="role">'+roleLabel()+'</span><div class="avatar">'+esc(first)+'</div></div></header><main class="content">'+content+'</main></div><nav class="bottom-nav">'+nav(true)+'</nav></div>';
     if(state.page==="register")renderQRCode();
   }
   function setup(){
@@ -86,7 +87,7 @@
     var dateToday=new Date().toDateString();
     var cashToday=state.cash.filter(function(x){return new Date(x.created_at).toDateString()===dateToday;}).reduce(function(a,x){return a+x.amount_cents;},0);
     var received=state.ledger.filter(function(x){return x.kind==="payment"&&x.payee_id===state.user.id;}).reduce(function(a,x){return a+x.amount_cents;},0);
-    return header("DEIN ARBEITSPLATZ","Guten Tag, "+esc(state.profile.display_name)+".","Dein Überblick über Guthaben, Zahlungen und Kassen.")+
+    return '<section class="card portal-recovery"><div class="portal-recovery-head"><div><div class="eyebrow">SaS ONE · V3 WIEDERHERGESTELLT</div><h2>Dein vollständiges Schulportal.</h2><p>Ausweis-Galerie, Schülerausweis, ViSA, Schwarzes Brett, V3-Blog, Shop, Raumplan, Raumreservierungen, Termine und Fundbüro. Die älteren Bereiche sind derzeit als Demo gekennzeichnet.</p></div><a class="btn primary" href="./portal/">Zum Schulportal ↗</a></div><div class="portal-tiles"><a href="./portal/#gallery">Ausweis-Galerie →</a><a href="./portal/#visa">ViSA →</a><a href="./portal/#news">Schwarzes Brett →</a><a href="./portal/#blog">V3-Blog →</a><a href="./portal/#map">Schulplan →</a><a href="./portal/#rooms">Räume →</a></div></section>'+header("DEIN ARBEITSPLATZ","Guten Tag, "+esc(state.profile.display_name)+".","Dein Überblick über Guthaben, Zahlungen und Kassen.")+
     '<div class="grid three"><section class="card ink"><div class="stat-label">Digitales Guthaben</div><div class="stat-value">'+cashFmt(state.wallet.balance_cents)+'</div><div class="stat-caption">Aktuell verfügbar</div></section><section class="card"><div class="stat-label">Digitale Einnahmen</div><div class="stat-value">'+cashFmt(received)+'</div><div class="stat-caption">Aus den letzten 60 Buchungen</div></section><section class="card"><div class="stat-label">Bargeld erfasst · heute</div><div class="stat-value">'+cashFmt(cashToday)+'</div><div class="stat-caption">Unabhängig vom digitalen Konto</div></section></div>'+
     '<h2 class="section-title">Schnellzugriff</h2><div class="grid two"><div class="card quick"><div><h3>Digital bezahlen</h3><p>QR-Code einer Kasse scannen und Betrag prüfen.</p></div>'+btn("Scannen","to-pay")+'</div><div class="card quick"><div><h3>'+(adminOrCashier()?"Neue Kassenzahlung":"Mein Konto")+'</h3><p>'+(adminOrCashier()?"Digitale und Bargeldverkäufe erfassen.":"Kontostand und Transaktionen ansehen.")+'</p></div>'+btn(adminOrCashier()?"Kasse":"Konto",adminOrCashier()?"to-register":"to-wallet","dark")+'</div></div><h2 class="section-title">Letzte Buchungen</h2><section class="card">'+latest(5)+'</section>';
   }
@@ -382,6 +383,7 @@
     if(session.error)throw session.error;
     state.user=session.data.session&&session.data.session.user||null;
     if(state.user){await claimDesignatedAdmin();await fetchData();}
+    if(state.user&&openPortalAfterLogin){location.replace("./portal/");return;}
     render();
     if(deepLink&&state.user){try{await openInvoice(deepLink);}catch(e){fail(e);}}
     api.auth.onAuthStateChange(function(event,session){
@@ -395,7 +397,7 @@
       if(next&&state.user&&next.id===state.user.id)return;
       state.user=next;state.profile=null;state.wallet=null;state.ledger=[];state.cash=[];state.requests=[];state.users=[];state.polls=[];state.pollResults=[];state.active=null;state.invoice=null;
       void stopScanner().then(async function(){
-        try{if(state.user){await claimDesignatedAdmin();await fetchData();}render();if(deepLink&&state.user)await openInvoice(deepLink);}
+        try{if(state.user){await claimDesignatedAdmin();await fetchData();if(openPortalAfterLogin){location.replace("./portal/");return;}}render();if(deepLink&&state.user)await openInvoice(deepLink);}
         catch(e){fail(e);render();}
       });
     });
