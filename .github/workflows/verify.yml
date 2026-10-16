@@ -23,6 +23,10 @@ jobs:
           node --check app.js
           node --check features.js
           node --check verification.js
+          node --check roles.js
+          node --check attendance.js
+          node --check tutorial.js
+          node --test tests/school-roles-and-attendance.mjs
           node --test tests/school-verification.mjs
           node --check config.js
           node --test tests/v4-source-check.mjs
@@ -42,4 +46,8 @@ jobs:
           test -s _site/features.css
           test -s _site/verification.js
           test -s _site/verification.css
+          test -s _site/roles.js
+          test -s _site/attendance.js
+          test -s _site/tutorial.js
+          test -s _site/tutorial.css
           test ! -e _site/portal/index.html
