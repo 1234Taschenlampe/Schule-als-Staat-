@@ -92,3 +92,20 @@ Der Nutzer registriert sich weiterhin ohne Bestätigungs-E-Mail und erhält sofo
 **Sicherheitstest:** Rollenwechsel in einer SQL-Transaktion zeigte, dass normale Mitglieder keine QR-Codes anderer Personen prüfen dürfen; ein Admin kann einen gültigen Code anzeigen und bestätigen; nach Bestätigung ist die Ausweisidentität gegen Änderungen gesperrt. Vollständige Transaktion zurückgerollt, keine bestehenden Konten als verifiziert markiert.
 
 **Abnahme ausstehend:** Kameratest auf Android/iOS, tatsächliche Lehrkraft-/Adminprüfung vor Ort und Schulfreigabe des verwendeten Identitätsnachweises. Nur das vorhandene Admin-Konto kann derzeit prüfen; eine gesonderte Schulpersonal-Rolle wurde nicht vergeben.
+
+
+## Hierarchie, Schulberufe und Schülerausweis-Anwesenheit (16.10.2026)
+
+Die verbindliche Rechtehierarchie lautet **Administrator (höchster Rang) → Operator → normale Schulberufe → Schüler**. Geschützte Systemrechte (Geldverwaltung, Kassenfreigaben, Stimmrecht, SQL-Admin) bleiben bei der bestehenden Supabase-`profiles.role`-Administration und können **nicht** über frei vergebbare Schulberufe erlangt werden.
+
+- Die neue `school_role_assignments`-Tabelle und der Berufskatalog `school_job_roles` enthalten anfangs u. a. Operator, Anwesenheitskontrolle, Journalist, Redaktion, Verkäufer, Veranstaltungshelfer, Raumkoordination, Fundbüro, ViSA-Hilfe, Wahlhelfer, Sicherheitsdienst und Schulguide. Admins dürfen weitere einfache Berufe anlegen.
+- Nur **Administratoren** können Operatorrechte vergeben/entziehen; Operatoren können ausschließlich Berufe unterhalb ihrer eigenen Stufe vergeben oder entziehen, keine Administratoren oder anderen Operatoren verwalten und niemals selbst die eigene Rolle ändern.
+- Operatoren dürfen `admin_create_poll`, `admin_close_poll` und `admin_poll_results` nutzen (historische RPC-Namen bleiben aus Kompatibilitätsgründen erhalten). **Keine** Operatorfreigabe für `admin_set_cashier`, `admin_set_vote_eligibility`, Geldkonten oder Auth-Admin.
+- Operatoren dürfen `review_school_verification_qr` und `confirm_school_verification_qr` erst nach Abgleich mit Schulunterlagen nutzen. Ein QR-Code allein ist kein Identitätsnachweis.
+- Der neue Admin-/Operatorbereich „Berufe & Rollen“ erlaubt Suche nach Schülernamen/E-Mail sowie sichere Berufszuteilung. Die Regeln gelten **serverseitig** auch dann, wenn jemand Buttons oder Browseranfragen manipuliert.
+- **Direkt auf dem digitalen Schülerausweis** können Schüler ihren einmaligen Verifizierungs-QR-Code erstellen und, nach Schulverifizierung, einen **Anwesenheits-QR-Code** mit 2 Minuten Gültigkeit.
+- Der Bereich „Anwesenheitskontrolle“ steht Administratoren, Operatoren und ausdrücklich ernannten Anwesenheitskontrolleuren zur Verfügung. Dort können Anwesenheitstermine geöffnet, QR-Codes mit der Kamera gescannt, Einträge eingesehen und Termine geschlossen werden. `attendance_scans` erzwingt genau einen Eintrag je Schüler und Termin; der Scan verbraucht den QR-Code.
+- Die Teilnehmerlisten und QR-Hashes sind nicht über Tabellen-SELECT für normale Schüler verfügbar. Berechtigte Aufsichten erhalten Teilnehmerlisten ausschließlich über das geschützte RPC `attendance_session_roster`. Schülerdaten dürfen erst nach Schulfreigabe für echte Anwesenheitskontrollen verwendet werden.
+- Das interaktive Tutorial führt Erstbesucher durch sechs Stationen mit selbst einzugebenden Antworten. Fortschritt wird pro Konto in `student_onboarding` mit RLS gespeichert, nicht lokal oder auf einem Schulgerät. Echte Passwörter, Zahlungen und Stimmen sind nie Teil der Übungen; Tutorial lässt sich später erneut öffnen.
+
+**Tests:** SQL-Rollback-Test als Operator: niedrige Rollenverwaltung möglich, Admin-Rollen/Kassenrechte gesperrt. Operator kann eine Testabstimmung erstellen und aggregierte Ergebnisse einsehen. QR-Anwesenheit wurde transaktional getestet (verifizierter Schüler erzeugt Code, Operator scannt, Roster enthält einen Eintrag, wiederholter QR wird zurückgewiesen). Alle Testtransaktionen zurückgerollt. GitHub-CI bestätigt Syntax, neue UI- und Policy-Quelltests. Noch offen sind echte Zwei-Geräte-Kameratests und die schulische Datenschutz-/Betriebsfreigabe.
