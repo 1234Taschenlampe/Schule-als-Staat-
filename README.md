@@ -1,5 +1,9 @@
 # Schule als Staat – V4 (Projektname; Staatsname noch offen)
 
+**Offizielle Live-Adresse:** https://schule-als-staat.schule-als-staat-jfe.workers.dev/
+
+**Hosting-Regel:** Ausschließlich Cloudflare Workers ist das produktive Hosting. GitHub bleibt Code- und Test-Repository. Die bisherige GitHub-Pages-Adresse führt nur noch auf Cloudflare weiter. Veröffentlichungen und Funktionstests müssen auf Cloudflare stattfinden. Die Worker-Uploads werden derzeit manuell durchgeführt; ein GitHub-Commit allein aktualisiert Cloudflare nicht.
+
 > **Aktueller Stand (16.10.2026): SaS ONE V6.** Die Funktionen aus V3 werden nun in einer einzigen neuen, Apple-inspirierten Oberfläche mit echtem Supabase-Backend bereitgestellt. Das alte V3-Design ist **nicht** Teil der öffentlichen Anwendung. Technische Tests sind bestanden; Schulplan, offizielle Ausweisprüfung, Datenschutzfreigaben und echte Browser-/Mehrbenutzer-End-to-End-Tests bleiben notwendige Abnahmeschritte. Details: [V6 – Funktionsstand und Abnahme](docs/V6_IMPLEMENTATION.md). **Kostenbudget: 0,00 €.**
 
 Responsive Projektplattform mit digitalen Guthaben, QR-Kassenzahlungen, Bargeldbuchungen und Schulabstimmungen.
