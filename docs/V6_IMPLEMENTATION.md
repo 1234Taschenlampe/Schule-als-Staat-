@@ -75,3 +75,20 @@
 - Separater Rollentest mit echter RLS: Ein Mitglied kann genau ein eigenes Profil/Wallet/eigenen Ausweis lesen und keinerlei Adminprofil; ein Admin kann die Ausweisverwaltung lesen.
 - Fünf zusätzliche simulierte UI-Registrierungsfälle in `tests/self-signup-flow.mjs`: sofortige Anmeldung, fehlende Signup-Session mit Login-Fallback, bereits verwendete Adresse, SMTP-Rate-Limit und noch unbestätigtes Konto. GitHub-CI erfolgreich.
 - Der reale Test bestätigt **Backend-Registrierung und -Login**, nicht die Browserbedienung, das E-Mail-Verfahren, Social Login, geräteabhängige Kamera oder Zahlungs- und Abstimmungsabläufe unter mehreren echten Konten. Diese bleiben vor der Schulfreigabe offen.
+
+
+## Schulverifizierung per QR-Code (16.10.2026)
+
+**Ausgeführt:** `supabase/v10_school_qr_verification.sql` und `supabase/v10_school_qr_card_lock.sql`.
+Der Nutzer registriert sich weiterhin ohne Bestätigungs-E-Mail und erhält sofort sein normales Mitgliedskonto. Die **zusätzliche Schulverifizierung** läuft so:
+
+1. Angemeldeter Schüler öffnet „Schulverifizierung“ und erstellt einen QR-Code, der nur ein kryptografisch zufälliges Einmalgeheimnis enthält. Kein Name, keine Mail und keine Benutzer-ID im QR. Das Geheimnis wird ausschließlich als SHA-256-Hash in der Datenbank gespeichert.
+2. Code läuft nach 10 Minuten ab. Neuer Code ersetzt den vorherigen (mindestens 20 Sekunden Abstand). Nach erfolgreicher Prüfung wird der Code gelöscht und ist nicht wiederverwendbar.
+3. Administrationskonto öffnet „QR-Prüfung“, scannt per Kamera oder gibt den Inhalt manuell ein. Angezeigte Angaben (Name, Klasse, Mail) dienen ausschließlich zum Abgleich mit den Schulunterlagen; vom Schüler selbst eingetragene Angaben sind für sich genommen kein Identitätsnachweis.
+4. Nur nach ausdrücklich bestätigtem Abgleich wird `school_verified_at` und der prüfende Admin im bestehenden Profil gespeichert.
+5. Name/Klasse eines verifizierten Schülerausweises sind danach serverseitig schreibgeschützt; das visuelle Design bleibt änderbar.
+6. Verifizierung **vergibt weder Admin- und Kassenrechte noch automatisch Stimmrecht oder Echtgeld**. Eine offizielle Schülerausweis-Freigabe ist gesondert erforderlich.
+
+**Sicherheitstest:** Rollenwechsel in einer SQL-Transaktion zeigte, dass normale Mitglieder keine QR-Codes anderer Personen prüfen dürfen; ein Admin kann einen gültigen Code anzeigen und bestätigen; nach Bestätigung ist die Ausweisidentität gegen Änderungen gesperrt. Vollständige Transaktion zurückgerollt, keine bestehenden Konten als verifiziert markiert.
+
+**Abnahme ausstehend:** Kameratest auf Android/iOS, tatsächliche Lehrkraft-/Adminprüfung vor Ort und Schulfreigabe des verwendeten Identitätsnachweises. Nur das vorhandene Admin-Konto kann derzeit prüfen; eine gesonderte Schulpersonal-Rolle wurde nicht vergeben.
