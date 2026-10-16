@@ -48,14 +48,15 @@ function futureISO(value){const t=new Date(value);if(!Number.isFinite(t.getTime(
 function iso(value){const t=new Date(value);if(!Number.isFinite(t.getTime()))throw Error("Datum nicht gültig.");return t.toISOString();}
 function topLink(){return headerActions(linkPage("Abstimmungen","votes")+linkPage("Konto und Zahlungen","wallet"));}
 function renderId(){
-const c=data[0],design=c?.design||"classic",name=c?.display_name||ctx.profile.display_name;
+const c=data[0],design=c?.design||"classic",name=c?.display_name||ctx.profile.display_name,verified=Boolean(ctx.profile.school_verified_at);
 return wrap(current,
  box("Mein digitaler Schülerausweis",'<div class="sas-id sas-id-'+escapeAttr(design)+'"><div class="sas-id-top"><strong>Schule als Staat</strong><span>PERSONALAUSWEIS</span></div><div><small>Mitglied · Selbstauskunft</small><h2>'+escapeHtml(name)+'</h2><p>Klasse '+escapeHtml(c?.class_label||"nicht angegeben")+'</p></div><span class="sas-id-bottom">ID · '+escapeHtml(ctx.user.id.slice(0,8).toUpperCase())+' · NICHT ALS IDENTITÄTSNACHWEIS GÜLTIG</span></div>'
- +msg("Diese Karte zeigt dein angemeldetes Konto. Für einen offiziell gültigen Schülerausweis sind eine Identitätsprüfung und Freigabe durch die Schule erforderlich.")
- +form("card",input("Name auf der Karte","display_name","text",'minlength="2" maxlength="80" value="'+escapeAttr(name)+'"')
-  +input("Klasse","class_label","text",'maxlength="24" value="'+escapeAttr(c?.class_label||"")+'"')
+ +msg(verified?"Deine Schulzugehörigkeit wurde vor Ort bestätigt. Ein offiziell gültiger Ausweis setzt weiterhin die Freigabe der Schule voraus.":"Noch nicht persönlich geprüft. Für einen offiziell gültigen Schülerausweis sind Identitätsprüfung und Schulfreigabe erforderlich.")
+ +form("card",input("Name auf der Karte","display_name","text",'minlength="2" maxlength="80" value="'+escapeAttr(name)+'" '+(verified?"readonly":"")')
+  +input("Klasse","class_label","text",'maxlength="24" value="'+escapeAttr(c?.class_label||"")+'" '+(verified?"readonly":"")')
   +'<label class="sas-field"><span>Ausweisdesign</span><select name="design">'+["classic","blue","forest","mono"].map(v=>'<option value="'+v+'"'+(v===design?' selected':'')+'>'+({"classic":"Klassisch","blue":"Blau","forest":"Grün","mono":"Monochrom"}[v])+'</option>').join("")+'</select></label>',"Ausweis speichern")),
- headerActions(linkPage("Design-Galerie","gallery")));
+ headerActions(linkPage("Design-Galerie","gallery"))+
+ box("QR-Codes auf deinem Schülerausweis",'<p class="sas-note">Verifizierung: Zeige deinen Ausweis vor Ort einer berechtigten Person. Anwesenheit: Nur bereits verifizierte Mitglieder können für einen Termin eingecheckt werden.</p><div class="verify-qr-actions">'+btn("Schulidentität prüfen lassen","id-school-qr")+btn("Anwesenheit zeigen","id-attendance-qr")+'</div><div id="student-id-qr-code" class="verify-qr-wrap" aria-live="polite"><span class="sas-note">Wähle eine der beiden QR-Funktionen.</span></div>'+msg("Die QR-Codes sind nur kurz gültig. Eine Lehrkraft oder eine berechtigte Aufsicht muss deinen Ausweis persönlich prüfen.")));
 }
 function renderGallery(){
  const currentDesign=data[0]?.design||"classic";
@@ -223,6 +224,21 @@ async function handle(action,id){
 const api=ctx.api,u=ctx.user.id;
 if(action==="navigate"){if(!pages[id]&&!["wallet","pay","register","votes"].includes(id))throw Error("Seite unbekannt.");await ctx.navigate(id);return;}
 if(action==="reload"){await refresh();return;}
+if(action==="id-school-qr"||action==="id-attendance-qr"){
+ const rpcName=action==="id-school-qr"?"create_school_verification_qr":"create_attendance_pass";
+ const response=await api.rpc(rpcName);
+ if(response.error)throw response.error;
+ const area=target.querySelector("#student-id-qr-code");
+ if(!area)throw Error("QR-Code-Bereich nicht gefunden.");
+ if(!window.QRCode)throw Error("QR-Code-Bibliothek konnte nicht geladen werden.");
+ area.replaceChildren();
+ new window.QRCode(area,{text:response.data,width:224,height:224,colorDark:"#20364f",colorLight:"#ffffff"});
+ const caption=document.createElement("p");caption.className="sas-note";
+ caption.textContent=action==="id-school-qr"?"Schulverifizierung: 10 Minuten gültig.":"Anwesenheitskontrolle: 2 Minuten gültig.";
+ area.append(caption);
+ feedback("Der QR-Code wurde erstellt. Zeige ihn einer berechtigten Person in der Schule.");
+ return;
+}
 if(action==="place-show"){const p=data.find(p=>p.id===id);if(p)feedback(p.name+" · "+p.floor_label+" · "+p.detail);return;}
 if(action==="job-open"){
  const slot=target.querySelector('#sas-job-form-slot');if(!slot)return;
@@ -267,7 +283,7 @@ here.addEventListener("click",async event=>{
  if(busy)return;
  if(b.dataset.featureAction==="navigate"){try{await handle("navigate",b.dataset.id||"");}catch(e){setError(e);}return;}
  busy=true;b.disabled=true;
- try{await handle(b.dataset.featureAction,b.dataset.id||"");if(!["navigate","place-show","job-open","reload"].includes(b.dataset.featureAction)){await refresh();feedback("Änderung gespeichert.");}}
+ try{await handle(b.dataset.featureAction,b.dataset.id||"");if(!["navigate","place-show","job-open","reload","id-school-qr","id-attendance-qr"].includes(b.dataset.featureAction)){await refresh();feedback("Änderung gespeichert.");}}
  catch(e){setError(e);}finally{busy=false;b.disabled=false;}
 });
 await refresh();
