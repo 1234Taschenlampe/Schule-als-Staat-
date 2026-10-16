@@ -4,7 +4,7 @@
   var cfg=window.NV_CONFIG||{}, root=document.getElementById("app"), toasts=document.getElementById("toast-root");
   var ready=Boolean(cfg.supabaseUrl&&cfg.supabaseAnonKey&&window.supabase&&window.supabase.createClient);
   var api=ready?window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey):null;
-  var state={user:null,profile:null,wallet:null,ledger:[],cash:[],requests:[],users:[],polls:[],pollResults:[],page:"home",active:null,invoice:null,scanner:null,scanning:false,busy:false,editing:false,recovering:/(?:^|[&#?])type=recovery(?:&|$)/.test(location.hash)};
+  var state={user:null,profile:null,wallet:null,ledger:[],cash:[],requests:[],users:[],polls:[],pollResults:[],schoolRoles:{operator:false,jobs:[]},page:"home",active:null,invoice:null,scanner:null,scanning:false,busy:false,editing:false,recovering:/(?:^|[&#?])type=recovery(?:&|$)/.test(location.hash)};
   var deepLink=new URLSearchParams(location.search).get("pay");
   var openPortalAfterLogin=false; // No old V3 demo portal; all live features are integrated.
   if(deepLink)state.page="pay";
@@ -12,11 +12,13 @@
   var navs=[["home","Übersicht"],["wallet","Mein Konto"],["pay","Bezahlen"],["register","Kasse"],["history","Verlauf"],["votes","Abstimmungen"],["settings","Einstellungen"]];
   if(window.SAS_FEATURES)navs.splice(navs.length-1,0,...window.SAS_FEATURES.navigation.map(function(n){return [n[0],n[1]];}));
   if(window.SAS_VERIFICATION)navs.splice(navs.length-1,0,["schoolverify","Schulverifizierung"],["verifyadmin","QR-Prüfung"]);
+  if(window.SAS_SCHOOL_ROLES)navs.splice(navs.length-1,0,["roles","Berufe & Rollen"]);
+  if(window.SAS_ATTENDANCE)navs.splice(navs.length-1,0,["attendance","Anwesenheitskontrolle"]);
   function esc(v){return String(v==null?"":v).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
   function cashFmt(v){return new Intl.NumberFormat("de-DE",{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(v||0)/100)+" "+esc(units);}
   function time(v){return new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeStyle:"short"}).format(new Date(v));}
   function adminOrCashier(){return state.profile&&["admin","cashier"].includes(state.profile.role);}
-  function roleLabel(){return {admin:"Administration",cashier:"Kassenpersonal",member:"Mitglied"}[state.profile&&state.profile.role]||"Mitglied";}
+  function roleLabel(){if(state.profile&&state.profile.role==="admin")return "Administration";if(state.schoolRoles?.operator)return "Operator";return {cashier:"Kassenpersonal",member:"Mitglied"}[state.profile&&state.profile.role]||"Mitglied";}
   function showToast(message,isError){
     toasts.querySelectorAll(".toast").forEach(function(t){t.remove();});
     var el=document.createElement("div");
@@ -75,9 +77,10 @@
     rows.forEach(function(row){if(row.error)throw row.error;});
     state.profile=rows[0].data;state.wallet=rows[1].data;state.ledger=rows[2].data||[];state.cash=rows[3].data||[];state.requests=rows[4].data||[];
     if(state.active)state.active=state.requests.find(function(x){return x.id===state.active.id;})||state.active;
+    state.schoolRoles=await rpc("my_school_roles",{})||{operator:false,jobs:[]};
     state.users=state.profile.role==="admin"?await rpc("admin_list_users",{}):[];
     state.polls=await rpc("poll_catalog",{});
-    state.pollResults=state.profile.role==="admin"?await rpc("admin_poll_results",{}):[];
+    state.pollResults=(state.profile.role==="admin"||state.schoolRoles?.operator)?await rpc("admin_poll_results",{}):[];
   }
   async function refresh(silent){
     if(!state.user||state.busy||state.scanning)return;
@@ -89,13 +92,20 @@
     ["Schulleben",["bulletin","blog","events","lost"]],
     ["Organisation",["map","rooms","shops","jobs"]],
     ["Staat & Mitbestimmung",["votes","laws","parties","courts"]],
-    ["Verwaltung",["register","verifyadmin","admin","settings"]]
+    ["Verwaltung",["register","verifyadmin","attendance","roles","admin","settings"]]
   ];
-  var descriptions={schoolverify:"QR-Code für die Prüfung vor Ort erstellen",verifyadmin:"Schüler vor Ort sicher bestätigen",home:"Dein persönlicher Überblick",idcard:"Deine persönliche Projektkarte",gallery:"Das passende Ausweisdesign wählen",visa:"Einreise beantragen und Status verfolgen",wallet:"Guthaben und Kontobewegungen",pay:"QR-Code scannen und Betrag prüfen",history:"Digitale Buchungen und Bargeld",bulletin:"Neuigkeiten aus unserem Schulstaat",blog:"Geschichten und Einblicke ins Projekt",events:"Termine entdecken und teilnehmen",lost:"Verlorenes suchen, Gefundenes melden",map:"Räume und Orte im Schulgebäude",rooms:"Räume für dein Vorhaben reservieren",shops:"Geschäfte und Kassen entdecken",jobs:"Aufgaben finden und sich bewerben",votes:"Gemeinsame Entscheidungen treffen",laws:"Regeln und Verordnungen nachlesen",parties:"Mitteilungen der Parteien",courts:"Öffentliche Gerichtsbekanntmachungen",register:"Verkäufe und QR-Zahlungen erfassen",admin:"Guthaben, Rollen und Stimmrecht verwalten",settings:"Profil, Passwort und Geräte"};
-  var iconPaths={schoolverify:'M4 4h6v6H4z M14 4h6v6h-6z M4 14h6v6H4z M15 15h2 M20 16v4 M15 20h5',verifyadmin:'M4 8V4h4 M16 4h4v4 M20 16v4h-4 M8 20H4v-4 M8 10h3v3H8z M14 10h2 M14 14h3 M8 16h3',home:'M3 10l9-7 9 7v11H3z M9 21v-8h6v8',idcard:'M3 5h18v14H3z M7 9h3v4H7z M14 9h4 M14 13h4 M7 16h11',gallery:'M4 4h16v16H4z M8 8h3v3H8z M4 16l5-4 4 3 3-2 4 3',visa:'M6 3h12v18H6z M9 7h6 M9 11h6 M9 15h3',wallet:'M3 6h17v14H3z M3 6V4h14 M15 11h6v5h-6z',pay:'M4 8V4h4 M16 4h4v4 M20 16v4h-4 M8 20H4v-4 M8 10h3v3H8z M14 10h2 M14 14h3 M8 16h3',history:'M3 11a9 9 0 1 1 2 7 M3 4v7h7 M12 7v5l3 2',bulletin:'M4 5h16v14H4z M8 9h8 M8 13h5 M8 19v3 M16 19v3',blog:'M5 3h14v18H5z M8 7h8 M8 11h8 M8 15h5',events:'M4 5h16v16H4z M8 3v4 M16 3v4 M4 10h16 M8 14h2 M14 14h2',lost:'M10 17a7 7 0 1 0 0-14 7 7 0 0 0 0 14 M15 15l6 6 M7 10h6 M10 7v6',map:'M3 5l6-2 6 2 6-2v16l-6 2-6-2-6 2z M9 3v16 M15 5v16',rooms:'M5 3h14v18H5z M9 3v18 M14 12h1',shops:'M3 9l2-6h14l2 6 M3 9v3h18V9 M5 12v9h14v-9 M9 21v-6h6v6',jobs:'M3 7h18v14H3z M8 7V3h8v4 M3 12h18 M10 12v3h4v-3',votes:'M5 4h14v17H5z M8 8l2 2 5-5 M8 14h8 M8 17h5',laws:'M4 4h7v16H4z M13 4h7v16h-7z M7 8h1 M16 8h1',parties:'M8 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8 M2 21v-3a6 6 0 0 1 12 0v3 M16 4a4 4 0 0 1 0 8 M17 15a5 5 0 0 1 5 5',courts:'M12 3v18 M5 21h14 M4 6h16 M5 6l-3 8h6z M19 6l-3 8h6z',register:'M5 3h14v18H5z M8 6h8v4H8z M8 14h2 M14 14h2 M8 17h2 M14 17h2',settings:'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8 M12 2v3 M12 19v3 M2 12h3 M19 12h3 M5 5l2 2 M17 17l2 2 M5 19l2-2 M17 7l2-2',admin:'M12 3l8 3v6c0 5-8 9-8 9S4 17 4 12V6z M9 12l2 2 4-4',apps:'M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z',search:'M10 17a7 7 0 1 0 0-14 7 7 0 0 0 0 14 M15 15l6 6'};
+  var descriptions={roles:"Schulberufe und Operatorrechte vergeben",attendance:"Anwesenheit per Schülerausweis scannen",schoolverify:"QR-Code für die Prüfung vor Ort erstellen",verifyadmin:"Schüler vor Ort sicher bestätigen",home:"Dein persönlicher Überblick",idcard:"Deine persönliche Projektkarte",gallery:"Das passende Ausweisdesign wählen",visa:"Einreise beantragen und Status verfolgen",wallet:"Guthaben und Kontobewegungen",pay:"QR-Code scannen und Betrag prüfen",history:"Digitale Buchungen und Bargeld",bulletin:"Neuigkeiten aus unserem Schulstaat",blog:"Geschichten und Einblicke ins Projekt",events:"Termine entdecken und teilnehmen",lost:"Verlorenes suchen, Gefundenes melden",map:"Räume und Orte im Schulgebäude",rooms:"Räume für dein Vorhaben reservieren",shops:"Geschäfte und Kassen entdecken",jobs:"Aufgaben finden und sich bewerben",votes:"Gemeinsame Entscheidungen treffen",laws:"Regeln und Verordnungen nachlesen",parties:"Mitteilungen der Parteien",courts:"Öffentliche Gerichtsbekanntmachungen",register:"Verkäufe und QR-Zahlungen erfassen",admin:"Guthaben, Rollen und Stimmrecht verwalten",settings:"Profil, Passwort und Geräte"};
+  var iconPaths={roles:'M4 6h16 M4 12h16 M4 18h16 M6 8h3 M6 14h3',attendance:'M3 8V4h5 M16 4h5v4 M21 16v5h-5 M8 21H3v-5 M9 12l2 2 4-4',schoolverify:'M4 4h6v6H4z M14 4h6v6h-6z M4 14h6v6H4z M15 15h2 M20 16v4 M15 20h5',verifyadmin:'M4 8V4h4 M16 4h4v4 M20 16v4h-4 M8 20H4v-4 M8 10h3v3H8z M14 10h2 M14 14h3 M8 16h3',home:'M3 10l9-7 9 7v11H3z M9 21v-8h6v8',idcard:'M3 5h18v14H3z M7 9h3v4H7z M14 9h4 M14 13h4 M7 16h11',gallery:'M4 4h16v16H4z M8 8h3v3H8z M4 16l5-4 4 3 3-2 4 3',visa:'M6 3h12v18H6z M9 7h6 M9 11h6 M9 15h3',wallet:'M3 6h17v14H3z M3 6V4h14 M15 11h6v5h-6z',pay:'M4 8V4h4 M16 4h4v4 M20 16v4h-4 M8 20H4v-4 M8 10h3v3H8z M14 10h2 M14 14h3 M8 16h3',history:'M3 11a9 9 0 1 1 2 7 M3 4v7h7 M12 7v5l3 2',bulletin:'M4 5h16v14H4z M8 9h8 M8 13h5 M8 19v3 M16 19v3',blog:'M5 3h14v18H5z M8 7h8 M8 11h8 M8 15h5',events:'M4 5h16v16H4z M8 3v4 M16 3v4 M4 10h16 M8 14h2 M14 14h2',lost:'M10 17a7 7 0 1 0 0-14 7 7 0 0 0 0 14 M15 15l6 6 M7 10h6 M10 7v6',map:'M3 5l6-2 6 2 6-2v16l-6 2-6-2-6 2z M9 3v16 M15 5v16',rooms:'M5 3h14v18H5z M9 3v18 M14 12h1',shops:'M3 9l2-6h14l2 6 M3 9v3h18V9 M5 12v9h14v-9 M9 21v-6h6v6',jobs:'M3 7h18v14H3z M8 7V3h8v4 M3 12h18 M10 12v3h4v-3',votes:'M5 4h14v17H5z M8 8l2 2 5-5 M8 14h8 M8 17h5',laws:'M4 4h7v16H4z M13 4h7v16h-7z M7 8h1 M16 8h1',parties:'M8 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8 M2 21v-3a6 6 0 0 1 12 0v3 M16 4a4 4 0 0 1 0 8 M17 15a5 5 0 0 1 5 5',courts:'M12 3v18 M5 21h14 M4 6h16 M5 6l-3 8h6z M19 6l-3 8h6z',register:'M5 3h14v18H5z M8 6h8v4H8z M8 14h2 M14 14h2 M8 17h2 M14 17h2',settings:'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8 M12 2v3 M12 19v3 M2 12h3 M19 12h3 M5 5l2 2 M17 17l2 2 M5 19l2-2 M17 7l2-2',admin:'M12 3l8 3v6c0 5-8 9-8 9S4 17 4 12V6z M9 12l2 2 4-4',apps:'M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z',search:'M10 17a7 7 0 1 0 0-14 7 7 0 0 0 0 14 M15 15l6 6'};
   navs.push(["apps","Portal"],["admin","Administration"]);
   function icon(id){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+(iconPaths[id]||iconPaths.apps)+'"/></svg>';}
-  function allowed(id){return (id!=="register"||adminOrCashier())&&(!["admin","verifyadmin"].includes(id)||state.profile&&state.profile.role==="admin");}
+  function allowed(id){
+    var administrator=state.profile&&state.profile.role==="admin";
+    var operator=Boolean(state.schoolRoles?.operator);
+    return (id!=="register"||adminOrCashier())&&
+      (id!=="admin"||administrator)&&
+      (!["verifyadmin","roles"].includes(id)||administrator||operator)&&
+      (id!=="attendance"||administrator||operator||state.schoolRoles?.can_check_attendance);
+  }
   function label(id){return (navs.find(function(n){return n[0]===id;})||[id,id])[1];}
   function navButton(id,mobile){return '<button type="button" class="'+(mobile?'bottom-button':'nav-button')+(state.page===id?' active':'')+'" data-nav="'+id+'"'+(state.page===id?' aria-current="page"':'')+'>'+icon(id)+'<span>'+esc(mobile?({home:"Start",apps:"Portal",pay:"Bezahlen",votes:"Abstimmen",settings:"Profil"}[id]||label(id)):label(id))+'</span></button>';}
   function nav(isMobile){
@@ -174,7 +184,7 @@
   function votesPage(){
     var polls=state.polls||[];
     var enabled=Boolean(state.profile.vote_eligible);
-    var admin=state.profile.role==="admin";
+    var admin=state.profile.role==="admin"||Boolean(state.schoolRoles?.operator);
     var notice=enabled?"":info("Für eine gültige Stimme muss die Schule dein Benutzerkonto zuerst freischalten. So werden unberechtigte Mehrfachkonten begrenzt.",true);
     var blocks=polls.map(function(p){
       var open=p.status==="open", voted=p.has_voted;
@@ -198,7 +208,7 @@
         }).join("");
         return '<section class="card"><div class="card-header"><h2>'+esc(p.title)+'</h2><span class="pill '+(p.status==="open"?"blue":"")+'">'+(p.status==="open"?"Live":"Beendet")+'</span></div><p class="details">'+total+' abgegebene Stimme'+(total===1?"":"n")+'</p>'+data+'<div class="poll-footer">'+(p.status==="open"?'<button type="button" class="btn" data-action="close-poll" data-poll-id="'+esc(p.id)+'">Abstimmung schließen</button>':"")+'</div></section>';
       }).join("");
-      adminResults='<h2 class="section-title">Live-Auswertung · nur Administration</h2><p class="details">Aggregierte Stimmen, automatische Aktualisierung etwa alle 6 Sekunden. Keine einzelnen Stimmzettel werden hier angezeigt.</p><div class="grid two">'+(cards||empty("Noch keine Abstimmungen vorhanden."))+'</div>'+
+      adminResults='<h2 class="section-title">Live-Auswertung · Verwaltung</h2><p class="details">Aggregierte Stimmen, automatische Aktualisierung etwa alle 6 Sekunden. Keine einzelnen Stimmzettel werden hier angezeigt.</p><div class="grid two">'+(cards||empty("Noch keine Abstimmungen vorhanden."))+'</div>'+
         '<h2 class="section-title">Neue Abstimmung erstellen</h2><section class="card"><form id="poll-create"><div class="form-group"><label for="poll-title">Frage oder Abstimmungstitel</label><input class="field" id="poll-title" name="title" maxlength="160" required placeholder="Wie soll unser Schulstaat heißen?"></div><div class="form-group"><label for="poll-description">Beschreibung (optional)</label><input class="field" id="poll-description" name="description" maxlength="500" placeholder="Wähle deinen Favoriten."></div><div class="form-group"><label for="poll-options">Antwortmöglichkeiten · eine pro Zeile (2–10)</label><textarea class="field poll-textarea" id="poll-options" name="options" rows="5" required placeholder="Vorschlag A&#10;Vorschlag B&#10;Vorschlag C"></textarea><p class="field-help">Die Antwortmöglichkeiten stehen nach Veröffentlichung fest. Bitte vorab prüfen.</p></div><button type="submit" class="btn primary">Abstimmung veröffentlichen</button></form></section>';
     }
     return header("MITBESTIMMUNG","Abstimmungen.","Der Name unseres Schulstaats steht noch nicht fest. Darüber und über weitere Entscheidungen stimmen wir gemeinsam ab.")+
@@ -210,6 +220,7 @@
     var approvePanel=state.profile.role==="admin"?'<h2 class="section-title">Stimmberechtigungen</h2><section class="card"><h2>Teilnahme freischalten</h2><p class="details" style="margin-top:12px">Prüfe vor Freigabe anhand der Schulunterlagen, dass genau eine Person hinter dem Benutzerkonto steht.</p><form id="vote-permission-form"><div class="form-group"><label for="vote-user">Nutzer</label><select class="field" id="vote-user" name="user_id" required>'+(state.users||[]).map(function(u){return '<option value="'+esc(u.id)+'">'+esc(u.name)+' · '+esc(u.email||"ohne E-Mail")+(u.vote_eligible?" · freigegeben":" · gesperrt")+'</option>';}).join("")+'</select></div><div class="form-group"><label for="vote-permission">Stimmrecht</label><select class="field" id="vote-permission" name="enabled"><option value="true">Freigeben</option><option value="false">Sperren</option></select></div><button type="submit" class="btn dark">Berechtigung speichern</button></form><p class="field-help">Eine nachträgliche Sperre löscht keine bereits abgegebenen Stimmen.</p></section>':"";
     if(state.page==="admin")return header("VERWALTUNG","Administration.","Guthaben, Rollen und Stimmrecht für unseren Schulstaat verwalten.")+adminPanel+approvePanel;
     return header(state.page==="admin"?"VERWALTUNG":"MEIN BEREICH",state.page==="admin"?"Administration.":"Einstellungen.",state.page==="admin"?"Berechtigungen und Guthaben für unseren Schulstaat verwalten.":"Dein Profil, dein Passwort und deine Geräte.")+
+      '<section class="card"><div class="card-header"><h2>Die Webseite kennenlernen</h2><span class="pill blue">Interaktiv</span></div><p class="details">Für neue Schüler: In sechs kurzen Übungen lernst du die wichtigsten Bereiche kennen und tippst die Antworten selbst ein.</p><button class="btn" type="button" data-action="restart-tutorial">Einführung starten oder wiederholen</button></section>'+ 
       '<div class="grid two"><section class="card"><h2>Benutzerkonto</h2><div class="divider"></div><div class="settings-row"><div><strong>Name</strong><p>'+esc(state.profile.display_name)+'</p></div></div><div class="settings-row"><div><strong>E-Mail</strong><p>'+esc(state.user.email)+'</p></div></div><div class="settings-row"><div><strong>Rolle</strong><p>'+roleLabel()+'</p></div></div><div class="divider"></div>'+btn("Abmelden","logout","")+'</section><section class="card"><h2>Kameraberechtigung</h2><div class="divider"></div><p class="details">HTTPS-Status: '+(window.isSecureContext?"Sicherer Kontext":"Unsicherer Kontext")+'. Kamera wird nur auf deinen Wunsch aktiviert und niemals aufgezeichnet.</p>'+btn("Kamerazugriff testen","camera-test")+'<div class="divider"></div><p class="details">Kontoeinheit: '+esc(units)+'. Kein Bank- oder Echtgeldsystem.</p></section></div>'+'<section class="card" style="margin-top:20px"><h2>Passwort ändern</h2><p class="field-help">Wähle ein individuelles, mindestens 12 Zeichen langes Passwort. Deine aktuelle Anmeldung muss gültig sein.</p><form id="password-change-form"><div class="form-group"><label for="change-pw">Neues Passwort</label><input class="field" type="password" autocomplete="new-password" id="change-pw" name="password" minlength="12" required></div><div class="form-group"><label for="change-pw-repeat">Passwort wiederholen</label><input class="field" type="password" autocomplete="new-password" id="change-pw-repeat" name="repeat" minlength="12" required></div><button type="submit" class="btn dark">Passwort aktualisieren</button></form></section>'+(state.page==="admin"?adminPanel+approvePanel:"");
   }
   function passwordRecoveryView(){
@@ -226,6 +237,18 @@
       if(!allowed(state.page)){state.page="home";mount(dashboard());return;}
       mount('<div id="sas-school-verification" role="region" aria-label="'+esc(window.SAS_VERIFICATION.pages[state.page])+'"></div>');
       window.SAS_VERIFICATION.show({api:api,user:state.user,profile:state.profile,page:state.page,target:document.getElementById("sas-school-verification")}).catch(fail);
+      return;
+    }
+    if(state.page==="roles"&&window.SAS_SCHOOL_ROLES){
+      if(!allowed("roles")){state.page="home";mount(dashboard());return;}
+      mount('<div id="school-roles-root"></div>');
+      window.SAS_SCHOOL_ROLES.show({api:api,profile:state.profile,schoolRoles:state.schoolRoles,target:document.getElementById("school-roles-root")}).catch(fail);
+      return;
+    }
+    if(state.page==="attendance"&&window.SAS_ATTENDANCE){
+      if(!allowed("attendance")){state.page="home";mount(dashboard());return;}
+      mount('<div id="school-attendance-root"></div>');
+      window.SAS_ATTENDANCE.show({api:api,profile:state.profile,schoolRoles:state.schoolRoles,target:document.getElementById("school-attendance-root")}).catch(fail);
       return;
     }
     if(window.SAS_FEATURES&&window.SAS_FEATURES.pages[state.page]){
@@ -309,8 +332,9 @@
       if(id==="close-search"){document.getElementById("portal-search").close();return;}
       if(id.indexOf("to-")===0)return await navigate(id.slice(3));
       if(id==="camera-test")return await cameraTest();
+      if(id==="restart-tutorial"&&window.SAS_TUTORIAL)return await window.SAS_TUTORIAL.reopen(api,state.user.id);
       if(id==="close-poll"){
-        if(!state.profile||state.profile.role!=="admin")throw Error("Keine Administratorberechtigung");
+        if(!state.profile||(state.profile.role!=="admin"&&!state.schoolRoles?.operator))throw Error("Keine Verwaltungsberechtigung");
         if(!window.confirm("Diese Abstimmung wirklich schließen? Danach sind keine Stimmen mehr möglich."))return;
         state.busy=true;
         await rpc("admin_close_poll",{p_poll_id:pollId});
@@ -320,7 +344,7 @@
       if(id==="scan-stop"){await stopScanner();render();return;}
       if(id==="cancel"){state.invoice=null;render();return;}
       if(id==="reload"){await refresh();showToast("Aktualisiert.");return;}
-      if(id==="logout"){await stopScanner();if(window.SAS_VERIFICATION)await window.SAS_VERIFICATION.stop();var o=await api.auth.signOut();if(o.error)throw o.error;return;}
+      if(id==="logout"){if(window.SAS_TUTORIAL)window.SAS_TUTORIAL.logout();await stopScanner();if(window.SAS_VERIFICATION)await window.SAS_VERIFICATION.stop();var o=await api.auth.signOut();if(o.error)throw o.error;return;}
       if(id==="copy"&&state.active){await navigator.clipboard.writeText(paymentURL(state.active.id));showToast("Zahlungslink kopiert.");return;}
       if(id==="confirm"&&state.invoice){
         state.busy=true;
@@ -418,7 +442,7 @@
         await fetchData();render();showToast("Deine Stimme wurde gezählt.");
       }
       if(form.id==="poll-create"){
-        if(state.profile.role!=="admin")throw Error("Keine Administratorberechtigung.");
+        if(state.profile.role!=="admin"&&!state.schoolRoles?.operator)throw Error("Keine Verwaltungsberechtigung.");
         var choices=String(data.get("options")||"").split(/\r?\n/).map(function(x){return x.trim();}).filter(Boolean);
         await rpc("admin_create_poll",{p_title:String(data.get("title")||"").trim(),p_description:String(data.get("description")||"").trim(),p_options:choices});
         await fetchData();render();showToast("Abstimmung veröffentlicht.");
@@ -483,6 +507,7 @@
     if(state.user){await claimDesignatedAdmin();await fetchData();}
 
     render();
+    if(state.user&&window.SAS_TUTORIAL)void window.SAS_TUTORIAL.start(api,state.user.id);
     if(deepLink&&state.user){try{await openInvoice(deepLink);}catch(e){fail(e);}}
     api.auth.onAuthStateChange(function(event,session){
       var next=session&&session.user||null;
@@ -493,9 +518,10 @@
         return;
       }
       if(next&&state.user&&next.id===state.user.id)return;
-      state.user=next;state.profile=null;state.wallet=null;state.ledger=[];state.cash=[];state.requests=[];state.users=[];state.polls=[];state.pollResults=[];state.active=null;state.invoice=null;
+      state.user=next;state.profile=null;state.wallet=null;state.ledger=[];state.cash=[];state.requests=[];state.users=[];state.polls=[];state.pollResults=[];state.schoolRoles={operator:false,jobs:[]};state.active=null;state.invoice=null;
+      if(window.SAS_TUTORIAL)window.SAS_TUTORIAL.logout();
       void stopScanner().then(async function(){
-        try{if(state.user){await claimDesignatedAdmin();await fetchData();}render();if(deepLink&&state.user)await openInvoice(deepLink);}
+        try{if(state.user){await claimDesignatedAdmin();await fetchData();}render();if(state.user&&window.SAS_TUTORIAL)void window.SAS_TUTORIAL.start(api,state.user.id);if(deepLink&&state.user)await openInvoice(deepLink);}
         catch(e){fail(e);render();}
       });
     });
