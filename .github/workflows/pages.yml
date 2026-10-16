@@ -1,4 +1,4 @@
-name: Publish V4 to GitHub Pages
+name: Redirect former GitHub Pages site to Cloudflare
 
 on:
   push:
@@ -28,9 +28,31 @@ jobs:
       - name: Verify JavaScript
         run: |
           node --check app.js
+          node --check features.js
           node --check config.js
-      - name: Prepare public files only
-        run: sh scripts/build-static.sh
+      - name: Publish redirect to canonical Cloudflare site
+        run: |
+          mkdir -p _site
+          cat > _site/index.html <<'HTML'
+          <!doctype html>
+          <html lang="de">
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width,initial-scale=1">
+            <meta name="robots" content="noindex,follow">
+            <meta http-equiv="refresh" content="0;url=https://schule-als-staat.schule-als-staat-jfe.workers.dev/">
+            <link rel="canonical" href="https://schule-als-staat.schule-als-staat-jfe.workers.dev/">
+            <title>Schule als Staat – Neue Adresse</title>
+            <script>
+              location.replace("https://schule-als-staat.schule-als-staat-jfe.workers.dev/"+location.search+location.hash);
+            </script>
+          </head>
+          <body><p>Du wirst zur offiziellen Seite weitergeleitet:
+            <a href="https://schule-als-staat.schule-als-staat-jfe.workers.dev/">Schule als Staat öffnen</a>.</p></body>
+          </html>
+          HTML
+          touch _site/.nojekyll
+          test -s _site/index.html
       - name: Upload static site
         uses: actions/upload-pages-artifact@v4
         with:
