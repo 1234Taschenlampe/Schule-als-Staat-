@@ -99,7 +99,17 @@ async function show(context){
      if(action==="stop"){await stop();feedback("Kamera gestoppt.");}
      else if(action==="scan")await scanCamera();
      else if(action==="select"){await stop();selected=id;paint();}
-     else if(action==="details"){feedback("Der aktuelle Zähler steht direkt an der Liste. Einzelne Schülerdaten sind nicht öffentlich sichtbar.");}
+     else if(action==="details"){
+       const students=await rpc("attendance_session_roster",{p_session_id:id});
+       const area=host?.querySelector("#attendance-result");
+       if(area){
+         const list=Array.isArray(students)?students:[];
+         area.innerHTML='<div class="sas-item"><h3>Anwesenheitsliste · '+list.length+' Personen</h3>'+
+           (list.length?'<div class="sas-list">'+list.map((p,i)=>'<div class="sas-item"><strong>'+(i+1)+'. '+escape(p.display_name)+'</strong> · '+escape(p.class_label||"Klasse offen")+'<p>'+escape(new Date(p.scanned_at).toLocaleString("de-DE",{dateStyle:"short",timeStyle:"short"}))+'</p></div>').join("")+'</div>':'<p>Es sind noch keine Schüler eingetragen.</p>')+'</div>';
+         area.scrollIntoView({behavior:"smooth",block:"nearest"});
+       }
+       feedback("Teilnehmerliste geladen. Nur berechtigtes Schulpersonal kann sie einsehen.");
+     }
      else if(action==="close"){
        if(!confirm("Diese Anwesenheitsliste schließen? Danach sind keine neuen Scans mehr möglich."))return;
        await rpc("close_attendance_session",{p_session_id:id});
