@@ -293,7 +293,7 @@
         if(response.error)throw response.error;
       }
       if(form.id==="login-form"){
-        var result=await api.auth.signInWithOtp({email:String(data.get("email")||"").trim(),options:{emailRedirectTo:location.origin+location.pathname+location.search}});
+        var result=await api.auth.signInWithOtp({email:String(data.get("email")||"").trim(),options:{emailRedirectTo:location.origin+location.pathname+location.search,shouldCreateUser:false}});
         if(result.error)throw result.error;
         showToast("Bitte E-Mail prüfen und den Anmeldelink öffnen.");
       }
