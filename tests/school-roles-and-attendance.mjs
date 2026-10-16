@@ -49,7 +49,7 @@ test("operator can assign only lower roles in the rendered roles interface",asyn
  assert.match(fake.innerHTML,/Schüler finden/);
  const target={innerHTML:"",dataset:{},addEventListener:()=>{},querySelector:()=>null};
  await tool.show({api,profile:{role:"member"},schoolRoles:{operator:false},target});
- assert.match(target.innerHTML,/fehlen dir die Rechte/);
+ assert.match(target.textContent,/fehlen dir die Rechte/);
 });
 
 test("attendance permits only authorized checkers and uses server-side one-time passes",async()=>{
