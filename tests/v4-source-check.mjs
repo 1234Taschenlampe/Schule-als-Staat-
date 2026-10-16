@@ -45,4 +45,4 @@ console.log("V4 source and security invariants checked. (Not an integration or b
 
 const { demoIdentities } = await import("./fictional-identities.mjs");
 assert.equal(demoIdentities.length,3);
-for(const person of demoIdentities){assert.match(person.email, /@example\\.test$/);}
+for(const person of demoIdentities){assert.match(person.email, /@example\.test$/);}
