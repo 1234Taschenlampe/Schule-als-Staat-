@@ -25,6 +25,11 @@
     return c;
   }
   async function rpc(name,params){if(!api)throw Error("Backend nicht verbunden");var r=await api.rpc(name,params);if(r.error)throw r.error;return r.data;}
+  async function claimDesignatedAdmin(){
+    // Only the database checks a confirmed email on the authenticated auth.users row.
+    // Any user may invoke the RPC; it grants admin ONLY to the pre-approved verified identity.
+    return rpc("claim_initial_admin",{});
+  }
   async function fetchData(){
     if(!state.user)return;
     var id=state.user.id;
@@ -65,7 +70,7 @@
     root.innerHTML='<div class="app-shell"><aside class="sidebar"><div class="brand"><div class="brand-mark">S/S</div><div><div class="brand-name">Schule als Staat</div><div class="brand-sub">SCHULE ALS STAAT</div></div></div><div class="sidebar-foot"><span class="status"><i class="dot"></i> Backend nicht verbunden</span></div></aside><div class="main-area"><header class="topbar"><div>Schule als Staat / Einrichtung</div><span class="pill">V4</span></header><main class="content">'+header("PROJEKTSTATUS","V4 ist vorbereitet.","Die Anwendung braucht für mehrere Geräte eine sichere Datenbankverbindung.")+'<div class="grid two"><section class="card"><h2>Produktivsystem einrichten</h2><div class="divider"></div><p class="details">1. Supabase-Projekt anlegen.<br>2. Datei supabase/schema.sql ausführen.<br>3. Projekt-URL und Publishable Key in config.js eintragen.<br>4. E-Mail-Login und Redirect-URL konfigurieren.<br>5. Benutzerrollen vergeben und Testzahlung durchführen.</p>'+info("Ohne Backend werden bewusst keine erfolgreichen Zahlungen oder Kontostände vorgetäuscht.",true)+'<a class="btn primary" target="_blank" rel="noopener noreferrer" href="https://supabase.com/dashboard">Supabase öffnen</a></section><section class="card"><h2>Kamera-Diagnose</h2><div class="divider"></div><p class="details">Die Kameraberechtigung wird nur nach deiner Aktion angefragt. Test-Video wird nicht gespeichert.</p>'+btn("Kamerazugriff testen","camera-test")+'<p class="field-help">Für Smartphone-Kameras wird eine direkte HTTPS-Seite benötigt.</p></section></div></main></div></div>';
   }
   function login(){
-    root.innerHTML='<div class="welcome"><section class="welcome-left"><div class="brand" style="padding:0"><div class="brand-mark">S/S</div><div><div class="brand-name" style="color:white">Schule als Staat</div><div class="brand-sub" style="color:#b6c7df">SCHULE ALS STAAT</div></div></div><div><div class="eyebrow" style="color:#97adc9">DIGITALER ZAHLUNGSVERKEHR</div><div class="welcome-hero">Eine Stadt.<br>Ein System.<br><span>Alles im Blick.</span></div><p class="welcome-sub">Kassen, QR-Zahlungen und digitale Guthaben – übersichtlich und sicher.</p></div><div class="small" style="color:#8fa4c1">Schule als Staat · V4</div><a href="https://www.instagram.com/schule.als.staat_rng/" class="project-social" target="_blank" rel="noopener noreferrer" aria-label="Schule als Staat auf Instagram öffnen">Instagram · @schule.als.staat_rng ↗</a></section><section class="welcome-side"><div class="login-box">'+header("WILLKOMMEN","Jetzt anmelden.","Melde dich mit deinem von der Schule eingerichteten Konto an.")+'<form id="password-login-form"><div class="form-group"><label for="account-email">E-Mail-Adresse</label><input class="field" type="email" autocomplete="username" name="email" id="account-email" placeholder="name@schule.de" required></div><div class="form-group"><label for="account-password">Passwort</label><input class="field" type="password" autocomplete="current-password" name="password" id="account-password" minlength="6" required></div><button type="submit" class="btn primary full">Mit Passwort anmelden</button></form><details class="alternate-auth"><summary>Stattdessen per E-Mail-Link anmelden</summary><p class="field-help">E-Mail-Links können beim kostenlosen Supabase-Versand wegen des Versandlimits zeitweise nicht verfügbar sein.</p><form id="login-form"><div class="form-group"><label for="magic-email">E-Mail-Adresse</label><input class="field" type="email" autocomplete="email" name="email" id="magic-email" placeholder="name@schule.de" required></div><button type="submit" class="btn dark full">Anmeldelink senden</button></form></details><p class="login-footer">Nur für berechtigte Teilnehmer. Gib dein Passwort niemals an andere weiter. Guthaben stellt kein Echtgeld dar.</p></div></section></div>';
+    root.innerHTML='<div class="welcome"><section class="welcome-left"><div class="brand" style="padding:0"><div class="brand-mark">S/S</div><div><div class="brand-name" style="color:white">Schule als Staat</div><div class="brand-sub" style="color:#b6c7df">SCHULE ALS STAAT</div></div></div><div><div class="eyebrow" style="color:#97adc9">DIGITALER ZAHLUNGSVERKEHR</div><div class="welcome-hero">Eine Stadt.<br>Ein System.<br><span>Alles im Blick.</span></div><p class="welcome-sub">Kassen, QR-Zahlungen und digitale Guthaben – übersichtlich und sicher.</p></div><div class="small" style="color:#8fa4c1">Schule als Staat · V4</div><a href="https://www.instagram.com/schule.als.staat_rng/" class="project-social" target="_blank" rel="noopener noreferrer" aria-label="Schule als Staat auf Instagram öffnen">Instagram · @schule.als.staat_rng ↗</a></section><section class="welcome-side"><div class="login-box">'+header("WILLKOMMEN","Jetzt anmelden.","Melde dich mit deinem von der Schule eingerichteten Konto an.")+'<form id="password-login-form"><div class="form-group"><label for="account-email">E-Mail-Adresse</label><input class="field" type="email" autocomplete="username" name="email" id="account-email" placeholder="name@schule.de" required></div><div class="form-group"><label for="account-password">Passwort</label><input class="field" type="password" autocomplete="current-password" name="password" id="account-password" minlength="6" required></div><button type="submit" class="btn primary full">Mit Passwort anmelden</button></form><details class="alternate-auth"><summary>Neues Konto mit Passwort erstellen</summary><p class="field-help">Zur Aktivierung wird einmalig eine Bestätigungs-E-Mail verschickt. Abstimmungen und Kassenzugriff erfordern anschließend die Freigabe durch die Schule.</p><form id="signup-form"><div class="form-group"><label for="signup-email">E-Mail-Adresse</label><input class="field" type="email" autocomplete="email" name="email" id="signup-email" placeholder="name@schule.de" required></div><div class="form-group"><label for="signup-password">Neues Passwort (mindestens 12 Zeichen)</label><input class="field" type="password" autocomplete="new-password" name="password" id="signup-password" minlength="12" required></div><div class="form-group"><label for="signup-repeat">Passwort wiederholen</label><input class="field" type="password" autocomplete="new-password" name="repeat" id="signup-repeat" minlength="12" required></div><button type="submit" class="btn dark full">Konto erstellen</button></form></details><details class="alternate-auth"><summary>Stattdessen per E-Mail-Link anmelden</summary><p class="field-help">E-Mail-Links können beim kostenlosen Supabase-Versand wegen des Versandlimits zeitweise nicht verfügbar sein.</p><form id="login-form"><div class="form-group"><label for="magic-email">E-Mail-Adresse</label><input class="field" type="email" autocomplete="email" name="email" id="magic-email" placeholder="name@schule.de" required></div><button type="submit" class="btn dark full">Anmeldelink senden</button></form></details><p class="login-footer">Nur für berechtigte Teilnehmer. Gib dein Passwort niemals an andere weiter. Guthaben stellt kein Echtgeld dar.</p></div></section></div>';
   }
   function empty(label){return '<div class="empty">'+label+'</div>';}
   function ledgerRow(x){
@@ -271,6 +276,15 @@
     var data=new FormData(form), submit=form.querySelector('[type="submit"]');
     if(submit)submit.disabled=true;
     try{
+      if(form.id==="signup-form"){
+        var newEmail=String(data.get("email")||"").trim();
+        var newPass=String(data.get("password")||"");
+        if(newPass.length<12)throw Error("Bitte mindestens 12 Zeichen als Passwort verwenden.");
+        if(newPass!==String(data.get("repeat")||""))throw Error("Die Passwörter stimmen nicht überein.");
+        var created=await api.auth.signUp({email:newEmail,password:newPass,options:{emailRedirectTo:location.origin+location.pathname}});
+        if(created.error)throw created.error;
+        showToast("Kontoanfrage übermittelt. Prüfe deine E-Mails und bestätige die Adresse, bevor du dich anmeldest.");
+      }
       if(form.id==="password-login-form"){
         var response=await api.auth.signInWithPassword({
           email:String(data.get("email")||"").trim(),
@@ -345,7 +359,7 @@
     var session=await api.auth.getSession();
     if(session.error)throw session.error;
     state.user=session.data.session&&session.data.session.user||null;
-    if(state.user)await fetchData();
+    if(state.user){await claimDesignatedAdmin();await fetchData();}
     render();
     if(deepLink&&state.user){try{await openInvoice(deepLink);}catch(e){fail(e);}}
     api.auth.onAuthStateChange(function(event,session){
@@ -353,7 +367,7 @@
       if(next&&state.user&&next.id===state.user.id)return;
       state.user=next;state.profile=null;state.wallet=null;state.ledger=[];state.cash=[];state.requests=[];state.users=[];state.polls=[];state.pollResults=[];state.active=null;state.invoice=null;
       void stopScanner().then(async function(){
-        try{if(state.user)await fetchData();render();if(deepLink&&state.user)await openInvoice(deepLink);}
+        try{if(state.user){await claimDesignatedAdmin();await fetchData();}render();if(deepLink&&state.user)await openInvoice(deepLink);}
         catch(e){fail(e);render();}
       });
     });
