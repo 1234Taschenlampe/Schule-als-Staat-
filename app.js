@@ -68,7 +68,7 @@
     if(!state.user)return;
     var id=state.user.id;
     var rows=await Promise.all([
-      api.from("profiles").select("id,display_name,role,vote_eligible").eq("id",id).single(),
+      api.from("profiles").select("id,display_name,role,vote_eligible,school_verified_at").eq("id",id).single(),
       api.from("wallets").select("balance_cents").eq("user_id",id).single(),
       api.from("wallet_ledger").select("*").order("created_at",{ascending:false}).limit(60),
       api.from("cash_sales").select("*").order("created_at",{ascending:false}).limit(50),
@@ -236,7 +236,7 @@
     if(window.SAS_VERIFICATION&&window.SAS_VERIFICATION.pages[state.page]){
       if(!allowed(state.page)){state.page="home";mount(dashboard());return;}
       mount('<div id="sas-school-verification" role="region" aria-label="'+esc(window.SAS_VERIFICATION.pages[state.page])+'"></div>');
-      window.SAS_VERIFICATION.show({api:api,user:state.user,profile:state.profile,page:state.page,target:document.getElementById("sas-school-verification")}).catch(fail);
+      window.SAS_VERIFICATION.show({api:api,user:state.user,profile:state.profile,schoolRoles:state.schoolRoles,page:state.page,target:document.getElementById("sas-school-verification")}).catch(fail);
       return;
     }
     if(state.page==="roles"&&window.SAS_SCHOOL_ROLES){
@@ -324,7 +324,7 @@
       throw e;
     }finally{if(stream)stream.getTracks().forEach(function(t){t.stop();});}
   }
-  async function navigate(id){if(state.busy||(window.SAS_FEATURES&&window.SAS_FEATURES.isBusy())){showToast("Bitte warte, bis die Änderung gespeichert ist.");return;}if(!allowed(id))return;await stopScanner();if(window.SAS_VERIFICATION)await window.SAS_VERIFICATION.stop();state.page=id;state.editing=false;render();if(["home","wallet","history","votes"].includes(id))void refresh(true);window.scrollTo(0,0);var main=document.getElementById("main-content");if(main)main.focus({preventScroll:true});}
+  async function navigate(id){if(state.busy||(window.SAS_FEATURES&&window.SAS_FEATURES.isBusy())){showToast("Bitte warte, bis die Änderung gespeichert ist.");return;}if(!allowed(id))return;await stopScanner();if(window.SAS_VERIFICATION)await window.SAS_VERIFICATION.stop();if(window.SAS_ATTENDANCE)await window.SAS_ATTENDANCE.stop();state.page=id;state.editing=false;render();if(["home","wallet","history","votes"].includes(id))void refresh(true);window.scrollTo(0,0);var main=document.getElementById("main-content");if(main)main.focus({preventScroll:true});}
   async function action(id,pollId){
     if(state.busy)return;
     try{
@@ -344,7 +344,7 @@
       if(id==="scan-stop"){await stopScanner();render();return;}
       if(id==="cancel"){state.invoice=null;render();return;}
       if(id==="reload"){await refresh();showToast("Aktualisiert.");return;}
-      if(id==="logout"){if(window.SAS_TUTORIAL)window.SAS_TUTORIAL.logout();await stopScanner();if(window.SAS_VERIFICATION)await window.SAS_VERIFICATION.stop();var o=await api.auth.signOut();if(o.error)throw o.error;return;}
+      if(id==="logout"){if(window.SAS_TUTORIAL)window.SAS_TUTORIAL.logout();await stopScanner();if(window.SAS_VERIFICATION)await window.SAS_VERIFICATION.stop();if(window.SAS_ATTENDANCE)await window.SAS_ATTENDANCE.stop();var o=await api.auth.signOut();if(o.error)throw o.error;return;}
       if(id==="copy"&&state.active){await navigator.clipboard.writeText(paymentURL(state.active.id));showToast("Zahlungslink kopiert.");return;}
       if(id==="confirm"&&state.invoice){
         state.busy=true;
