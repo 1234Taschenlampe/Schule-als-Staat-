@@ -30,7 +30,8 @@ async function scenario(noSession){
   const document={
     getElementById(id){return id==="app"?root:id==="toast-root"?toasts:null;},
     createElement(){return {className:"",textContent:"",isConnected:true,remove(){}};},
-    querySelector(){return null;}
+    querySelector(){return null;},
+    addEventListener(){}
   };
   class MockFormData{constructor(form){this.form=form;}get(k){return this.form.fields[k];}}
   const sandbox={
