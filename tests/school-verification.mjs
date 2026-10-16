@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import vm from "node:vm";
 import {readFileSync} from "node:fs";
 const read=path=>readFileSync(new URL("../"+path,import.meta.url),"utf8");
+const guard=read("supabase/v10_school_qr_card_lock.sql");
 const source=read("verification.js"),sql=read("supabase/v10_school_qr_verification.sql"),
   app=read("app.js"),page=read("index.html"),bundle=read("scripts/build-worker.mjs");
 new vm.Script(source,{filename:"verification.js"});
@@ -57,6 +58,10 @@ test("QR secrets hashed at rest, expire in ten minutes, are single use, and cann
  assert.doesNotMatch(sql,/set role='admin'/);
  assert.doesNotMatch(sql,/set vote_eligible=true/);
  assert.doesNotMatch(sql,/grant (select|insert|update|delete) on public\.school_verification_challenges/);
+ assert.match(guard,/before update on public\.student_cards/);
+ assert.match(guard,/school_verified_at is not null/);
+ assert.match(guard,/new\.display_name is distinct from old\.display_name/);
+ assert.match(guard,/new\.class_label is distinct from old\.class_label/);
 });
 
 test("school verification available on same Cloudflare build and role-filtered navigation",()=>{
