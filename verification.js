@@ -96,9 +96,9 @@ async function show(context){
  activeContext=context;
  screen=context.target;
  if(!screen)throw Error("Verifizierungsbereich nicht verfügbar.");
- const isAdmin=context.profile?.role==="admin";
+ const isAdmin=context.profile?.role==="admin"||Boolean(context.schoolRoles?.operator);
  if(context.page==="verifyadmin"&&!isAdmin){
-   screen.innerHTML=shell("Kein Zugriff","Nur autorisierte Schuladministratoren dürfen QR-Codes prüfen.",'');
+   screen.innerHTML=shell("Kein Zugriff","Nur Administratoren und Operatoren dürfen QR-Codes prüfen.",'');
    return;
  }
  if(context.page==="verifyadmin")adminView();else await studentView();
@@ -127,7 +127,7 @@ async function show(context){
     else if(action==="stop-camera"){await stop();feedback("Kamera gestoppt.");}
     else if(action==="confirm"){
        const ctx=activeContext;
-       if(ctx?.page!=="verifyadmin"||ctx.profile?.role!=="admin")throw Error("Keine Berechtigung.");
+       if(ctx?.page!=="verifyadmin"||(ctx.profile?.role!=="admin"&&!ctx.schoolRoles?.operator))throw Error("Keine Berechtigung.");
        if(!ctx.pendingCode)throw Error("Bitte zuerst einen gültigen QR-Code prüfen.");
        const tick=here.querySelector("#verify-identity-checked");
        if(!tick?.checked)throw Error("Bestätige zuerst die persönliche Überprüfung.");
