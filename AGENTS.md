@@ -1,3 +1,13 @@
+# Canonical V6 direction (supersedes any V3 restoration notes below)
+
+- **DO NOT restore, publish or link old V3 HTML designs.** Keep the original archived at `archive/SaS_ONE_Prototyp_v3.html` only for feature specification.
+- The only user-facing frontend is `index.html` + `app.js` + `features.js` with `styles.css` + `features.css`. One consistent Apple-inspired responsive system.
+- All user-facing features must use real Supabase storage and authorization, never fabricated demo purchases, IDs, votes, rentals or news. Incomplete features must state exactly what remains.
+- V6 business features live in `supabase/v6_integrated_portal.sql`; safety enhancements in `supabase/v6_1_data_safety.sql` and `supabase/v6_btree_gist_schema_hardening.sql`.
+- Test `node --test tests/v6-functional-source-check.mjs`, the existing V4 tests, the static Pages build, and real multi-account flows before claiming readiness.
+- Student identity documents and detailed Visa addresses require school authorization/privacy compliance before real rollout.
+- **0 EUR total, no paid upgrades or usage.** `docs/V6_IMPLEMENTATION.md` is the status matrix.
+
 # Agent guidelines: Schule als Staat V4
 
 ## Goal
