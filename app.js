@@ -342,7 +342,7 @@
         if(signupAccountExists(created)){
           if(feedback){
             feedback.textContent="Konto bereits vergeben. Bitte melde dich an oder verwende „Passwort vergessen?“.";
-            feedback.className="field-help signup-error";
+            feedback.className="info error";
           }
           return;
         }
