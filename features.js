@@ -77,7 +77,7 @@ return wrap(current,msg("ViSA-Anträge enthalten personenbezogene Daten (einschl
  +input("Kontakt-E-Mail","contact_email","email",'maxlength="200" value="'+escapeAttr(ctx.user.email)+'"')
  +'<label class="sas-checkbox"><input type="checkbox" name="acknowledged_privacy" required><span>Ich habe die Hinweise zur Verarbeitung meiner Angaben gelesen und beantrage die Bearbeitung durch die Schuladministration.</span></label>',
  "Antrag verbindlich einreichen"))
- +box(admin()?"Eingegangene Anträge":"Meine Anträge",personal.length?'<div class="sas-list">'+personal.map(v=>card(v.first_name+' '+v.last_name,fmtDate(v.submitted_at)+' · '+v.origin_country+' · '+v.school_class, badge(v.status)+(admin()?'<p class="sas-note">Unterkunft: '+escapeHtml(v.accommodation)+' · '+escapeHtml(v.address_line)+', '+escapeHtml(v.postal_city)+'</p>'+btn("Genehmigen","visa-approve",v.id)+btn("Ablehnen","visa-reject",v.id):'')+(v.reviewer_note?msg(v.reviewer_note):''))).join("")+'</div>':empt("Noch keine ViSA-Anträge."))+'</div>');
+ +box(admin()?"Eingegangene Anträge":"Meine Anträge",personal.length?'<div class="sas-list">'+personal.map(v=>card(v.first_name+' '+v.last_name,fmtDate(v.submitted_at)+' · '+v.origin_country+' · '+v.school_class, badge(v.status)+(admin()?'<p class="sas-note">Unterkunft: '+escapeHtml(v.accommodation)+' · '+escapeHtml(v.address_line)+', '+escapeHtml(v.postal_city)+'</p>'+btn("Genehmigen","visa-approve",v.id)+btn("Ablehnen","visa-reject",v.id):'')+(v.reviewer_note?msg(v.reviewer_note):'')+(v.applicant_id===ctx.user.id&&v.status!=='approved'?btn('Antrag zurückziehen','visa-delete',v.id):''))).join("")+'</div>':empt("Noch keine ViSA-Anträge."))+'</div>');
 }
 function renderPosts(){
 const section=current==="blog"?"blog":"news";
@@ -103,7 +103,7 @@ return wrap(current,
  current==="map"?box("Interaktiver Schulplan",
  withCoordinates.length?'<div class="sas-plan"><div class="sas-plan-caption">Positionen wurden von der Administration hinterlegt · Lageplan nicht maßstabsgetreu</div>'+withCoordinates.map(p=>'<button data-feature-action="place-show" data-id="'+escapeAttr(p.id)+'" class="sas-pin" style="left:'+Number(p.x_percent)+'%;top:'+Number(p.y_percent)+'%" title="'+escapeAttr(p.name)+'">'+escapeHtml(p.name.slice(0,18))+'</button>').join("")+'</div>':empt("Noch keine Orte mit echten Positionen eingetragen. Die Schuladministration kann sie unten ergänzen.")) : "",
 '<div class="sas-columns">'+box(kind?"Geschäfte und Kassen":"Orte im Schulgebäude",
-entries.length?'<div class="sas-list">'+entries.map(p=>card(p.name,p.floor_label+(p.detail?' · '+p.detail:''),badge(p.kind)+(p.owner_id?msg("Kassenbetreiber hinterlegt."):"")+(kind==="shop"?cashier()?linkPage("QR-Kasse öffnen","register"):linkPage("Bezahlen","pay"):"")+(admin()?btn("Ort entfernen","place-delete",p.id):''))).join("")+'</div>':empt("Noch keine von der Schule eingetragenen Orte."))+
+entries.length?'<div class="sas-list">'+entries.map(p=>card(p.name,p.floor_label+(p.detail?' · '+p.detail:''),badge(p.kind)+(p.owner_id?msg("Kassenbetreiber hinterlegt."):"")+(kind==="shop"?((p.owner_id===ctx.user.id&&cashier())?linkPage("Zahlungs-QR erstellen","register"):linkPage("QR-Zahlung durchführen","pay")):"")+(admin()?btn("Ort entfernen","place-delete",p.id):''))).join("")+'</div>':empt("Noch keine von der Schule eingetragenen Orte."))+
 placesForm(kind||"room",kind?"Geschäft hinzufügen":"Raum oder Ort hinzufügen")+'</div>');
 }
 function renderRooms(){
@@ -121,7 +121,7 @@ visible.length?'<div class="sas-list">'+visible.map(b=>card(related.find(p=>p.id
 function renderEvents(){
 return wrap(current,
 '<div class="sas-columns">'+box("Veranstaltungen und Termine",
-data.length?'<div class="sas-list">'+data.map(e=>card(e.title,date(e.starts_at)+" – "+date(e.ends_at),'<div class="sas-text">'+escapeHtml(e.description||"")+'</div>'+(related.some(r=>r.event_id===e.id&&r.user_id===ctx.user.id)?btn("Teilnahme zurücknehmen","event-leave",e.id):btn("Teilnehmen","event-join",e.id))+(admin()?btn("Termin löschen","event-delete",e.id):""))).join("")+'</div>':empt("Noch keine Veranstaltungen eingetragen."))+
+data.length?'<div class="sas-list">'+data.map(e=>card(e.title,date(e.starts_at)+" – "+date(e.ends_at),'<div class="sas-text">'+escapeHtml(e.description||"")+'</div>'+(related.some(r=>r.event_id===e.id&&r.user_id===ctx.user.id)?btn("Teilnahme zurücknehmen","event-leave",e.id):(new Date(e.starts_at)>new Date()?btn("Teilnehmen","event-join",e.id):badge("Bereits begonnen")))+(admin()?btn("Termin löschen","event-delete",e.id):""))).join("")+'</div>':empt("Noch keine Veranstaltungen eingetragen."))+
 (admin()?box("Veranstaltung erstellen",form("event",input("Titel","title","text",'maxlength="150"')+textArea("Beschreibung","description",3000)+input("Beginn","starts_at","datetime-local")+input("Ende","ends_at","datetime-local"),"Termin veröffentlichen")):"")+'</div>');
 }
 function renderLost(){
@@ -198,7 +198,7 @@ if(new Date(end)<=new Date(start))throw Error("Das Ende muss nach dem Beginn lie
 await query(api.from('room_bookings').insert({place_id:v('place_id'),booked_by:u,starts_at:start,ends_at:end,purpose:v('purpose')}));break;}
 case "event":{
 if(!admin())throw Error("Nur Administratoren dürfen Termine erstellen.");
-const a={title:v('title'),description:v('description'),starts_at:iso(v('starts_at')),ends_at:iso(v('ends_at')),created_by:u};
+const a={title:v('title'),description:v('description'),starts_at:futureISO(v('starts_at')),ends_at:iso(v('ends_at')),created_by:u};
 await query(api.from('school_events').insert(a));break;}
 case "lost":await query(api.from('lost_items').insert({created_by:u,kind:v('kind'),title:v('title'),detail:v('detail'),location_hint:v('location_hint')}));break;
 case "civic":{
@@ -222,8 +222,9 @@ if(action==="choose-design"){
  const existing=data[0];const a={user_id:u,display_name:existing?.display_name||ctx.profile.display_name,class_label:existing?.class_label||"",design:id,updated_at:new Date().toISOString()};
  await query(api.from('student_cards').upsert(a,{onConflict:'user_id'}));return;}
 if(["visa-approve","visa-reject","booking-approve","booking-reject","lost-resolve","civic-delete","post-delete","place-delete","event-delete"].includes(action)&&!admin())throw Error("Administratorberechtigung erforderlich.");
-if(["place-delete","event-delete","civic-delete","lost-delete","post-delete"].includes(action)&&!confirm("Eintrag wirklich löschen?"))return;
+if(["place-delete","event-delete","civic-delete","lost-delete","post-delete","visa-delete"].includes(action)&&!confirm("Eintrag wirklich löschen?"))return;
 switch(action){
+case "visa-delete":await query(api.from("visa_applications").delete().eq("id",id));break;
 case "visa-approve":case "visa-reject":await query(api.from('visa_applications').update({status:action==="visa-approve"?"approved":"rejected",reviewed_at:new Date().toISOString()}).eq('id',id));break;
 case "booking-approve":case "booking-reject":await query(api.from('room_bookings').update({status:action==="booking-approve"?"approved":"rejected"}).eq('id',id));break;
 case "booking-cancel":await query(api.from('room_bookings').delete().eq('id',id));break;
