@@ -63,7 +63,7 @@ async function create(){
  if(!node)return;
  node.replaceChildren();
  if(window.QRCode){
-   try{new window.QRCode(node,{text:code,width:224,height:224,colorDark:"#19304b",colorLight:"#ffffff",correctLevel:window.QRCode.CorrectLevel?.M});}
+   try{new window.QRCode(node,{text:code,width:224,height:224,colorDark:"#19304b",colorLight:"#ffffff"});}
    catch(e){node.textContent="QR-Code konnte nicht dargestellt werden. Bitte Seite neu laden.";return;}
  }else{node.textContent="Die QR-Bibliothek ist noch nicht geladen. Bitte Seite neu laden.";return;}
  const text=document.createElement("p");text.className="sas-note";
