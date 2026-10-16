@@ -6,10 +6,11 @@
   var api=ready?window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey):null;
   var state={user:null,profile:null,wallet:null,ledger:[],cash:[],requests:[],users:[],polls:[],pollResults:[],page:"home",active:null,invoice:null,scanner:null,scanning:false,busy:false,recovering:/(?:^|[&#?])type=recovery(?:&|$)/.test(location.hash)};
   var deepLink=new URLSearchParams(location.search).get("pay");
-  var openPortalAfterLogin=new URLSearchParams(location.search).get("after")==="portal";
+  var openPortalAfterLogin=false; // No old V3 demo portal; all live features are integrated.
   if(deepLink)state.page="pay";
   var units=String(cfg.currencyLabel||"Einheiten");
   var navs=[["home","Übersicht"],["wallet","Mein Konto"],["pay","Bezahlen"],["register","Kasse"],["history","Verlauf"],["votes","Abstimmungen"],["settings","Einstellungen"]];
+  if(window.SAS_FEATURES)navs.splice(navs.length-1,0,...window.SAS_FEATURES.navigation.map(function(n){return [n[0],n[1]];}));
   function esc(v){return String(v==null?"":v).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
   function cashFmt(v){return new Intl.NumberFormat("de-DE",{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(v||0)/100)+" "+esc(units);}
   function time(v){return new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeStyle:"short"}).format(new Date(v));}
@@ -54,17 +55,17 @@
     catch(e){if(!silent)fail(e);}
   }
   function nav(isMobile){
-    var list=navs.filter(function(n){return (adminOrCashier()||n[0]!=="register")&&(!isMobile||(n[0]!=="history"&&(n[0]!=="wallet"||!adminOrCashier())));});
+    var list=navs.filter(function(n){return (adminOrCashier()||n[0]!=="register")&&(!isMobile||["home","wallet","pay","votes","settings"].includes(n[0]));});
     var paths=["M3 3h8v8H3z M13 3h8v5h-8z M3 13h8v8H3z M13 10h8v11h-8z","M3 6h18v14H3z M3 10h18 M16 15h2","M4 8V4h4 M16 4h4v4 M20 16v4h-4 M8 20H4v-4 M4 12h16","M2 5h20v14H2z M2 10h20","M3 12a9 9 0 1 0 3-6 M3 3v5h5 M12 7v5l3 2","M3 12h18 M5 4h14v16H5z M9 9h6 M9 14h4","M12 2v3 M12 19v3 M2 12h3 M19 12h3 M5 5l2 2 M17 17l2 2 M5 19l2-2 M17 7l2-2"];
     return list.map(function(n){
       var idx=navs.findIndex(function(x){return x[0]===n[0];});
-      return '<button class="'+(isMobile?"bottom-button":"nav-button")+(state.page===n[0]?" active":"")+'" data-nav="'+n[0]+'" aria-current="'+(state.page===n[0]?"page":"false")+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+paths[idx]+'"/></svg><span>'+(isMobile&&n[0]==="home"?"Start":n[1])+'</span></button>';
+      return '<button class="'+(isMobile?"bottom-button":"nav-button")+(state.page===n[0]?" active":"")+'" data-nav="'+n[0]+'" aria-current="'+(state.page===n[0]?"page":"false")+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+(paths[idx]||paths[0])+'"/></svg><span>'+(isMobile&&n[0]==="home"?"Start":n[1])+'</span></button>';
     }).join("");
   }
   function mount(content){
     var current=navs.find(function(n){return n[0]===state.page;});
     var first=(state.profile&&state.profile.display_name||"NV").slice(0,2).toUpperCase();
-    root.innerHTML='<div class="app-shell"><aside class="sidebar"><div class="brand"><div class="brand-mark">S/S</div><div><div class="brand-name">Schule als Staat</div><div class="brand-sub">PROJEKTPLATTFORM</div></div></div><div class="nav-kicker">MENÜ</div><nav class="nav-links">'+nav(false)+'<a href="./portal/" class="nav-button v3-link" aria-label="V3-Schulportal mit Ausweis, Galerie, ViSA und Schwarzem Brett">▦ <span>Schulportal · V3</span></a></nav><div class="sidebar-foot"><span class="status"><i class="dot connected"></i> Sicher verbunden</span><div class="subinfo">V4 · Digitale Schulwährung</div><a class="project-social" href="https://www.instagram.com/schule.als.staat_rng/" target="_blank" rel="noopener noreferrer" aria-label="Instagram-Kanal des Schulprojekts öffnen">Instagram ↗</a></div></aside><div class="main-area"><header class="topbar"><div class="topbar-left">Schule als Staat <b>/ '+(current?current[1]:"Übersicht")+'</b></div><div class="topbar-right"><span class="role">'+roleLabel()+'</span><div class="avatar">'+esc(first)+'</div></div></header><main class="content">'+content+'</main></div><nav class="bottom-nav">'+nav(true)+'</nav></div>';
+    root.innerHTML='<div class="app-shell"><aside class="sidebar"><div class="brand"><div class="brand-mark">S/S</div><div><div class="brand-name">Schule als Staat</div><div class="brand-sub">PROJEKTPLATTFORM</div></div></div><div class="nav-kicker">MENÜ</div><nav class="nav-links">'+nav(false)+'</nav><div class="sidebar-foot"><span class="status"><i class="dot connected"></i> Sicher verbunden</span><div class="subinfo">V4 · Digitale Schulwährung</div><a class="project-social" href="https://www.instagram.com/schule.als.staat_rng/" target="_blank" rel="noopener noreferrer" aria-label="Instagram-Kanal des Schulprojekts öffnen">Instagram ↗</a></div></aside><div class="main-area"><header class="topbar"><div class="topbar-left">Schule als Staat <b>/ '+(current?current[1]:"Übersicht")+'</b></div><div class="topbar-right"><span class="role">'+roleLabel()+'</span><div class="avatar">'+esc(first)+'</div></div></header><main class="content">'+content+'</main></div><nav class="bottom-nav">'+nav(true)+'</nav></div>';
     if(state.page==="register")renderQRCode();
   }
   function setup(){
@@ -87,7 +88,18 @@
     var dateToday=new Date().toDateString();
     var cashToday=state.cash.filter(function(x){return new Date(x.created_at).toDateString()===dateToday;}).reduce(function(a,x){return a+x.amount_cents;},0);
     var received=state.ledger.filter(function(x){return x.kind==="payment"&&x.payee_id===state.user.id;}).reduce(function(a,x){return a+x.amount_cents;},0);
-    return '<section class="card portal-recovery"><div class="portal-recovery-head"><div><div class="eyebrow">SaS ONE · V3 WIEDERHERGESTELLT</div><h2>Dein vollständiges Schulportal.</h2><p>Ausweis-Galerie, Schülerausweis, ViSA, Schwarzes Brett, V3-Blog, Shop, Raumplan, Raumreservierungen, Termine und Fundbüro. Die älteren Bereiche sind derzeit als Demo gekennzeichnet.</p></div><a class="btn primary" href="./portal/">Zum Schulportal ↗</a></div><div class="portal-tiles"><a href="./portal/#gallery">Ausweis-Galerie →</a><a href="./portal/#visa">ViSA →</a><a href="./portal/#news">Schwarzes Brett →</a><a href="./portal/#blog">V3-Blog →</a><a href="./portal/#map">Schulplan →</a><a href="./portal/#rooms">Räume →</a></div></section>'+header("DEIN ARBEITSPLATZ","Guten Tag, "+esc(state.profile.display_name)+".","Dein Überblick über Guthaben, Zahlungen und Kassen.")+
+    return '<section class="card portal-recovery"><div class="portal-recovery-head"><div><div class="eyebrow">SaS ONE · V6</div><h2>Alles an einem Ort.</h2><p>Schulportal, Bürgerfunktionen und Finanzbereich mit echtem Supabase-Backend – einheitlich gestaltet und mit deinem Konto verbunden.</p></div></div><div class="portal-tiles">'+'<button type="button" class="sas-home-shortcut" data-action="to-idcard">Schülerausweis →</button>'+
++'<button type="button" class="sas-home-shortcut" data-action="to-gallery">Ausweis-Galerie →</button>'+
++'<button type="button" class="sas-home-shortcut" data-action="to-visa">ViSA →</button>'+
++'<button type="button" class="sas-home-shortcut" data-action="to-bulletin">Schwarzes Brett →</button>'+
++'<button type="button" class="sas-home-shortcut" data-action="to-blog">Projektblog →</button>'+
++'<button type="button" class="sas-home-shortcut" data-action="to-shops">Geschäfte →</button>'+
++'<button type="button" class="sas-home-shortcut" data-action="to-map">Schulplan →</button>'+
++'<button type="button" class="sas-home-shortcut" data-action="to-rooms">Raumreservierung →</button>'+
++'<button type="button" class="sas-home-shortcut" data-action="to-events">Kalender →</button>'+
++'<button type="button" class="sas-home-shortcut" data-action="to-lost">Fundbüro →</button>'+
++'<button type="button" class="sas-home-shortcut" data-action="to-jobs">Berufe →</button>'+
++'<button type="button" class="sas-home-shortcut" data-action="to-laws">Gesetze →</button>'+'</div></section>'+header("DEIN ARBEITSPLATZ","Guten Tag, "+esc(state.profile.display_name)+".","Dein Überblick über Guthaben, Zahlungen und Kassen.")+
     '<div class="grid three"><section class="card ink"><div class="stat-label">Digitales Guthaben</div><div class="stat-value">'+cashFmt(state.wallet.balance_cents)+'</div><div class="stat-caption">Aktuell verfügbar</div></section><section class="card"><div class="stat-label">Digitale Einnahmen</div><div class="stat-value">'+cashFmt(received)+'</div><div class="stat-caption">Aus den letzten 60 Buchungen</div></section><section class="card"><div class="stat-label">Bargeld erfasst · heute</div><div class="stat-value">'+cashFmt(cashToday)+'</div><div class="stat-caption">Unabhängig vom digitalen Konto</div></section></div>'+
     '<h2 class="section-title">Schnellzugriff</h2><div class="grid two"><div class="card quick"><div><h3>Digital bezahlen</h3><p>QR-Code einer Kasse scannen und Betrag prüfen.</p></div>'+btn("Scannen","to-pay")+'</div><div class="card quick"><div><h3>'+(adminOrCashier()?"Neue Kassenzahlung":"Mein Konto")+'</h3><p>'+(adminOrCashier()?"Digitale und Bargeldverkäufe erfassen.":"Kontostand und Transaktionen ansehen.")+'</p></div>'+btn(adminOrCashier()?"Kasse":"Konto",adminOrCashier()?"to-register":"to-wallet","dark")+'</div></div><h2 class="section-title">Letzte Buchungen</h2><section class="card">'+latest(5)+'</section>';
   }
@@ -178,6 +190,11 @@
     if(!state.user)return login();
     if(!state.profile||!state.wallet){root.textContent="Profil oder Guthaben konnte nicht geladen werden. Bitte Zugang und Datenbankkonfiguration prüfen.";return;}
     var views={home:dashboard,wallet:wallet,pay:pay,register:register,history:history,votes:votesPage,settings:settingsPage};
+    if(window.SAS_FEATURES&&window.SAS_FEATURES.pages[state.page]){
+      mount('<div id="sas-live-module" role="region" aria-label="'+esc(window.SAS_FEATURES.pages[state.page])+'"></div>');
+      window.SAS_FEATURES.show({api:api,user:state.user,profile:state.profile,page:state.page,target:document.getElementById("sas-live-module"),navigate:navigate}).catch(fail);
+      return;
+    }
     if(state.page==="register"&&!adminOrCashier())state.page="home";
     mount((views[state.page]||dashboard)());
   }
