@@ -16,8 +16,26 @@
   function time(v){return new Intl.DateTimeFormat("de-DE",{dateStyle:"medium",timeStyle:"short"}).format(new Date(v));}
   function adminOrCashier(){return state.profile&&["admin","cashier"].includes(state.profile.role);}
   function roleLabel(){return {admin:"Administration",cashier:"Kassenpersonal",member:"Mitglied"}[state.profile&&state.profile.role]||"Mitglied";}
-  function showToast(message,isError){var el=document.createElement("div");el.className="toast"+(isError?" err":"");el.textContent=String(message);toasts.appendChild(el);setTimeout(function(){el.remove();},5500);}
-  function fail(e){showToast(e&&e.message||String(e),true);}
+  function showToast(message,isError){
+    toasts.querySelectorAll(".toast").forEach(function(t){t.remove();});
+    var el=document.createElement("div");
+    el.className="toast"+(isError?" err":"");
+    el.textContent=String(message);
+    toasts.appendChild(el);
+    setTimeout(function(){if(el.isConnected)el.remove();},5500);
+  }
+  function friendlyAuthError(e){
+    var code=String(e&&e.code||"").toLowerCase();
+    var original=String(e&&e.message||e||"");
+    var message=original.toLowerCase();
+    if(code==="invalid_credentials"||/invalid login credentials/.test(message))return "E-Mail-Adresse oder Passwort stimmen nicht überein. Prüfe, mit welcher Adresse du dein Konto erstellt hast.";
+    if(code==="email_not_confirmed"||/email not confirmed/.test(message))return "Dieses Konto ist noch nicht zur Anmeldung freigeschaltet. Bitte wende dich an die Schulverwaltung.";
+    if(code==="over_email_send_rate_limit"||/email rate limit exceeded/.test(message))return "Die Registrierung ist derzeit durch ein Versandlimit blockiert. Bitte die Schulverwaltung informieren.";
+    if(code==="over_request_rate_limit"||/for security purposes.*after \d+ seconds|rate limit exceeded/.test(message))return "Zu viele Versuche hintereinander. Bitte warte kurz, bevor du es erneut versuchst.";
+    if(code==="user_already_exists"||/user already registered/.test(message))return "Konto bereits vergeben. Bitte melde dich an.";
+    return original;
+  }
+  function fail(e){showToast(friendlyAuthError(e),true);}
   function signupAccountExists(result){
     // Supabase Auth owns email uniqueness. Never expose auth.users to anonymous clients.
     var err=result&&result.error;
