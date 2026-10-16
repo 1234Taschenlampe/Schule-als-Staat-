@@ -30,3 +30,12 @@ Maintain and deploy the responsive school project website, digital internal-curr
 4. Configure Supabase in `config.js` and configure the exact public URL under Supabase Auth redirect URLs. Verify SQL migrations and row-level security.
 5. Test payment concurrency, one vote per verified person, admin-only tallies, cash/digital separation, and camera permissions.
 6. Obtain school authorization for hosting and personal data processing.
+
+## Non-negotiable zero-cost policy
+
+- Total external operating budget: **EUR 0.00**, including hosting, database, emails, observability, CI, API calls, upgrades, add-ons and transaction providers.
+- Only use confirmed free-plan services and free quotas; never add a paid subscription, enable pay-as-you-go, activate an optional billable feature or add a payment method.
+- Never automatically upgrade to restore availability. At the free-plan limit, fail closed and notify the project administrator; no surprise charges.
+- Check the actual connected account plan and current free limits before creating any new resource. Do not rely on static marketing limits.
+- Never interpret an application-internal virtual wallet as authorization for payments to an external provider.
+- Existing Supabase project was confirmed on free tier; Cloudflare Pages project exists but GitHub source connection currently fails with Cloudflare error 8000011. Do not claim successful Cloudflare deployment until verified.
