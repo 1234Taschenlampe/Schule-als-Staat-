@@ -128,3 +128,15 @@ Die Projektplattform sollte als **echter HTTPS-Unterpfad** oder über eine eigen
 ## Cloudflare Pages und Cloudflare-Agent
 
 Die geprüften, projektspezifischen Einrichtungsschritte stehen in [Cloudflare-Setup](docs/CLOUDFLARE_SETUP.md). Für Codex wurden zusätzlich im Repository [AGENTS.md](AGENTS.md) Cloudflare-Skills, MCP, Build-Einstellungen und Sicherheitsgrenzen dokumentiert. Das Cloudflare-Konto muss vom Inhaber per OAuth beziehungsweise über das Cloudflare-Dashboard verbunden werden; es liegt noch keine bestätigte Cloudflare-Deployment-URL vor.
+
+## Cloudflare Workers – kostenlose Ersatzveröffentlichung (Stand 16.10.2026)
+
+Cloudflare Pages Git-Anbindung verweigert weiterhin die Verbindung mit Fehler `8000011`. Die Website wurde deshalb als **statischer Worker** auf `https://schule-als-staat.schule-als-staat-jfe.workers.dev/` hochgeladen und für workers.dev aktiviert. Das Workers-Skript enthält nur `index.html`, `app.js`, `styles.css` und `config.js`. Keine Datenbankdaten oder geheimen Schlüssel sind enthalten.
+
+**Wichtig:** Dieser Worker ist ein Snapshot, **nicht** automatisch mit GitHub synchronisiert. Änderungen werden beim nächsten manuellen Worker-Upload sichtbar. `node scripts/build-worker.mjs` erzeugt die vollständig gebündelte Skriptdatei unter `dist/schule-als-staat-worker.js`. Für permanente automatisierte Deployments ist künftig die GitHub-Installation von Cloudflare zu reparieren oder ein kostenloser CI-Workflow mit sicher gespeicherten, minimal berechtigten Deployment-Credentials aufzusetzen.
+
+GitHub Pages ist inzwischen ebenfalls vorbereitet und sein Build-Workflow lief erfolgreich; die öffentliche Verfügbarkeit konnte noch nicht unabhängig vom Cloudflare- und GitHub-Deployment-Status via HTTP getestet werden.
+
+**Anmeldung vor öffentlichem Schulbetrieb:** Supabase Free erlaubt über den eingebauten Auth-E-Mail-Dienst derzeit nur eine sehr geringe Sendefrequenz. Der E-Mail-Magic-Link-Login ist daher **nicht** für Tausende gleichzeitige erstmalige Anmeldungen geeignet. Die Schul-IT muss einen kostenlosen, leistungsfähigen alternativen SMTP-/SSO-/Einladungsweg genehmigen. Supabase Auth Redirect URLs müssen die tatsächlichen HTTPS-Hosts umfassen. Es gibt noch **keinen** Administrator im Backend, keine freigeschalteten Wähler und keine produktiv getesteten Buchungen. Nicht als voll funktionsfähige Schulkasse freigeben.
+
+**Kostenregel:** Keine kostenpflichtigen Tarife, Abonnements, automatischen Upgrades, Zusatzdienste, gebührenpflichtigen Transaktionen oder Secrets als Repo-Dateien. Bei Quotenende stoppt die Funktion. Cloudflare Workers Free: bis zu 100.000 Requests/Tag. Jede reale Nutzung muss innerhalb der kostenlosen Kontingente bleiben.
