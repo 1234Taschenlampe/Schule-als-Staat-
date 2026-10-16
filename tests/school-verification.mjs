@@ -65,7 +65,7 @@ test("QR secrets hashed at rest, expire in ten minutes, are single use, and cann
 });
 
 test("school verification available on same Cloudflare build and role-filtered navigation",()=>{
- assert.match(app,/\["register","verifyadmin","admin","settings"\]/);
+ assert.match(app,/\["register","verifyadmin","attendance","roles","admin","settings"\]/);
  assert.match(app,/window\.SAS_VERIFICATION\.show/);
  assert.match(app,/window\.SAS_VERIFICATION\.stop/);
  assert.match(app,/state\.profile\.role==="admin"/);
