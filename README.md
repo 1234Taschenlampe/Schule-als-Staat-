@@ -140,3 +140,15 @@ GitHub Pages ist inzwischen ebenfalls vorbereitet und sein Build-Workflow lief e
 **Anmeldung vor öffentlichem Schulbetrieb:** Supabase Free erlaubt über den eingebauten Auth-E-Mail-Dienst derzeit nur eine sehr geringe Sendefrequenz. Der E-Mail-Magic-Link-Login ist daher **nicht** für Tausende gleichzeitige erstmalige Anmeldungen geeignet. Die Schul-IT muss einen kostenlosen, leistungsfähigen alternativen SMTP-/SSO-/Einladungsweg genehmigen. Supabase Auth Redirect URLs müssen die tatsächlichen HTTPS-Hosts umfassen. Es gibt noch **keinen** Administrator im Backend, keine freigeschalteten Wähler und keine produktiv getesteten Buchungen. Nicht als voll funktionsfähige Schulkasse freigeben.
 
 **Kostenregel:** Keine kostenpflichtigen Tarife, Abonnements, automatischen Upgrades, Zusatzdienste, gebührenpflichtigen Transaktionen oder Secrets als Repo-Dateien. Bei Quotenende stoppt die Funktion. Cloudflare Workers Free: bis zu 100.000 Requests/Tag. Jede reale Nutzung muss innerhalb der kostenlosen Kontingente bleiben.
+
+## Erstes Administratorkonto sicher aktivieren (16.10.2026)
+
+Die E-Mail-Adresse `jan.felix.eckert@gmail.com` ist serverseitig als vorgesehener Administrator hinterlegt. **Noch existiert für diese Adresse kein bestätigtes Supabase-Konto.** `supabase/v4_admin_bootstrap.sql` wurde bereits angewendet; die Funktion `claim_initial_admin` prüft immer die tatsächlich eingeloggte Nutzer-ID, exakt diese E-Mail-Adresse **und** `auth.users.email_confirmed_at`. Anonyme Nutzer können sie nicht aufrufen. Sie wird beim Login einmal automatisch ausgeführt.
+
+Zum Aktivieren: Webseite öffnen → **Neues Konto mit Passwort erstellen** → persönliche Gmail-Adresse und selbst gewähltes Passwort von mindestens zwölf Zeichen eintragen → Bestätigungslink in der Gmail-Mailbox aufrufen → auf der Website mit E-Mail und Passwort anmelden. Danach wird im Backend die Adminrolle beansprucht. Nie Passwörter in GitHub, Cloudflare oder ChatGPT veröffentlichen.
+
+**Wichtig:** Im Supabase-Dashboard unter **Authentication → URL Configuration** die echte HTTPS-Adresse der Website als Site URL bzw. Additional Redirect URLs freigeben, beispielsweise `https://schule-als-staat.schule-als-staat-jfe.workers.dev/**`. Diese Auth-Einstellung konnte nicht durch den bereitstehenden Supabase-Konnektor geändert werden. Außerdem muss in Supabase das Bestätigen von E-Mail-Adressen aktiv sein, damit nur nach tatsächlichem Inbox-Nachweis eine Adminrolle verliehen werden kann.
+
+Aktuell existiert in Supabase nur ein zuvor angelegtes, bestätigtes Konto mit einer anderen Mailadresse. Dieses Konto wird **nicht** automatisch zum Administrator gemacht. Frei erfundene Schüler- und Kassen-Adressen sind ausschließlich Offline-Fixtures unter `tests/fictional-identities.mjs` und keine Auth-Benutzer.
+
+Der alternative alte Magic-Link-Login erstellt ab jetzt **keine neuen Benutzerkonten** mehr; er ist nur für bereits vorhandene E-Mail-Konten. Für viele Schüler benötigt das Schulprojekt später ein sicheres, von der Schule genehmigtes Verfahren zur Kontoausgabe mit angemessener Anti-Spam-Kontrolle. Alle Vorgänge müssen innerhalb des kostenlosen Limits bleiben.
