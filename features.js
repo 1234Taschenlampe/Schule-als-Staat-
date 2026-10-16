@@ -8,9 +8,9 @@ const navigation=[
  ["bulletin","Schwarzes Brett","Offizielle Nachrichten"],
  ["blog","Blog","Projektbeiträge"],
  ["shops","Geschäfte","Geschäfte und ihre Kassen"],
- ["map","Schulplan","Orte und Räume"],
- ["rooms","Raumbuchung","Raumreservierung"],
- ["events","Kalender","Termine und Anmeldungen"],
+ ["map","Raumplan","Orte und Räume"],
+ ["rooms","Raumreservierung","Raumreservierung"],
+ ["events","Veranstaltungen","Termine und Anmeldungen"],
  ["lost","Fundbüro","Verloren und gefunden"],
  ["jobs","Berufe","Offene Stellen und Bewerbungen"],
  ["laws","Gesetze","Regeln und Verordnungen"],
@@ -25,16 +25,16 @@ const trim=(v)=>String(v??"").trim();
 const msg=(s)=>'<p class="sas-note">'+escapeHtml(s)+'</p>';
 const date=(v)=>v?new Date(v).toLocaleString("de-DE",{dateStyle:"medium",timeStyle:"short"}):"–";
 const fmtDate=(v)=>v?new Date(v).toLocaleDateString("de-DE"):"–";
-const badge=(v)=>'<span class="sas-badge">'+escapeHtml(v)+'</span>';
+const badge=(v)=>'<span class="sas-badge" data-status="'+escapeAttr(v)+'">'+escapeHtml(({pending:"In Prüfung",submitted:"Eingereicht",approved:"Genehmigt",rejected:"Abgelehnt",open:"Offen",resolved:"Erledigt",room:"Raum",shop:"Geschäft",service:"Service",other:"Ort"})[v]||v)+'</span>';
 const empt=(t)=>'<div class="sas-empty"><span>○</span><p>'+escapeHtml(t)+'</p></div>';
-const btn=(text,action,id,kind="soft")=>'<button class="sas-btn '+kind+'" data-feature-action="'+escapeAttr(action)+'"'+(id?' data-id="'+escapeAttr(id)+'"':'')+'>'+escapeHtml(text)+'</button>';
+const btn=(text,action,id,kind="soft")=>'<button class="sas-btn '+kind+'" data-feature-action="'+escapeAttr(action)+'"'+(id?' data-id="'+escapeAttr(id)+'"':'')+(kind==='muted'?' disabled':'')+'>'+escapeHtml(text)+'</button>';
 const linkPage=(text,page)=>'<button class="sas-btn soft" data-feature-action="navigate" data-id="'+escapeAttr(page)+'">'+escapeHtml(text)+' →</button>';
 const box=(title,body)=>'<section class="sas-panel"><h2>'+escapeHtml(title)+'</h2>'+body+'</section>';
 const input=(label,name,type="text",extra="")=>'<label class="sas-field"><span>'+escapeHtml(label)+'</span><input name="'+escapeAttr(name)+'" type="'+escapeAttr(type)+'" '+extra+' required></label>';
 const textArea=(label,name,maximum=1500)=>'<label class="sas-field"><span>'+escapeHtml(label)+'</span><textarea name="'+escapeAttr(name)+'" maxlength="'+Number(maximum)+'" required></textarea></label>';
 const form=(kind,inner,submit)=>'<form class="sas-form" data-feature-form="'+escapeAttr(kind)+'">'+inner+'<button type="submit" class="sas-btn primary">'+escapeHtml(submit)+'</button></form>';
 const card=(heading,text,more="")=>'<article class="sas-item"><h3>'+escapeHtml(heading)+'</h3><p>'+escapeHtml(text)+'</p>'+more+'</article>';
-const wrap=(page,body,extra="")=>'<div class="sas-space"><div class="sas-heading"><div><span class="sas-kicker">SaS ONE · Schulplattform</span><h1>'+escapeHtml(pages[page])+'</h1><p>'+escapeHtml(navigation.find(a=>a[0]===page)?.[2]||"")+'</p></div>'+extra+'</div>'+body+extra+'</div>';
+const wrap=(page,body,extra="")=>'<div class="sas-space"><div class="sas-heading"><div><span class="sas-kicker">SCHULPORTAL</span><h1>'+escapeHtml(pages[page])+'</h1><p>'+escapeHtml(navigation.find(a=>a[0]===page)?.[2]||"")+'</p></div></div>'+body+extra+'</div>';
 let ctx=null, current="",target=null,data=[],related=[],busy=false,stamp=0;
 function admin(){return ctx?.profile?.role==="admin";}
 function cashier(){return ctx?.profile?.role==="admin"||ctx?.profile?.role==="cashier";}
@@ -157,20 +157,29 @@ default:markup=renderCivic();
 }
 target.innerHTML=markup+'<div class="sas-feedback" role="status" aria-live="polite"></div>';
 }
-async function readPage(){
-const api=ctx.api,u=ctx.user.id;
-data=[];related=[];
-switch(current){
+async function readPage(page,context){
+const api=context.api,u=context.user.id,isAdmin=context.profile.role==="admin";
+let data=[],related=[];
+switch(page){
 case "idcard":case "gallery":{let a=await query(api.from('student_cards').select('*').eq('user_id',u).limit(1));data=a;break;}
-case "visa":data=await query(admin()?api.from('visa_applications').select('*').order('submitted_at',{ascending:false}).limit(70):api.from('visa_applications').select('*').eq('applicant_id',u).order('submitted_at',{ascending:false}).limit(70));break;
-case "bulletin":case "blog":data=await query(api.from('portal_posts').select('*').eq('section',current==="blog"?"blog":"news").eq('published',true).order('created_at',{ascending:false}).limit(100));break;
+case "visa":data=await query(isAdmin?api.from('visa_applications').select('*').order('submitted_at',{ascending:false}).limit(70):api.from('visa_applications').select('*').eq('applicant_id',u).order('submitted_at',{ascending:false}).limit(70));break;
+case "bulletin":case "blog":data=await query(api.from('portal_posts').select('*').eq('section',page==="blog"?"blog":"news").eq('published',true).order('created_at',{ascending:false}).limit(100));break;
 case "shops":case "map":data=await query(api.from('school_places').select('*').order('name').limit(300));break;
 case "rooms":[related,data]=await Promise.all([query(api.from('school_places').select('*').eq('kind','room').order('name').limit(200)),query(api.from('room_bookings').select('*').order('starts_at',{ascending:true}).limit(200))]);break;
-case "events":[data,related]=await Promise.all([query(api.from('school_events').select('*').order('starts_at',{ascending:true}).limit(150)),query(api.from('event_rsvps').select('*').limit(500))]);break;
+case "events":[data,related]=await Promise.all([query(api.from('school_events').select('*').order('starts_at',{ascending:true}).limit(150)),query(api.from('event_rsvps').select('*').eq('user_id',u).limit(500))]);break;
 case "lost":data=await query(api.from('lost_items').select('*').order('created_at',{ascending:false}).limit(150));break;
-default:{data=await query(api.from('civic_posts').select('*').eq('kind',civicMap[current]).order('created_at',{ascending:false}).limit(130));if(current==="jobs")related=await query(api.from('job_applications').select('*').limit(200));}
-}}
-async function refresh(){const at=++stamp;target.innerHTML='<div class="sas-loading" role="status">Daten werden geladen …</div>';try{await readPage();if(at===stamp&&target?.isConnected)renderScreen();}catch(e){if(at===stamp&&target?.isConnected){target.innerHTML=wrap(current,'<section class="sas-panel"><h2>Daten konnten nicht geladen werden</h2>'+msg(e.message||e)+btn("Erneut laden","reload")+'</section>')+'<div class="sas-feedback" role="status"></div>';}}}
+default:{data=await query(api.from('civic_posts').select('*').eq('kind',civicMap[page]).order('created_at',{ascending:false}).limit(130));if(page==="jobs")related=await query(api.from('job_applications').select('*').limit(200));}
+ }
+return [data,related];
+}
+async function refresh(){
+ const at=++stamp,screen=target,page=current,context=ctx;
+ screen.innerHTML='<div class="sas-loading" role="status">Daten werden geladen …</div>';
+ try{
+  const result=await readPage(page,context);
+  if(at===stamp&&screen.isConnected&&screen===target){[data,related]=result;renderScreen();}
+ }catch(e){if(at===stamp&&screen.isConnected&&screen===target){screen.innerHTML=wrap(page,'<section class="sas-panel"><h2>Daten konnten nicht geladen werden</h2>'+msg(e.message||e)+btn("Erneut laden","reload")+'</section>')+'<div class="sas-feedback" role="status"></div>';}}
+}
 async function submit(kind,f){
 const api=ctx.api,u=ctx.user.id;
 const values=Object.fromEntries(new FormData(f).entries());
@@ -195,8 +204,10 @@ await query(api.from('school_places').insert(a));break;}
 case "booking":{
 const start=futureISO(v('starts_at')),end=iso(v('ends_at'));
 if(new Date(end)<=new Date(start))throw Error("Das Ende muss nach dem Beginn liegen.");
+if(new Date(end)-new Date(start)>8*3600000)throw Error("Eine Reservierung darf höchstens acht Stunden dauern.");
 await query(api.from('room_bookings').insert({place_id:v('place_id'),booked_by:u,starts_at:start,ends_at:end,purpose:v('purpose')}));break;}
 case "event":{
+if(new Date(v("ends_at"))<=new Date(v("starts_at")))throw Error("Das Ende muss nach dem Beginn liegen.");
 if(!admin())throw Error("Nur Administratoren dürfen Termine erstellen.");
 const a={title:v('title'),description:v('description'),starts_at:futureISO(v('starts_at')),ends_at:iso(v('ends_at')),created_by:u};
 await query(api.from('school_events').insert(a));break;}
@@ -253,11 +264,13 @@ here.addEventListener("submit",async event=>{
 here.addEventListener("click",async event=>{
  const b=event.target.closest('[data-feature-action]');if(!b)return;
  event.preventDefault();event.stopPropagation();
- if(busy)return;busy=true;b.disabled=true;
+ if(busy)return;
+ if(b.dataset.featureAction==="navigate"){try{await handle("navigate",b.dataset.id||"");}catch(e){setError(e);}return;}
+ busy=true;b.disabled=true;
  try{await handle(b.dataset.featureAction,b.dataset.id||"");if(!["navigate","place-show","job-open","reload"].includes(b.dataset.featureAction)){await refresh();feedback("Änderung gespeichert.");}}
  catch(e){setError(e);}finally{busy=false;b.disabled=false;}
 });
 await refresh();
 }
-window.SAS_FEATURES={pages,navigation,show};
+window.SAS_FEATURES={pages,navigation,show,isBusy:()=>busy};
 })();

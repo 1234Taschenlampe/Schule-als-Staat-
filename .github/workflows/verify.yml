@@ -25,6 +25,7 @@ jobs:
           node --check config.js
           node --test tests/v4-source-check.mjs
           node --test tests/v6-functional-source-check.mjs
+          node --test tests/ui-navigation.mjs
           node scripts/build-worker.mjs
           node --check dist/schule-als-staat-worker.js
       - name: Verify static hosting bundle

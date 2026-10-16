@@ -42,3 +42,22 @@
 - Bei Free-Kontingenten: Funktion stoppen statt kostenpflichtig hochzustufen.
 
 **Budget:** absolut 0,00 EUR. Es wurden keine Bezahldienste bestellt. Keine Funktion hat einen automatischen Upgrade-Pfad.
+
+
+## Überarbeitung der Oberfläche am 16.10.2026
+
+- Das verbindliche Designsystem und die Navigation stehen in `docs/DESIGN_SYSTEM.md`.
+- Neue neutrale Oberfläche, gemeinsames Token-System für Schulmodule, Finanzen und Administration; separate Admin-Seite und gruppierte Hauptnavigation.
+- Neue Startseite mit persönlichem Ausweiszugang, echtem Walletsaldo, noch nicht beantworteten offenen Abstimmungen, sechs Modulzugängen und Buchungsverlauf.
+- Portalverzeichnis und tastaturbedienbarer Suchdialog (Strg/Command + K); nur statische Modulnamen werden durchsucht, keine personenbezogenen Datensätze.
+- Mobile Navigation mit Zugriff auf sämtliche Module über „Portal“; Touchziele, Safe Areas und einspaltige Formulare.
+- Doppelt gerenderte Modulformulare beseitigt; Hintergrundaktualisierung überschreibt keine begonnenen Eingaben und keine offenen Dialoge. Verspätete Modulabfragen werden verworfen.
+- Teilnehmerstatus für Veranstaltungen wird explizit auf das eigene Konto gefiltert; Formularprüfung für Terminende und maximale Raumreservierungsdauer.
+- Kein altes V3-Portal, keine neuen Beispieldatensätze oder kostenpflichtigen Ressourcen.
+
+### Verifikation dieses Änderungsstands
+
+- 7 automatisierte Node-Prüfungen erfolgreich: bestehende V4-Invarianten, 14 Modulansichten in Mitglieds-/Adminrolle, Navigation für Mitglied/Kasse/Admin, einmalige Formulare und Schutz vor verspäteten Abfrageantworten.
+- Static-Build und Worker-Bundle einschließlich Syntaxprüfung erfolgreich.
+- `tests/live-rollback.sql` auf dem verbundenen Supabase-Projekt ausgeführt: drei fiktive Identitäten innerhalb einer vollständig zurückgerollten Transaktion, fremder Ausweis nicht lesbar/beschreibbar, Adminzugriff verweigert, Zahlung mit korrektem Saldo, idempotente Wiederholung, gültige Stimme, gesperrte Doppelstimme und Adminauswertung für Mitglieder verweigert. Keine Testdaten verbleiben.
+- Dies sind Backendtests unter authentifizierten DB-Rollen, keine Anmelde-End-to-End-Tests mit drei Browserkonten. Geräteabhängige Kamera-/QR-Tests und mobile Browserabnahme bleiben vor Schulbetrieb offen.
