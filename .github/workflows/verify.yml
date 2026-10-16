@@ -23,6 +23,8 @@ jobs:
           node --check app.js
           node --check config.js
           node --test tests/v4-source-check.mjs
+          node scripts/build-worker.mjs
+          node --check dist/schule-als-staat-worker.js
       - name: Verify static hosting bundle
         run: |
           sh scripts/build-static.sh
