@@ -34,7 +34,7 @@ const input=(label,name,type="text",extra="")=>'<label class="sas-field"><span>'
 const textArea=(label,name,maximum=1500)=>'<label class="sas-field"><span>'+escapeHtml(label)+'</span><textarea name="'+escapeAttr(name)+'" maxlength="'+Number(maximum)+'" required></textarea></label>';
 const form=(kind,inner,submit)=>'<form class="sas-form" data-feature-form="'+escapeAttr(kind)+'">'+inner+'<button type="submit" class="sas-btn primary">'+escapeHtml(submit)+'</button></form>';
 const card=(heading,text,more="")=>'<article class="sas-item"><h3>'+escapeHtml(heading)+'</h3><p>'+escapeHtml(text)+'</p>'+more+'</article>';
-const wrap=(page,body,extra="")=>'<div class="sas-space"><div class="sas-heading"><div><span class="sas-kicker">SaS ONE · Schulplattform</span><h1>'+escapeHtml(pages[page])+'</h1><p>'+escapeHtml(navigation.find(a=>a[0]===page)?.[2]||"")+'</p></div>'+extra+'</div>'+body+'</div>';
+const wrap=(page,body,extra="")=>'<div class="sas-space"><div class="sas-heading"><div><span class="sas-kicker">SaS ONE · Schulplattform</span><h1>'+escapeHtml(pages[page])+'</h1><p>'+escapeHtml(navigation.find(a=>a[0]===page)?.[2]||"")+'</p></div>'+extra+'</div>'+body+extra+'</div>';
 let ctx=null, current="",target=null,data=[],related=[],busy=false,stamp=0;
 function admin(){return ctx?.profile?.role==="admin";}
 function cashier(){return ctx?.profile?.role==="admin"||ctx?.profile?.role==="cashier";}
