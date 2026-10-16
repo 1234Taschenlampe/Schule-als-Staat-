@@ -150,3 +150,16 @@ small,.muted{color:var(--muted)}.small{font-size:13px}.mono{font-variant-numeric
   flex:0 0 42px;overflow:hidden;
   box-shadow:0 0 0 1px rgba(9,45,27,.14);
 }
+
+/* Restored SaS ONE V3 access point */
+.nav-button.v3-link{display:flex;align-items:center;gap:13px;margin-top:10px;text-decoration:none;color:#cde3ff;background:linear-gradient(120deg,#2744a4,#4164b7);border:1px solid #ffffff18;border-radius:12px;padding:13px 15px;font-size:13px;font-weight:700}
+.nav-button.v3-link:hover{color:#fff;background:linear-gradient(120deg,#3055b8,#4777d1)}
+.portal-recovery{padding:25px 27px;margin-bottom:26px;overflow:hidden;border:1px solid #d7e4ff;background:linear-gradient(125deg,#f4f8ff,#fff)}
+.portal-recovery-head{display:flex;align-items:center;justify-content:space-between;gap:22px}
+.portal-recovery h2{font-size:25px;margin:9px 0 12px;letter-spacing:-.8px}
+.portal-recovery p{font-size:14px;max-width:680px;line-height:1.65;color:#5b6780}
+.portal-recovery-head a{white-space:nowrap;text-decoration:none}
+.portal-tiles{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:21px}
+.portal-tiles a{padding:13px 14px;border-radius:12px;background:white;border:1px solid #e0e8f7;text-decoration:none;color:#23437c;font-weight:650;font-size:13px}
+.portal-tiles a:hover{border-color:#6288e0;background:#f5f8ff}
+@media(max-width:780px){.portal-recovery{padding:20px 17px}.portal-recovery-head{align-items:stretch;flex-direction:column}.portal-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.portal-recovery h2{font-size:22px}}
