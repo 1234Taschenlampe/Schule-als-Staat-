@@ -241,7 +241,18 @@
     state.editing=false;
     if(!api)return setup();
     if(state.recovering&&state.user){root.innerHTML=passwordRecoveryView();return;}
-    if(!state.user){if(window.location.hash==="#visa-onboarding"&&window.SAS_PUBLIC_VISA){root.innerHTML='<div class="sas-public-visa-page"><a class="sas-public-visa-back" href="#login">← Zur Anmeldung</a>'+window.SAS_PUBLIC_VISA.form()+'</div>';return;}return login();}
+    if(window.SAS_PUBLIC_VISA){
+      var visaHash=window.location.hash;
+      if(visaHash==="#visa-onboarding"||visaHash.indexOf("#visa-verify=")===0||visaHash==="#visa-payment-success"){
+        root.innerHTML='<div class="sas-public-visa-page"><a class="sas-public-visa-back" href="#login">← Zur Anmeldung</a><div id="sas-visa-public-root"></div></div>';
+        var visaRoot=document.getElementById("sas-visa-public-root");
+        if(visaHash==="#visa-onboarding"){visaRoot.innerHTML=window.SAS_PUBLIC_VISA.form();void window.SAS_PUBLIC_VISA.showPublic(api,visaRoot);}
+        else if(visaHash.indexOf("#visa-verify=")===0){void window.SAS_PUBLIC_VISA.showVerification(api,visaRoot,visaHash.slice("#visa-verify=".length));}
+        else{window.SAS_PUBLIC_VISA.showPaidRedirect(visaRoot);}
+        return;
+      }
+    }
+    if(!state.user)return login();
     if(!state.profile||!state.wallet){root.textContent="Profil oder Guthaben konnte nicht geladen werden. Bitte Zugang und Datenbankkonfiguration prüfen.";return;}
     var views={home:dashboard,wallet:wallet,pay:pay,register:register,history:history,votes:votesPage,settings:settingsPage,apps:appDirectory,admin:settingsPage};
     if(!allowed(state.page)){state.page="home";}
@@ -537,7 +548,7 @@
     dialog.querySelectorAll("[data-module-group]").forEach(function(el){el.hidden=!Array.from(el.querySelectorAll("[data-module-search]")).some(function(t){return !t.hidden;});});
     dialog.querySelector(".search-empty").hidden=count>0;
   });
-  window.addEventListener("hashchange",function(){if(!state.user)render();});
+  window.addEventListener("hashchange",function(){if(!state.user||document.querySelector(".sas-public-visa-page"))render();});
   document.addEventListener("keydown",function(e){if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="k"&&state.user){e.preventDefault();var d=document.getElementById("portal-search");if(d){if(d.open)d.close();else d.showModal();}}});
   document.addEventListener("visibilitychange",function(){if(document.hidden)void stopScanner();});
   window.addEventListener("pagehide",function(){void stopScanner();});
