@@ -22,3 +22,8 @@ drop trigger if exists guard_verified_school_card_identity on public.student_car
 create trigger guard_verified_school_card_identity
  before update on public.student_cards for each row
  execute function public.guard_verified_school_card_identity();
+
+-- This function is called by its trigger, not by browser clients or PostgREST.
+-- PostgreSQL grants EXECUTE to PUBLIC on new functions unless explicitly revoked.
+revoke execute on function public.guard_verified_school_card_identity()
+  from public, anon, authenticated;
