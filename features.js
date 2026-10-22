@@ -58,7 +58,7 @@ return wrap(current,
   +input("Klasse","class_label","text",'maxlength="24" value="'+escapeAttr(c?.class_label||"")+'" '+(verified?"readonly":""))
   +'<label class="sas-field"><span>Ausweisdesign</span><select name="design">'+["classic","blue","forest","mono"].map(v=>'<option value="'+v+'"'+(v===design?' selected':'')+'>'+({"classic":"Klassisch","blue":"Blau","forest":"Grün","mono":"Monochrom"}[v])+'</option>').join("")+'</select></label>',"Ausweis speichern")),
  headerActions(linkPage("Design-Galerie","gallery"))+
- box("Dein persönlicher Ausweis-QR-Code",'<p class="sas-note">Dieser QR-Code bleibt gleich und ist für die Identitätszuordnung, Kasse und Arbeitszeiterfassung vorgesehen. Er allein löst keine Zahlung aus.</p><div id="sas-permanent-card-qr" class="verify-qr-wrap" aria-live="polite">Lade QR-Code …</div>')+box("Zusätzliche Sicherheitsprüfungen",'<p class="sas-note">Verifizierung: Zeige deinen Ausweis vor Ort einer berechtigten Person. Anwesenheit: Nur bereits verifizierte Mitglieder können für einen Termin eingecheckt werden.</p><div class="verify-qr-actions">'+(verified?badge("Schulzugehörigkeit geprüft"):btn("Schulidentität prüfen lassen","id-school-qr"))+btn("Anwesenheit zeigen","id-attendance-qr")+'</div><div id="student-id-qr-code" class="verify-qr-wrap" aria-live="polite"><span class="sas-note">Wähle eine der beiden QR-Funktionen.</span></div>'+msg("Die QR-Codes sind nur kurz gültig. Eine Lehrkraft oder eine berechtigte Aufsicht muss deinen Ausweis persönlich prüfen.")));
+ box("Dein persönlicher Ausweis-QR-Code",'<p class="sas-note">Dieser QR-Code bleibt gleich und ist für die Identitätszuordnung, Kasse und Arbeitszeiterfassung vorgesehen. Er allein löst keine Zahlung aus.</p><div id="sas-permanent-card-qr" class="verify-qr-wrap" aria-live="polite">Lade QR-Code …</div>')+box("Zusätzliche Sicherheitsprüfungen",'<p class="sas-note">Verifizierung: Zeige deinen Ausweis vor Ort einer berechtigten Person. Anwesenheit: Nur bereits verifizierte Mitglieder können für einen Termin eingecheckt werden.</p><div class="verify-qr-actions">'+(verified?badge("Schulzugehörigkeit geprüft"):btn("Schulidentität prüfen lassen","id-school-qr"))+btn("Anwesenheit zeigen","id-attendance-qr")+btn("Ausweis für Guthaben zeigen","id-credit-qr")+'</div><div id="student-id-qr-code" class="verify-qr-wrap" aria-live="polite"><span class="sas-note">Wähle eine der beiden QR-Funktionen.</span></div>'+msg("Die QR-Codes sind nur kurz gültig. Eine Lehrkraft oder eine berechtigte Aufsicht muss deinen Ausweis persönlich prüfen.")));
 }
 function renderGallery(){
  const currentDesign=data[0]?.design||"classic";
@@ -226,8 +226,8 @@ async function handle(action,id){
 const api=ctx.api,u=ctx.user.id;
 if(action==="navigate"){if(!pages[id]&&!["wallet","pay","register","votes"].includes(id))throw Error("Seite unbekannt.");await ctx.navigate(id);return;}
 if(action==="reload"){await refresh();return;}
-if(action==="id-school-qr"||action==="id-attendance-qr"){
- const rpcName=action==="id-school-qr"?"create_school_verification_qr":"create_attendance_pass";
+if(action==="id-school-qr"||action==="id-attendance-qr"||action==="id-credit-qr"){
+ const rpcName=action==="id-school-qr"?"create_school_verification_qr":action==="id-credit-qr"?"my_student_card_code":"create_attendance_pass";
  const response=await api.rpc(rpcName);
  if(response.error)throw response.error;
  const area=target.querySelector("#student-id-qr-code");
@@ -236,7 +236,7 @@ if(action==="id-school-qr"||action==="id-attendance-qr"){
  area.replaceChildren();
  new window.QRCode(area,{text:response.data,width:224,height:224,colorDark:"#20364f",colorLight:"#ffffff"});
  const caption=document.createElement("p");caption.className="sas-note";
- caption.textContent=action==="id-school-qr"?"Schulverifizierung: 10 Minuten gültig.":"Anwesenheitskontrolle: 2 Minuten gültig.";
+ caption.textContent=action==="id-school-qr"?"Schulverifizierung: 10 Minuten gültig.":action==="id-credit-qr"?"Persönlicher Ausweiscode. Er identifiziert dein Konto, löst selbst keine Zahlung aus.":"Anwesenheitskontrolle: 2 Minuten gültig.";
  area.append(caption);
  feedback("Der QR-Code wurde erstellt. Zeige ihn einer berechtigten Person in der Schule.");
  return;
