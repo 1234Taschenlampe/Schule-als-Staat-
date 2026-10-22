@@ -38,3 +38,13 @@
 .intro-success-mark{display:grid;place-items:center;margin:0 auto;width:70px;height:70px;border-radius:21px;background:#e3f5eb;color:#168052;font-size:42px}
 @media(max-width:550px){.sas-onboarding{width:calc(100vw - 16px);max-height:94dvh;border-radius:20px}.intro-head{padding:19px 19px 0}.intro-main{padding:25px 19px 16px}.intro-practice{padding:15px}.intro-answer-line{flex-direction:column}.intro-primary{width:100%}.intro-footer{padding:13px 19px}.intro-footer-right span{display:none}.intro-finished{padding:44px 24px}}
 @media(prefers-reduced-motion:reduce){.intro-progress-bar,.intro-primary{transition:none}}
+/* Guided app tour: visible over the real app, with no typing or simulated transactions. */
+.sas-guided-tour{position:fixed;inset:0;z-index:99990;pointer-events:none;display:flex;align-items:flex-end;justify-content:center;padding:16px 16px max(20px,env(safe-area-inset-bottom));background:linear-gradient(180deg,transparent 15%,rgba(13,28,45,.16) 100%)}
+.sas-tour-panel{pointer-events:auto;width:min(540px,100%);max-height:min(60dvh,450px);overflow-y:auto;background:#fff;border:1px solid #dce4ed;border-radius:22px;padding:22px 24px;box-shadow:0 18px 65px rgba(13,29,48,.28);color:#1d2735}
+.sas-tour-counter{font-size:.77rem;font-weight:700;letter-spacing:.09em;color:#56687c;text-transform:uppercase}
+.sas-tour-progress{height:5px;background:#e5eaf0;border-radius:10px;margin:12px 0 17px;overflow:hidden}
+.sas-tour-progress span{display:block;height:100%;background:#3477c9;border-radius:10px;transition:width .2s}
+.sas-tour-panel h2{font-size:1.35rem;margin:0 0 8px}
+.sas-tour-panel p{line-height:1.5;margin:0 0 18px}
+.sas-tour-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end}
+@media(max-width:600px){.sas-guided-tour{padding:10px 10px calc(75px + env(safe-area-inset-bottom))}.sas-tour-panel{padding:18px;max-height:45dvh}}
