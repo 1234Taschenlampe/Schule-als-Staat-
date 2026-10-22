@@ -88,7 +88,7 @@
   }
   async function refresh(silent){
     if(!state.user||state.busy||state.scanning)return;
-    var requestedPage=state.page;try{await fetchData();if(state.page===requestedPage&&(!silent||(!state.editing&&!document.querySelector("dialog[open]")&&["home","wallet","history","votes"].includes(state.page)))){var scroll=window.scrollY;render();if(silent)window.scrollTo(0,scroll);}}
+    var requestedPage=state.page;try{await fetchData();if(state.page===requestedPage&&(!silent||(!state.editing&&!document.querySelector("dialog[open]")&&["home","wallet","history","votes"].includes(state.page)))){if(silent&&window.scrollY>40)return;var scroll=window.scrollY;render();if(silent&&scroll>0)requestAnimationFrame(function(){window.scrollTo({top:scroll,behavior:"instant"});});}}
     catch(e){if(!silent)fail(e);}
   }
   var groups=[
