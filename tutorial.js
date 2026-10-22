@@ -1,126 +1,25 @@
-/* SaS ONE: First-use tutorial for fifth graders. No actual passwords, payments or practice answers are collected. */
-(function(){
-"use strict";
-const lessons=[
- {tag:"WILLKOMMEN",icon:"✦",title:"Hallo im Schulstaat!",desc:"Hier kannst du deinen Schülerausweis ansehen, Veranstaltungen finden und vieles mehr. Wir zeigen dir alles in kleinen Schritten.",question:"Tippe das Wort **LOS** in das Feld. Dann beginnt deine Entdeckungsreise.",answer:"LOS",hint:"Tipp: Das Wort steht fett in der Aufgabe.",tip:"Du musst hier keine persönlichen Daten eingeben."},
- {tag:"DEIN AUSWEIS",icon:"▣",title:"Wo ist mein Schülerausweis?",desc:"Im Bereich „Schülerausweis“ findest du deine Karte und zwei QR-Funktionen: Schulverifizierung und Anwesenheit. Eine echte Identitätsprüfung erfolgt nur durch berechtigtes Schulpersonal.",question:"Wie heißt der Bereich mit deiner Karte? Tippe **AUSWEIS**.",answer:"AUSWEIS",hint:"Du suchst den Bereich „Schülerausweis“.",tip:"Deinen Ausweis findest du im Portal unter „Mein Bereich“."},
- {tag:"DEIN PASSWORT",icon:"●",title:"Ein Passwort bleibt geheim.",desc:"Dein Passwort ist nur für dich. Gib es niemals Freunden oder in fremde Formulare ein. Auch hier fragen wir dich NICHT nach deinem echten Passwort.",question:"Ein Passwort ist …? Tippe **GEHEIM**.",answer:"GEHEIM",hint:"Das Gegenteil von „öffentlich“.",tip:"Falls du Hilfe brauchst, frage eine erwachsene Vertrauensperson."},
- {tag:"SCHULVERIFIZIERUNG",icon:"▦",title:"So funktioniert dein Schul-QR.",desc:"Im Bereich „Schulverifizierung“ erstellst du einen QR-Code. Zeige ihn in der Schule. Eine berechtigte Person prüft dann deine Schulzugehörigkeit.",question:"Wo wird deine Identität geprüft? Tippe **SCHULE**.",answer:"SCHULE",hint:"Dort hast du Unterricht.",tip:"Nach der Verifizierung kann berechtigtes Schulpersonal auch deine Anwesenheit mit dem Schülerausweis scannen. Ein QR-Code allein ist kein Identitätsnachweis."},
- {tag:"BEZAHLEN",icon:"◈",title:"Erst prüfen, dann bezahlen.",desc:"Mit der Schulwährung kannst du später im Projekt bezahlen. Schau dir vor jeder Buchung den Empfänger und den Betrag genau an. Hier wird KEIN Geld bewegt.",question:"Was machst du VOR jeder Zahlung? Tippe **PRÜFEN**.",answer:"PRÜFEN",hint:"Schau genau hin, bevor du etwas bestätigst.",tip:"Diese Übung ist kostenlos – wir buchen nichts von deinem Konto ab."},
- {tag:"DU BIST BEREIT",icon:"✓",title:"Du kennst die wichtigsten Dinge!",desc:"Du weißt jetzt, wo dein Ausweis ist, wie du dein Passwort schützt und wie der Schul-QR funktioniert. Du kannst jederzeit alle anderen Bereiche entdecken.",question:"Zum Abschluss: Tippe **FERTIG**.",answer:"FERTIG",hint:"Das Wort, wenn alles geschafft ist.",tip:"Du findest die Einführung später unter „Einstellungen“ wieder."}
+/* Interactive first-use tour: visits real portal pages; no typing or test payments. */
+(function(){"use strict";
+const steps=[
+ {page:"home",title:"Willkommen in deinem Schulstaat",desc:"Das ist deine Startseite. Wir besuchen jetzt gemeinsam die wichtigsten Bereiche."},
+ {page:"idcard",title:"Dein Schülerausweis",desc:"Hier ist dein persönlicher Ausweis mit festem QR-Code. Er wird beim Scannen zur Zuordnung verwendet."},
+ {page:"wallet",title:"Dein Guthaben",desc:"Hier siehst du deine Schulwährung und Buchungen. Nur die Verwaltung kann neues Guthaben ausgeben."},
+ {page:"pay",title:"So funktioniert Bezahlen",desc:"Hier kannst du einen Zahlungs-QR scannen. Vor einer echten Zahlung musst du Empfänger und Betrag bestätigen. Im Tutorial wird nichts bezahlt."},
+ {page:"votes",title:"Mitbestimmen",desc:"Hier findest du Abstimmungen und Umfragen. Wir geben während der Einführung keine Stimme ab."},
+ {page:"lost",title:"Fundsachen",desc:"Hier kannst du verlorene oder gefundene Gegenstände melden. Wir speichern jetzt keine Meldung."}
 ];
-const escape=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const normalize=s=>String(s||"").normalize("NFKD").replace(/[\u0300-\u036f]/g,"").trim().replace(/\s+/g," ").toLocaleUpperCase("de-DE");
-let api=null,userId="",progress=0,dialog=null,active=false,accountVersion=0,waiting=false,finished=false;
-function asHtml(text){return escape(text).replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>");}
-function find(selector){return dialog?.querySelector(selector);}
-function hide(){
- if(!dialog)return;
- try{if(dialog.open)dialog.close();}catch(e){}
- dialog.remove();
- dialog=null;active=false;waiting=false;finished=false;
+let api=null,uid="",step=0,layer=null,version=0,busy=false,finished=false;
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function clear(){if(layer){layer.remove();layer=null;}busy=false;finished=false;document.querySelectorAll(".sas-tour-highlight").forEach(x=>x.classList.remove("sas-tour-highlight"));}
+function focusPage(page){const nav=window.SAS_TUTORIAL_NAV;if(typeof nav==="function")nav(page);}
+async function save(n){if(!api||!uid)return;const r=await api.from("student_onboarding").upsert({user_id:uid,current_step:n,updated_at:new Date().toISOString(),completed_at:n>=steps.length?new Date().toISOString():null},{onConflict:"user_id"});if(r.error)throw r.error;}
+function draw(){if(!layer)return;if(step>=steps.length){finished=true;layer.innerHTML='<div class="sas-tour-panel" role="dialog" aria-labelledby="sas-tour-title"><div class="sas-tour-counter">Einführung abgeschlossen</div><h2 id="sas-tour-title">Du kennst dich jetzt aus!</h2><p>Du hast die wichtigsten Seiten direkt in der App besucht. Du kannst die Einführung später in den Einstellungen wiederholen.</p><div class="sas-tour-actions"><button class="btn primary" data-tour="done">Zum Portal</button></div></div>';return;}
+const s=steps[step];focusPage(s.page);
+layer.innerHTML='<div class="sas-tour-panel" role="dialog" aria-labelledby="sas-tour-title" aria-describedby="sas-tour-desc"><div class="sas-tour-counter">Rundgang · '+(step+1)+' von '+steps.length+'</div><div class="sas-tour-progress"><span style="width:'+((step+1)/steps.length*100)+'%"></span></div><h2 id="sas-tour-title">'+esc(s.title)+'</h2><p id="sas-tour-desc">'+esc(s.desc)+'</p><div class="sas-tour-actions"><button class="btn" data-tour="later">Später</button>'+(step?'<button class="btn" data-tour="back">Zurück</button>':'')+'<button class="btn primary" data-tour="next">'+(step===steps.length-1?'Abschließen':'Weiter →')+'</button></div></div>';
 }
-async function readProgress(currentApi,uid){
- const out=await currentApi.from("student_onboarding").select("current_step,completed_at").eq("user_id",uid).maybeSingle();
- if(out.error)throw out.error;
- return out.data||{current_step:0,completed_at:null};
-}
-async function saveProgress(step){
- if(!api||!userId)throw Error("Du bist nicht angemeldet.");
- const fields={user_id:userId,current_step:step,updated_at:new Date().toISOString(),completed_at:step>=lessons.length?new Date().toISOString():null};
- const r=await api.from("student_onboarding").upsert(fields,{onConflict:"user_id"});
- if(r.error)throw r.error;
- progress=step;
-}
-function renderLesson(){
- if(!dialog)return;
- if(progress>=lessons.length){renderDone();return;}
- const p=lessons[progress];
- dialog.innerHTML='<div class="intro-head"><div class="intro-kicker"><span class="intro-spark">✦</span> DEIN ERSTER BESUCH <span class="intro-number">Schritt '+(progress+1)+' von '+lessons.length+'</span></div><div class="intro-progress" role="progressbar" aria-label="Fortschritt" aria-valuemin="0" aria-valuemax="'+lessons.length+'" aria-valuenow="'+progress+'"><div class="intro-progress-bar" style="width:'+(progress/lessons.length*100)+'%"></div></div></div>'+
-  '<div class="intro-main"><div class="intro-step-icon" aria-hidden="true">'+p.icon+'</div><span class="intro-topic">'+escape(p.tag)+'</span><h2 id="intro-title">'+escape(p.title)+'</h2><p class="intro-description">'+escape(p.desc)+'</p>'+
-  '<div class="intro-practice"><div class="intro-practice-label"><span class="intro-keyboard" aria-hidden="true">⌨</span> JETZT BIST DU DRAN</div><p>'+asHtml(p.question)+'</p>'+
-  '<form id="intro-answer-form"><label for="intro-answer">Deine Antwort</label><div class="intro-answer-line"><input id="intro-answer" name="answer" type="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="24" placeholder="Hier eintippen …" required aria-describedby="intro-feedback"><button class="intro-primary" type="submit">Weiter <span aria-hidden="true">→</span></button></div><p id="intro-feedback" class="intro-feedback" role="status" aria-live="polite"></p></form></div>'+
-  '<p class="intro-tip">ⓘ '+escape(p.tip)+'</p></div>'+
-  '<div class="intro-footer"><button type="button" class="intro-text-button" data-intro="later">Später weitermachen</button><div class="intro-footer-right">'+(progress?'<button type="button" class="intro-text-button" data-intro="back">← Zurück</button>':'')+'<span>Nur zum Üben · Keine echten Daten</span></div></div>';
- const input=find("#intro-answer");
- if(input)input.focus({preventScroll:true});
-}
-function renderDone(){
- finished=true;
- dialog.innerHTML='<div class="intro-finished"><div class="intro-success-mark" aria-hidden="true">✓</div><div class="intro-kicker">ALLE '+lessons.length+' SCHRITTE GESCHAFFT</div><h2 id="intro-title">Super! Du bist startklar.</h2><p>Deine Einführung ist abgeschlossen. Jetzt kannst du die Webseite erkunden. Bei Fragen hilft dir die Schulverwaltung.</p><button type="button" class="intro-primary" data-intro="done">Zum Schulportal <span aria-hidden="true">→</span></button><p>Das Tutorial findest du jederzeit in den Einstellungen.</p></div>';
-}
-function show(){
- if(!document.body||!document.createElement)return;
- hide();
- dialog=document.createElement("dialog");
- dialog.id="sas-onboarding";
- dialog.className="sas-onboarding";
- dialog.setAttribute("aria-labelledby","intro-title");
- dialog.setAttribute("aria-describedby","intro-instructions");
- dialog.addEventListener("close",()=>{if(dialog&&!dialog.open)hide();});
- dialog.addEventListener("cancel",()=>{hide();});
- dialog.addEventListener("click",event=>{
-  const button=event.target.closest("[data-intro]");
-  if(!button)return;
-  if(button.dataset.intro==="later"||button.dataset.intro==="done"){hide();return;}
-  if(button.dataset.intro==="back"&&!waiting&&progress>0){
-    progress--;renderLesson();
-  }
- });
- dialog.addEventListener("submit",async event=>{
-   if(event.target.id!=="intro-answer-form")return;
-   event.preventDefault();
-   if(waiting)return;
-   const actual=normalize(find("#intro-answer")?.value);
-   const expected=normalize(lessons[progress]?.answer);
-   const info=find("#intro-feedback");
-   if(actual!==expected){
-     if(info){info.textContent="Fast! "+lessons[progress].hint+" Versuche es noch einmal.";info.classList.add("intro-wrong");}
-     find("#intro-answer")?.focus();
-     return;
-   }
-   waiting=true;
-   const button=find('button[type="submit"]');
-   if(button){button.disabled=true;button.textContent="Wird gespeichert …";}
-   try{
-      await saveProgress(progress+1);
-      if(info){info.textContent="Richtig! Sehr gut gemacht.";info.classList.remove("intro-wrong");}
-      renderLesson();
-   }catch(e){
-      if(info){info.textContent="Dein Fortschritt konnte gerade nicht gespeichert werden. Bitte erneut versuchen.";info.classList.add("intro-wrong");}
-      if(button){button.disabled=false;button.innerHTML='Weiter <span aria-hidden="true">→</span>';}
-   }finally{waiting=false;}
- });
- document.body.appendChild(dialog);
- renderLesson();
- if(typeof dialog.showModal==="function")dialog.showModal();
- else dialog.setAttribute("open","");
- active=true;
-}
-async function start(currentApi,uid,opts={}){
- const version=++accountVersion;
- hide();
- api=currentApi;userId=uid||"";progress=0;
- if(!api||!userId)return;
- if(opts.auto===false)return;
- try{
-  const row=await readProgress(api,userId);
-  if(version!==accountVersion||uid!==userId)return;
-  if(row.completed_at||Number(row.current_step)>=lessons.length)return;
-  progress=Math.max(0,Math.min(lessons.length-1,Number(row.current_step)||0));
-  show();
- }catch(e){
-  // Do not prevent access to the actual portal if the tutorial service is unavailable.
-  console.warn("Einführung konnte nicht gestartet werden.",e?.message||e);
- }
-}
-async function reopen(currentApi,uid){
- ++accountVersion;
- hide();
- api=currentApi;userId=uid;progress=0;
- if(!api||!uid)throw Error("Bitte zuerst anmelden.");
- show();
-}
-function logout(){++accountVersion;hide();api=null;userId="";progress=0;}
-window.SAS_TUTORIAL={start,reopen,logout,lessonsCount:lessons.length};
+function show(){clear();layer=document.createElement("div");layer.id="sas-guided-tour";layer.className="sas-guided-tour";layer.setAttribute("aria-live","polite");layer.addEventListener("click",async e=>{const action=e.target.closest("[data-tour]")?.dataset.tour;if(!action||busy)return;if(action==="later"||action==="done"){clear();return;}busy=true;const button=e.target.closest("button");if(button)button.disabled=true;try{if(action==="back"){step=Math.max(0,step-1);draw();}else if(action==="next"){await save(step+1);step++;draw();}}catch(err){const p=layer?.querySelector("#sas-tour-desc");if(p)p.textContent="Fortschritt konnte nicht gespeichert werden. Bitte erneut versuchen.";}finally{busy=false;}});document.body.append(layer);draw();}
+async function start(client,user,options={}){const token=++version;clear();api=client;uid=user||"";step=0;if(!api||!uid||options.auto===false)return;try{const r=await api.from("student_onboarding").select("current_step,completed_at").eq("user_id",uid).maybeSingle();if(r.error)throw r.error;if(token!==version||uid!==user)return;if(r.data?.completed_at||Number(r.data?.current_step)>=steps.length)return;step=Math.max(0,Math.min(steps.length-1,Number(r.data?.current_step)||0));show();}catch(err){console.warn("Rundgang nicht verfügbar",err?.message||err);}}
+async function reopen(client,user){++version;clear();api=client;uid=user;step=0;if(!api||!uid)throw Error("Bitte anmelden.");show();}
+function logout(){++version;clear();api=null;uid="";step=0;}
+window.SAS_TUTORIAL={start,reopen,logout,lessonsCount:steps.length};
 })();
