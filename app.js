@@ -107,7 +107,7 @@
     var operator=Boolean(state.schoolRoles?.operator);
     // Navigation is a convenience boundary; all privileged writes are checked by Supabase RPC/RLS.
     // Regular pupils see the everyday school-state features, not administration modules.
-    var pupilPages=["home","apps","idcard","gallery","wallet","pay","history","shops","votes","lost","settings","workhours","myjob"];
+    var pupilPages=["home","apps","idcard","gallery","schoolverify","wallet","pay","history","shops","votes","lost","settings","workhours","myjob"];
     if(id==="admincredit"||id==="admin")return administrator;
     if(id==="register")return adminOrCashier();
     if(id==="verifyadmin"||id==="roles")return administrator||operator;
