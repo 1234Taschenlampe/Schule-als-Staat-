@@ -14,7 +14,8 @@
   if(window.SAS_VERIFICATION)navs.splice(navs.length-1,0,["schoolverify","Schulverifizierung"],["verifyadmin","QR-Prüfung"]);
   if(window.SAS_SCHOOL_ROLES)navs.splice(navs.length-1,0,["roles","Berufe & Rollen"]);
   navs.splice(navs.length-1,0,["myjob","Mein Beruf"]);
-  if(window.SAS_PUBLIC_VISA)navs.splice(navs.length-1,0,["guestvisa","Gast-ViSA-Anträge"]);\n  if(window.SAS_ADMIN_CREDIT)navs.splice(navs.length-1,0,["admincredit","Geld ausgeben"]);
+  if(window.SAS_PUBLIC_VISA)navs.splice(navs.length-1,0,["guestvisa","Gast-ViSA-Anträge"]);
+  if(window.SAS_ADMIN_CREDIT)navs.splice(navs.length-1,0,["admincredit","Geld ausgeben"]);
   if(window.SAS_SHOPS)navs.splice(navs.length-1,0,["shopmanage","Shopverwaltung"]);
   if(window.SAS_ATTENDANCE)navs.splice(navs.length-1,0,["attendance","Anwesenheitskontrolle"]);
   if(window.SAS_WORK_HOURS)navs.splice(navs.length-1,0,["workhours","Arbeitszeit"]);
