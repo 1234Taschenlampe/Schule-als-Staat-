@@ -154,3 +154,19 @@ end;
 $$;
 revoke all on function public.create_school_job_role(text,text,text) from public,anon,authenticated;
 grant execute on function public.create_school_job_role(text,text,text) to authenticated;
+
+-- Keep attendance authorization consistent with assigned professions.
+-- An operator or attendance controller can check attendance; ordinary jobs cannot.
+create or replace function public.sas_can_check_attendance()
+returns boolean language sql stable security definer set search_path=''
+as $$
+ select (select auth.uid()) is not null and (
+   exists(select 1 from public.profiles p where p.id=(select auth.uid()) and p.role='admin')
+   or exists(select 1 from public.attendance_checkers c where c.user_id=(select auth.uid()))
+   or exists(select 1 from public.school_role_assignments a
+     join public.school_job_roles j on j.slug=a.role_slug
+     where a.user_id=(select auth.uid()) and j.attendance_permission)
+ );
+$$;
+revoke all on function public.sas_can_check_attendance() from public,anon,authenticated;
+grant execute on function public.sas_can_check_attendance() to authenticated;
