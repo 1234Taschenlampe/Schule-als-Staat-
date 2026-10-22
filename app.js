@@ -13,6 +13,7 @@
   if(window.SAS_FEATURES)navs.splice(navs.length-1,0,...window.SAS_FEATURES.navigation.map(function(n){return [n[0],n[1]];}));
   if(window.SAS_VERIFICATION)navs.splice(navs.length-1,0,["schoolverify","Schulverifizierung"],["verifyadmin","QR-Prüfung"]);
   if(window.SAS_SCHOOL_ROLES)navs.splice(navs.length-1,0,["roles","Berufe & Rollen"]);
+  navs.splice(navs.length-1,0,["myjob","Mein Beruf"]);
   if(window.SAS_SHOPS)navs.splice(navs.length-1,0,["shopmanage","Shopverwaltung"]);
   if(window.SAS_ATTENDANCE)navs.splice(navs.length-1,0,["attendance","Anwesenheitskontrolle"]);
   if(window.SAS_WORK_HOURS)navs.splice(navs.length-1,0,["workhours","Arbeitszeit"]);
@@ -90,14 +91,14 @@
     catch(e){if(!silent)fail(e);}
   }
   var groups=[
-    ["Mein Bereich",["idcard","gallery","schoolverify","workhours","visa","wallet","pay","history"]],
+    ["Mein Bereich",["idcard","gallery","schoolverify","workhours","myjob","visa","wallet","pay","history"]],
     ["Schulleben",["bulletin","blog","events","lost"]],
     ["Organisation",["map","rooms","shops","shopmanage","jobs"]],
     ["Staat & Mitbestimmung",["votes","laws","parties","courts"]],
     ["Verwaltung",["register","verifyadmin","attendance","roles","admin","settings"]]
   ];
   var descriptions={workhours:"Arbeitszeit 12.–16. Juli 2027 per QR-Code erfassen",roles:"Schulberufe und Operatorrechte vergeben",attendance:"Anwesenheit per Schülerausweis scannen",schoolverify:"QR-Code für die Prüfung vor Ort erstellen",verifyadmin:"Schüler vor Ort sicher bestätigen",home:"Dein persönlicher Überblick",idcard:"Deine persönliche Projektkarte",gallery:"Das passende Ausweisdesign wählen",visa:"Einreise beantragen und Status verfolgen",wallet:"Guthaben und Kontobewegungen",pay:"QR-Code scannen und Betrag prüfen",history:"Digitale Buchungen und Bargeld",bulletin:"Neuigkeiten aus unserem Schulstaat",blog:"Geschichten und Einblicke ins Projekt",events:"Termine entdecken und teilnehmen",lost:"Verlorenes suchen, Gefundenes melden",map:"Räume und Orte im Schulgebäude",rooms:"Räume für dein Vorhaben reservieren",shops:"Geschäfte und Kassen entdecken",jobs:"Aufgaben finden und sich bewerben",votes:"Gemeinsame Entscheidungen treffen",laws:"Regeln und Verordnungen nachlesen",parties:"Mitteilungen der Parteien",courts:"Öffentliche Gerichtsbekanntmachungen",register:"Verkäufe und QR-Zahlungen erfassen",admin:"Guthaben, Rollen und Stimmrecht verwalten",settings:"Profil, Passwort und Geräte"};
-  var iconPaths={shopmanage:'M3 7h18 M5 7V4h14v3 M5 7v14h14V7 M9 12h6 M9 16h6',workhours:'M12 3v9l4 2 M21 12a9 9 0 1 1-9-9',roles:'M4 6h16 M4 12h16 M4 18h16 M6 8h3 M6 14h3',attendance:'M3 8V4h5 M16 4h5v4 M21 16v5h-5 M8 21H3v-5 M9 12l2 2 4-4',schoolverify:'M4 4h6v6H4z M14 4h6v6h-6z M4 14h6v6H4z M15 15h2 M20 16v4 M15 20h5',verifyadmin:'M4 8V4h4 M16 4h4v4 M20 16v4h-4 M8 20H4v-4 M8 10h3v3H8z M14 10h2 M14 14h3 M8 16h3',home:'M3 10l9-7 9 7v11H3z M9 21v-8h6v8',idcard:'M3 5h18v14H3z M7 9h3v4H7z M14 9h4 M14 13h4 M7 16h11',gallery:'M4 4h16v16H4z M8 8h3v3H8z M4 16l5-4 4 3 3-2 4 3',visa:'M6 3h12v18H6z M9 7h6 M9 11h6 M9 15h3',wallet:'M3 6h17v14H3z M3 6V4h14 M15 11h6v5h-6z',pay:'M4 8V4h4 M16 4h4v4 M20 16v4h-4 M8 20H4v-4 M8 10h3v3H8z M14 10h2 M14 14h3 M8 16h3',history:'M3 11a9 9 0 1 1 2 7 M3 4v7h7 M12 7v5l3 2',bulletin:'M4 5h16v14H4z M8 9h8 M8 13h5 M8 19v3 M16 19v3',blog:'M5 3h14v18H5z M8 7h8 M8 11h8 M8 15h5',events:'M4 5h16v16H4z M8 3v4 M16 3v4 M4 10h16 M8 14h2 M14 14h2',lost:'M10 17a7 7 0 1 0 0-14 7 7 0 0 0 0 14 M15 15l6 6 M7 10h6 M10 7v6',map:'M3 5l6-2 6 2 6-2v16l-6 2-6-2-6 2z M9 3v16 M15 5v16',rooms:'M5 3h14v18H5z M9 3v18 M14 12h1',shops:'M3 9l2-6h14l2 6 M3 9v3h18V9 M5 12v9h14v-9 M9 21v-6h6v6',jobs:'M3 7h18v14H3z M8 7V3h8v4 M3 12h18 M10 12v3h4v-3',votes:'M5 4h14v17H5z M8 8l2 2 5-5 M8 14h8 M8 17h5',laws:'M4 4h7v16H4z M13 4h7v16h-7z M7 8h1 M16 8h1',parties:'M8 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8 M2 21v-3a6 6 0 0 1 12 0v3 M16 4a4 4 0 0 1 0 8 M17 15a5 5 0 0 1 5 5',courts:'M12 3v18 M5 21h14 M4 6h16 M5 6l-3 8h6z M19 6l-3 8h6z',register:'M5 3h14v18H5z M8 6h8v4H8z M8 14h2 M14 14h2 M8 17h2 M14 17h2',settings:'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8 M12 2v3 M12 19v3 M2 12h3 M19 12h3 M5 5l2 2 M17 17l2 2 M5 19l2-2 M17 7l2-2',admin:'M12 3l8 3v6c0 5-8 9-8 9S4 17 4 12V6z M9 12l2 2 4-4',apps:'M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z',search:'M10 17a7 7 0 1 0 0-14 7 7 0 0 0 0 14 M15 15l6 6'};
+  var iconPaths={myjob:'M3 7h18v14H3z M8 7V3h8v4 M3 12h18',shopmanage:'M3 7h18 M5 7V4h14v3 M5 7v14h14V7 M9 12h6 M9 16h6',workhours:'M12 3v9l4 2 M21 12a9 9 0 1 1-9-9',roles:'M4 6h16 M4 12h16 M4 18h16 M6 8h3 M6 14h3',attendance:'M3 8V4h5 M16 4h5v4 M21 16v5h-5 M8 21H3v-5 M9 12l2 2 4-4',schoolverify:'M4 4h6v6H4z M14 4h6v6h-6z M4 14h6v6H4z M15 15h2 M20 16v4 M15 20h5',verifyadmin:'M4 8V4h4 M16 4h4v4 M20 16v4h-4 M8 20H4v-4 M8 10h3v3H8z M14 10h2 M14 14h3 M8 16h3',home:'M3 10l9-7 9 7v11H3z M9 21v-8h6v8',idcard:'M3 5h18v14H3z M7 9h3v4H7z M14 9h4 M14 13h4 M7 16h11',gallery:'M4 4h16v16H4z M8 8h3v3H8z M4 16l5-4 4 3 3-2 4 3',visa:'M6 3h12v18H6z M9 7h6 M9 11h6 M9 15h3',wallet:'M3 6h17v14H3z M3 6V4h14 M15 11h6v5h-6z',pay:'M4 8V4h4 M16 4h4v4 M20 16v4h-4 M8 20H4v-4 M8 10h3v3H8z M14 10h2 M14 14h3 M8 16h3',history:'M3 11a9 9 0 1 1 2 7 M3 4v7h7 M12 7v5l3 2',bulletin:'M4 5h16v14H4z M8 9h8 M8 13h5 M8 19v3 M16 19v3',blog:'M5 3h14v18H5z M8 7h8 M8 11h8 M8 15h5',events:'M4 5h16v16H4z M8 3v4 M16 3v4 M4 10h16 M8 14h2 M14 14h2',lost:'M10 17a7 7 0 1 0 0-14 7 7 0 0 0 0 14 M15 15l6 6 M7 10h6 M10 7v6',map:'M3 5l6-2 6 2 6-2v16l-6 2-6-2-6 2z M9 3v16 M15 5v16',rooms:'M5 3h14v18H5z M9 3v18 M14 12h1',shops:'M3 9l2-6h14l2 6 M3 9v3h18V9 M5 12v9h14v-9 M9 21v-6h6v6',jobs:'M3 7h18v14H3z M8 7V3h8v4 M3 12h18 M10 12v3h4v-3',votes:'M5 4h14v17H5z M8 8l2 2 5-5 M8 14h8 M8 17h5',laws:'M4 4h7v16H4z M13 4h7v16h-7z M7 8h1 M16 8h1',parties:'M8 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8 M2 21v-3a6 6 0 0 1 12 0v3 M16 4a4 4 0 0 1 0 8 M17 15a5 5 0 0 1 5 5',courts:'M12 3v18 M5 21h14 M4 6h16 M5 6l-3 8h6z M19 6l-3 8h6z',register:'M5 3h14v18H5z M8 6h8v4H8z M8 14h2 M14 14h2 M8 17h2 M14 17h2',settings:'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8 M12 2v3 M12 19v3 M2 12h3 M19 12h3 M5 5l2 2 M17 17l2 2 M5 19l2-2 M17 7l2-2',admin:'M12 3l8 3v6c0 5-8 9-8 9S4 17 4 12V6z M9 12l2 2 4-4',apps:'M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z',search:'M10 17a7 7 0 1 0 0-14 7 7 0 0 0 0 14 M15 15l6 6'};
   navs.push(["apps","Portal"],["admin","Administration"]);
   function icon(id){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+(iconPaths[id]||iconPaths.apps)+'"/></svg>';}
   function allowed(id){
@@ -252,6 +253,11 @@
       window.SAS_WORK_HOURS.show({api:api,profile:state.profile,schoolRoles:state.schoolRoles,target:document.getElementById("school-workhours-root")}).catch(fail);
       return;
     }
+    if(state.page==="myjob"){
+      mount('<section class="card"><div class="card-header"><h2>Mein Beruf</h2></div><p>Wähle deine Berufsbezeichnung. Daraus entstehen keine Sonderrechte. Admin, Operator, Polizei und Parlament sind reserviert.</p><form id="sas-myjob-form"><label for="sas-job-title">Berufsbezeichnung</label><input class="field" id="sas-job-title" name="title" minlength="3" maxlength="65" required placeholder="z. B. Bäcker"><button class="btn primary" type="submit">Beruf speichern</button></form><p id="sas-myjob-status" aria-live="polite"></p></section>');
+      rpc("my_school_job_title",{}).then(function(v){var f=document.getElementById("sas-job-title");if(f&&v)f.value=v;}).catch(fail);
+      return;
+    }
     if(state.page==="shopmanage"&&window.SAS_SHOPS){
       mount('<div id="sas-shop-root"></div>');
       window.SAS_SHOPS.show({api:api,user:state.user,profile:state.profile,schoolRoles:state.schoolRoles,target:document.getElementById("sas-shop-root")}).catch(fail);
@@ -374,6 +380,13 @@
     var data=new FormData(form), submit=form.querySelector('[type="submit"]');
     if(submit)submit.disabled=true;
     try{
+      if(form.id==="sas-myjob-form"){
+        var chosen=String(data.get("title")||"").trim();
+        await rpc("set_my_school_job_title",{p_title:chosen});
+        var jobStatus=document.getElementById("sas-myjob-status");if(jobStatus)jobStatus.textContent="Beruf gespeichert – ohne zusätzliche Berechtigungen.";
+        showToast("Berufsbezeichnung gespeichert.");
+        return;
+      }
       if(form.id==="password-reset-request-form"){
         var resetEmail=String(data.get("email")||"").trim();
         var reset=await api.auth.resetPasswordForEmail(resetEmail,{redirectTo:location.origin+location.pathname});
