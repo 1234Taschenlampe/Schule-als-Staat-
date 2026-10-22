@@ -105,11 +105,16 @@
   function allowed(id){
     var administrator=state.profile&&state.profile.role==="admin";
     var operator=Boolean(state.schoolRoles?.operator);
-    return (id!=="register"||adminOrCashier())&&
-      (id!=="admin"||administrator)&&
-      (id!=="admincredit"||administrator)&&
-      (!["verifyadmin","roles"].includes(id)||administrator||operator)&&
-      (id!=="attendance"||administrator||operator||state.schoolRoles?.can_check_attendance);
+    // Navigation is a convenience boundary; all privileged writes are checked by Supabase RPC/RLS.
+    // Regular pupils see the everyday school-state features, not administration modules.
+    var pupilPages=["home","apps","idcard","gallery","schoolverify","wallet","pay","history","shops","votes","lost","settings","workhours","myjob"];
+    if(id==="admincredit"||id==="admin")return administrator;
+    if(id==="register")return adminOrCashier();
+    if(id==="verifyadmin"||id==="roles")return administrator||operator;
+    if(id==="attendance")return administrator||operator||Boolean(state.schoolRoles?.can_check_attendance);
+    if(id==="shopmanage")return administrator||operator||Boolean(state.schoolRoles?.jobs?.length);
+    if(administrator||operator)return true;
+    return pupilPages.includes(id);
   }
   function label(id){return (navs.find(function(n){return n[0]===id;})||[id,id])[1];}
   function navButton(id,mobile){return '<button type="button" class="'+(mobile?'bottom-button':'nav-button')+(state.page===id?' active':'')+'" data-nav="'+id+'"'+(state.page===id?' aria-current="page"':'')+'>'+icon(id)+'<span>'+esc(mobile?({home:"Start",apps:"Portal",pay:"Bezahlen",votes:"Abstimmen",settings:"Profil"}[id]||label(id)):label(id))+'</span></button>';}
@@ -238,6 +243,7 @@
     if(!state.user)return login();
     if(!state.profile||!state.wallet){root.textContent="Profil oder Guthaben konnte nicht geladen werden. Bitte Zugang und Datenbankkonfiguration prüfen.";return;}
     var views={home:dashboard,wallet:wallet,pay:pay,register:register,history:history,votes:votesPage,settings:settingsPage,apps:appDirectory,admin:settingsPage};
+    if(!allowed(state.page)){state.page="home";}
     if(window.SAS_VERIFICATION&&window.SAS_VERIFICATION.pages[state.page]){
       if(!allowed(state.page)){state.page="home";mount(dashboard());return;}
       mount('<div id="sas-school-verification" role="region" aria-label="'+esc(window.SAS_VERIFICATION.pages[state.page])+'"></div>');
