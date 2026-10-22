@@ -22,7 +22,7 @@ Deno.serve(async req=>{
   });
   if(!checked.ok)return response(503,"Bot-Schutz aktuell nicht verfügbar");
   const verdict=await checked.json();
-  if(verdict.success!==true||verdict.hostname!=="schule-als-staat.schule-als-staat-jfe.workers.dev")
+  if(verdict.success!==true||verdict.hostname!=="schule-als-staat.schule-als-staat-jfe.workers.dev"||verdict.action!=="visa")
    return response(403,"Bot-Schutz nicht bestätigt");
   const input=body?.application;
   if(!input||typeof input!=="object")return response(400,"Ungültige Angaben");
