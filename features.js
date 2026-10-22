@@ -58,7 +58,7 @@ return wrap(current,
   +input("Klasse","class_label","text",'maxlength="24" value="'+escapeAttr(c?.class_label||"")+'" '+(verified?"readonly":""))
   +'<label class="sas-field"><span>Ausweisdesign</span><select name="design">'+["classic","blue","forest","mono"].map(v=>'<option value="'+v+'"'+(v===design?' selected':'')+'>'+({"classic":"Klassisch","blue":"Blau","forest":"Grün","mono":"Monochrom"}[v])+'</option>').join("")+'</select></label>',"Ausweis speichern")),
  headerActions(linkPage("Design-Galerie","gallery"))+
- box("QR-Codes auf deinem Schülerausweis",'<p class="sas-note">Verifizierung: Zeige deinen Ausweis vor Ort einer berechtigten Person. Anwesenheit: Nur bereits verifizierte Mitglieder können für einen Termin eingecheckt werden.</p><div class="verify-qr-actions">'+(verified?badge("Schulzugehörigkeit geprüft"):btn("Schulidentität prüfen lassen","id-school-qr"))+btn("Anwesenheit zeigen","id-attendance-qr")+'</div><div id="student-id-qr-code" class="verify-qr-wrap" aria-live="polite"><span class="sas-note">Wähle eine der beiden QR-Funktionen.</span></div>'+msg("Die QR-Codes sind nur kurz gültig. Eine Lehrkraft oder eine berechtigte Aufsicht muss deinen Ausweis persönlich prüfen.")));
+ box("Dein persönlicher Ausweis-QR-Code",'<p class="sas-note">Dieser QR-Code bleibt gleich und ist für die Identitätszuordnung, Kasse und Arbeitszeiterfassung vorgesehen. Er allein löst keine Zahlung aus.</p><div id="sas-permanent-card-qr" class="verify-qr-wrap" aria-live="polite">Lade QR-Code …</div>')+box("Zusätzliche Sicherheitsprüfungen",'<p class="sas-note">Verifizierung: Zeige deinen Ausweis vor Ort einer berechtigten Person. Anwesenheit: Nur bereits verifizierte Mitglieder können für einen Termin eingecheckt werden.</p><div class="verify-qr-actions">'+(verified?badge("Schulzugehörigkeit geprüft"):btn("Schulidentität prüfen lassen","id-school-qr"))+btn("Anwesenheit zeigen","id-attendance-qr")+'</div><div id="student-id-qr-code" class="verify-qr-wrap" aria-live="polite"><span class="sas-note">Wähle eine der beiden QR-Funktionen.</span></div>'+msg("Die QR-Codes sind nur kurz gültig. Eine Lehrkraft oder eine berechtigte Aufsicht muss deinen Ausweis persönlich prüfen.")));
 }
 function renderGallery(){
  const currentDesign=data[0]?.design||"classic";
@@ -180,7 +180,7 @@ async function refresh(){
  screen.innerHTML='<div class="sas-loading" role="status">Daten werden geladen …</div>';
  try{
   const result=await readPage(page,context);
-  if(at===stamp&&screen.isConnected&&screen===target){[data,related]=result;renderScreen();}
+  if(at===stamp&&screen.isConnected&&screen===target){[data,related]=result;renderScreen();if(page==="idcard"){const qr=screen.querySelector("#sas-permanent-card-qr");if(qr){const response=await context.api.rpc("my_student_card_code");if(!response.error&&qr.isConnected&&window.QRCode){qr.replaceChildren();new window.QRCode(qr,{text:response.data,width:220,height:220});}else if(qr.isConnected){qr.textContent=response.error?.message||"QR-Code konnte nicht angezeigt werden.";}}}}
  }catch(e){if(at===stamp&&screen.isConnected&&screen===target){screen.innerHTML=wrap(page,'<section class="sas-panel"><h2>Daten konnten nicht geladen werden</h2>'+msg(e.message||e)+btn("Erneut laden","reload")+'</section>')+'<div class="sas-feedback" role="status"></div>';}}
 }
 async function submit(kind,f){
