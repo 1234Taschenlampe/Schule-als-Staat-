@@ -4,7 +4,7 @@
 
 Schüler müssen keine gesonderte E-Mail-Bestätigung und keine persönliche Schulverifizierung mit einem zusätzlichen QR-Code durchführen. Die Schule stellt eine vollständige Excel-Liste zur Verfügung. Die **E-Mail-Bestätigung mit Token bleibt ausschließlich im öffentlichen Gast-ViSA** erhalten.
 
-**Wichtig:** Die Liste liegt noch nicht vor. Die serverseitige Zuordnung ist deswegen **noch nicht implementiert**. Der Branch entfernt zunächst nur die alte Schulverifizierungs-UI und die zugehörige QR-Erstellung aus dem Schülerausweis, **nicht** die bestehenden Sicherheitsgates im Backend.
+**Wichtig:** Die Schülerliste liegt noch nicht vor; eine verlässliche Kontozuordnung ist noch nicht implementiert. **Während der ausdrücklich freigegebenen Testphase** erhalten alle registrierten normalen Konten sofort das Stimmrecht und dürfen die üblichen Schülerfunktionen ohne zusätzliche Schulverifizierung nutzen. Alle Konten der Testphase werden separat für die spätere kontrollierte Bereinigung erfasst. Administrator-, Kassen-, Operator- und Prüfrechte sind hiervon nicht betroffen.
 
 ## Zukünftiger Schülerablauf
 
@@ -18,10 +18,11 @@ Schüler müssen keine gesonderte E-Mail-Bestätigung und keine persönliche Sch
 
 ## Übergangsregeln (wichtig)
 
-- **Keine automatische Freigabe** von Wahlrecht, Schuljobs, Anwesenheit oder privilegierten Funktionen an beliebige neue Accounts, nur weil der QR-Schulverifizierungsknopf entfernt wurde.
-- `vote_eligible` und Rollen bleiben bis zur eindeutigen Zuordnung serverseitig geschützt.
+- **Testphase bis zum Schülerlisten-Import:** Neue normale Konten erhalten automatisch `vote_eligible=true`; alle bestehenden sieben normalen Konten wurden entsprechend freigeschaltet. Für Anwesenheits-/Arbeitszeit-QR werden während der Testphase normale registrierte Konten ohne vorherige Schulverifizierung akzeptiert (Zeitfenster und Prüfrollen bleiben bestehen).
+- **Nach dem Schülerlisten-Import:** Beim Wechsel auf `roster_enforced=true` bekommen neue Konten nicht mehr automatisch Stimmrecht; für Anwesenheit/Zeiterfassung greift wieder die autorisierte serverseitige Schülerlisten-Zuordnung. Vor dem Umschalten muss diese Zuordnung fertig implementiert und getestet sein. Die Testkonten werden vorher kontrolliert abgeglichen und gelöscht.
+- Administrator-, Kassen-, Operator- und Kontrollberechtigungen bleiben ausschließlich rollen-/berechtigungsgebunden; **„alle Funktionen“ meint alle normalen Schülerfunktionen, niemals privilegierte Administratorfunktionen**.
 - Der permanente Ausweis-QR (`SAS-ID:`), der QR für Anwesenheit und der QR für digitale Schulguthaben bleiben bestehen. **Nur der zusätzliche `SAS-VERIFY:`-Schulverifizierungs-QR entfällt.**
-- Nach vollständigem Roster-Rollout: veraltete RPCs `create_school_verification_qr`, `review_school_verification_qr`, `confirm_school_verification_qr`, `my_school_verification_status` serverseitig entziehen/entfernen; vorhandene QR-Challenges sicher bereinigen. Vor dem Import **keine** produktiven Datensätze oder Berechtigungslogik löschen.
+- Die veralteten QR-RPCs `create_school_verification_qr`, `review_school_verification_qr`, `confirm_school_verification_qr` und `my_school_verification_status` sind für öffentliche und angemeldete Nutzer bereits gesperrt; ihre Tabellen/Funktionen können nach Abschluss der Umstellung kontrolliert entfernt werden. Vor dem Import **keine** personenbezogenen Datensätze oder Berechtigungen löschen.
 - Die bestehende Registrierung ist derzeit offen und besitzt noch **keine** Roster-Vorabprüfung; vor einer öffentlichen Freischaltung muss die Registrierung bzw. Berechtigungsausgabe serverseitig durch die Roster-Identität abgesichert sein.
 - E-Mail-basierte **Passwortzurücksetzung** ist keine Konto-E-Mail-Verifizierung und bleibt als Sicherheitsfunktion möglich.
 
@@ -40,6 +41,8 @@ Vor jedem Import ist die Excel-Datei ausschließlich in einer kontrollierten Umg
 ## Status dieser PR
 
 - Frontend: QR-Schulverifizierungsmodul aus Navigation, HTML und Schülerausweis entfernt; QR für Ausweis/Guthaben/Anwesenheit erhalten.
-- Backend: unverändert; alte Funktionen/Tabellen noch vorhanden.
+- Backend: Migration `pre_roster_student_trial_access_v27` ist in Supabase produktiv angewendet. `school_access_settings.roster_enforced=false`; fünf serverseitige Funktionen beachten diese Phase. Die sieben bestehenden Mitgliedskonten haben Stimmrecht. Der Trigger `on_new_user` vergibt es neuen Mitgliedern automatisch.
+- Testnutzer-Verzeichnis: `public.school_test_accounts` (privat, RLS aktiviert) enthält bereits sieben bestehende normale Konten; neue werden während dieser Phase automatisch erfasst. Es ist eine Prüf- und Bereinigungsliste, **kein automatischer Löschauftrag**. Administratorkonten nicht automatisch eintragen oder löschen.
+- Nach Erhalt der Excel-Liste: Zuerst die nach Klassen/ID gemappten realen Schulkonten unterscheiden; anschließend **nur nach Prüfung** die Testnutzer einschließlich ihrer Auth-Konten, Profile, Geldbewegungen, Stimmen, QR-Tokens, Test-Abstimmungen und Test-Vorgänge entfernen oder sicher archivieren. Keine Live-Daten pauschal anhand eines „test“-Teilstrings löschen.
 - Roster-Matching: **ausstehend, bis die offizielle .xlsx vorliegt**.
-- Produktions-Deployment: **nicht** Bestandteil dieses Branchs.
+- Frontend-Deployment: erst nach Abnahme und Review dieses Branchs, Backend-Regeln sind bereits aktiv. Abstimmungen in der Testphase sind **nicht** als identitätsgesicherte Schulwahlen zu werten. Mehrfachkonten können die Stimmverteilung manipulieren.
