@@ -25,8 +25,9 @@ function roomDetails(){
   return '<div class="sas-shopmap-selected-title"><div><h3>Raum '+esc(room.name)+'</h3><p>'+esc(room.floor)+'</p></div><b class="sas-shopmap-info-badge">Rauminformation</b></div>'+
   '<p class="sas-shopmap-readonly-info"><strong>'+esc(room.detail||"Raum im Schulplan")+'</strong><span>Im Gebäudeplan vorhanden. Für diesen Raum können derzeit keine Shops gebucht werden.</span></p>';
  }
+ var discrepancy=room.name==="D102"?'<p class="sas-shopmap-anomaly" role="note">Der offizielle Raumindex nennt D102, die Zeichnung an der mutmaßlichen Stelle jedoch D105. Die Position von D102 konnte deshalb nicht zweifelsfrei bestätigt werden. Bitte vor der Nutzung mit der Schule abgleichen.</p>':"";
  var form=chosen&&!slot(room,chosen)?'<form id="sas-shopmap-apply" class="sas-shopmap-form"><h3>Platz '+chosen+' in '+esc(room.name)+' reservieren</h3><label>Shop-Name <input name="name" required minlength="3" maxlength="100" placeholder="z. B. Waffelstand"></label><label>Beschreibung <textarea name="description" maxlength="450" rows="3"></textarea></label><div><button type="submit">Anfrage senden</button><button type="button" data-close>Abbrechen</button></div><p>Der Platz bleibt bis zur Entscheidung der Administration reserviert. Ein Shop wird erst nach Genehmigung angelegt.</p></form>':"";
- return '<div class="sas-shopmap-selected-title"><div><h3>Raum '+esc(room.name)+'</h3><p>'+esc(room.floor||"")+(room.detail?" · "+esc(room.detail):"")+'</p></div><b>'+(4-(room.slots||[]).length)+' frei</b></div><div class="sas-shopmap-slots">'+[1,2,3,4].map(function(n){return cell(room,n);}).join("")+'</div>'+form;
+ return '<div class="sas-shopmap-selected-title"><div><h3>Raum '+esc(room.name)+'</h3><p>'+esc(room.floor||"")+(room.detail?" · "+esc(room.detail):"")+'</p></div><b>'+(4-(room.slots||[]).length)+' frei</b></div>'+discrepancy+'<div class="sas-shopmap-slots">'+[1,2,3,4].map(function(n){return cell(room,n);}).join("")+'</div>'+form;
 }
 function adminForm(){return !admin?"":'<details class="sas-shopmap-admin"><summary>Klassenzimmer anhand des offiziellen Plans freigeben</summary><p>Bitte nur Räume eintragen, deren Nummer und Nutzung von der Schule bestätigt wurden.</p><form id="sas-shopmap-roomform" class="sas-shopmap-form"><div class="sas-shopmap-fields"><label>Raumnummer<input name="room" maxlength="20" required placeholder="z. B. A003"></label><label>Gebäude / Stockwerk<input name="floor" maxlength="40" required placeholder="Gebäude A · EG"></label><label>PDF-Seite (optional)<input type="number" min="1" max="40" name="page" placeholder="1"></label></div><label>Beschreibung (optional)<input name="detail" maxlength="500"></label><button type="submit">Raum mit vier Shop-Plätzen freigeben</button></form></details>';}
 
@@ -121,13 +122,14 @@ async function paintPdf(){
   var canvasCtx=targetCanvas.getContext("2d",{alpha:false});
   await page.render({canvasContext:canvasCtx,viewport:viewport}).promise;
   if(run!==paintRun)return;
-  // All known physical room pins already use the inspected PDF geometry.\n  if(el&&el.isConnected)el.textContent="Originalplan · Seite "+pageNum+" von "+pdf.numPages+" · Raum antippen";
+  // All known physical room pins already use the inspected PDF geometry.
+  if(el&&el.isConnected)el.textContent="Originalplan · Seite "+pageNum+" von "+pdf.numPages+" · Raum antippen";
  }catch(e){
   if(run!==paintRun)return;
   pdfDocumentPromise=null;
   if(el&&el.isConnected)el.innerHTML='PDF-Vorschau konnte nicht geladen werden. <a href="'+PDF+'" target="_blank" rel="noopener noreferrer">Offiziellen Plan öffnen ↗</a>';
   var holder=root.querySelector("#rng-plan-holder");
-  if(holder&&holder.isConnected)holder.innerHTML='<iframe title="Offizieller RNG-Schulplan" src="'+PDF_LOCAL+'#page='+pageNum+'" loading="lazy"></iframe>';
+  if(holder&&holder.isConnected)holder.innerHTML='<iframe title="Offizieller RNG-Schulplan" src="'+PDF_LOCAL+'#page='+pageNum+'" loading="lazy"></iframe><div class="sas-shopmap-pins" aria-label="Räume im Grundriss">'+mapPins()+'</div>';
  }
 }
 function draw(){
