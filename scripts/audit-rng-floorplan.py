@@ -12,14 +12,14 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 PDF = Path(sys.argv[1] if len(sys.argv) > 1 else "rng-floorplan.pdf")
-ROOM = re.compile(r"(?<![A-Z0-9])([A-E])-?(\\d{3})(?!\\d)")
+ROOM = re.compile(r"(?<![A-Z0-9])([A-E])-?(\d{3})(?!\d)")
 # 'A-102' (basement) is different from 'A102' (upstairs).
-DASHED = re.compile(r"(?<![A-Z0-9])([A-E])(-?)(\\d{3})(?!\\d)")
+DASHED = re.compile(r"(?<![A-Z0-9])([A-E])(-?)(\d{3})(?!\d)")
 def get_words(line):
     return [w for w in line.iter() if w.tag.rsplit("}", 1)[-1] == "word"]
 def parse():
     info = subprocess.check_output(["pdfinfo", str(PDF)], text=True)
-    m = re.search(r"^Pages:\\s+(\\d+)", info, re.M)
+    m = re.search(r"^Pages:\s+(\d+)", info, re.M)
     assert m and int(m.group(1)) == 7, "Expected exactly seven official PDF pages"
     out = subprocess.check_output(["pdftotext", "-bbox-layout", str(PDF), "-"])
     root = ET.fromstring(out)
@@ -69,7 +69,7 @@ def parse():
 if __name__ == "__main__":
     data = parse()
     output = Path(sys.argv[2] if len(sys.argv)>2 else "rng-floorplan-audit.json")
-    output.write_text(json.dumps(data, ensure_ascii=False, indent=2)+"\\n")
+    output.write_text(json.dumps(data, ensure_ascii=False, indent=2)+"\n")
     print("RNG_AUDIT_BEGIN")
     print(json.dumps(data, ensure_ascii=False, separators=(",",":")))
     print("RNG_AUDIT_END")
