@@ -45,7 +45,7 @@ async function addRoom(form){if(!admin)throw Error("Nicht berechtigt.");
  if(result.error)throw result.error;selected=result.data.id;chosen=0;await refresh("Raum mit vier Shop-Plätzen angelegt.");
 }
 async function show(context){root=context.target;api=context.api;userId=context.user.id;admin=context.profile&&context.profile.role==="admin";rooms=[];selected="";chosen=0;query="";busy=false;
- root.addEventListener("input",function(e){if(e.target.id!=="sas-shopmap-search")return;var caret=e.target.selectionStart;query=e.target.value.toLowerCase();draw();var node=root.querySelector("#sas-shopmap-search");if(node){node.focus();if(caret!==null)node.setSelectionRange(caret,caret);}});
+ root.addEventListener("input",function(e){if(e.target.id!=="sas-shopmap-search")return;query=e.target.value.toLowerCase();var items=rooms.filter(function(r){return (r.name+" "+r.floor+" "+r.detail).toLowerCase().includes(query);});var list=root.querySelector(".sas-shopmap-roomlist");if(list)list.innerHTML=items.length?items.map(roomButton).join(""):'<p class="sas-shopmap-empty">Kein passender Raum gefunden.</p>';});
  root.addEventListener("click",function(e){var b=e.target.closest("button");if(!b||busy)return;
  if(b.dataset.room){selected=b.dataset.room;chosen=0;draw();return;}
  if(b.dataset.slot){chosen=Number(b.dataset.slot);draw();root.querySelector('[name="name"]')?.focus();return;}
