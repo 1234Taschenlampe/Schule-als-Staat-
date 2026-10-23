@@ -94,3 +94,8 @@ button.sas-shopmap-stall:hover{background:#e5f6eb;border-color:#59a578}
 .sas-shopmap-readonly-info{display:flex;flex-direction:column;gap:8px;padding:17px;border:1px solid #dbe3ed;background:#f6f9fc;color:#334155;border-radius:12px}
 .sas-shopmap-readonly-info strong{font-size:16px}
 .sas-shopmap-readonly-info span{font-size:13px;line-height:1.5;color:#536477}
+
+/* For room labels that appear only in the PDF's printed right-hand directory. */
+.sas-shopmap-pin.sas-shopmap-legend{height:16px;min-width:22px;font-size:7px;padding:0 2px;background:rgba(77,103,86,.54);border:1px dashed #b3d1c1;box-shadow:none}
+.sas-shopmap-pin.sas-shopmap-readonly.sas-shopmap-legend{background:rgba(85,105,129,.52);border-color:#c5d1dd}
+.sas-shopmap-pin.sas-shopmap-legend.active{background:#ffdf7b;color:#274533;border:1px solid #274533}
