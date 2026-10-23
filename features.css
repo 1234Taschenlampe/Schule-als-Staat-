@@ -9,3 +9,10 @@
 .sas-id-inline-qr img,.sas-id-inline-qr canvas{max-width:100%!important;width:100%!important;height:auto!important;object-fit:contain}
 .sas-id-inline-qr .sas-note{color:#344054;text-align:center;font-size:12px}
 @media(max-width:480px){.sas-id{padding-right:132px;min-height:260px}.sas-id-inline-qr{right:12px;bottom:12px;width:116px;padding:6px}.sas-id h2{overflow-wrap:anywhere;font-size:clamp(1.1rem,5vw,1.8rem)}}
+
+/* Reusable ID-card QR styles (attendance and credit only; not identity verification). */
+.verify-qr-wrap{min-height:245px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;margin:12px 0 15px;padding:22px;background:#f6f9fd;border:1px solid #e5ebf4;border-radius:18px}
+.verify-qr-wrap canvas,.verify-qr-wrap img{max-width:100%;height:auto;image-rendering:auto;border:10px solid #fff;border-radius:10px}
+.verify-qr-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.verify-qr-actions .sas-btn{margin:0}
+@media(max-width:700px){.verify-qr-wrap{padding:14px}.verify-qr-actions .sas-btn{flex:1 1 auto}}
