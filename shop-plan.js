@@ -2,7 +2,7 @@
 (function(){
 "use strict";
 var PDF="https://www.rng-wangen.de/wp-content/uploads/2024/07/230625_digitaler-uebersichtsplan.pdf";
-var root,api,userId,admin,rooms=[],selected="",chosen=0,query="",busy=false,currentPage=4,currentBuilding="",pdfDocumentPromise=null,paintRun=0;
+var root,api,userId,admin,rooms=[],selected="",chosen=0,query="",busy=false,currentPage=4,currentBuilding="",pdfDocumentPromise=null,paintRun=0,mapZoom=1,lastDrawnPage=0;
 function esc(v){return String(v==null?"":v).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
 function slot(room,n){return (room.slots||[]).find(function(x){return x.number===n;});}
 function msg(s,error){var t=root&&root.querySelector("#shop-map-msg");if(t){t.textContent=s;t.className="sas-shopmap-msg"+(error?" err":"");}}
@@ -131,17 +131,21 @@ async function paintPdf(){
  }
 }
 function draw(){
+ var prev=root.querySelector("#rng-plan-scroll"),lastPage=lastDrawnPage;
+ var priorX=prev?prev.scrollLeft:0,priorY=prev?prev.scrollTop:0;
  var shown=shownRooms();
  var current=findRoom(selected);
  var total=allRooms().length;
  var pageInfo=currentPage===3?"Chemie- und Werkräume: keine regulären Klassenräume für Shops.":
  currentPage===7?"Kunsträume im 3. Obergeschoss: keine regulären Klassenräume für Shops.":
  currentPage===1?"Gebäudeübersicht A, B, C, D und E.":
- currentPage===2?"Raumverzeichnis und Fachraumnamen.":"Tippe eine beschriftete Raumnummer im Plan an.";
+ currentPage===2?"Raumverzeichnis und Fachraumnamen.":
+ currentPage===5?"Achtung: Der Raumindex führt D102 auf, im Grundriss steht stattdessen D105. Die genaue Lage von D102 ist nicht bestätigt.":"Tippe eine beschriftete Raumnummer im Plan an.";
  root.innerHTML='<section class="sas-shopmap"><header><span class="sas-shopmap-kicker">SCHULE ALS STAAT · SHOPS</span><h1>Interaktiver RNG-Schulplan</h1><p>Gebäude, Stockwerk und Klassenzimmer auswählen. In jedem buchbaren Klassenzimmer stehen vier Shop-Plätze zur Verfügung.</p></header>'+
  floorNavigation()+
  '<div class="sas-shopmap-layout"><section class="sas-shopmap-card"><div class="sas-shopmap-head"><h2>Offizieller RNG-Gebäudeplan</h2><a target="_blank" rel="noopener noreferrer" href="'+PDF+'">Original-PDF öffnen ↗</a></div>'+
- '<div class="sas-shopmap-pdf" id="rng-plan-holder"><canvas id="rng-floorplan-canvas" aria-label="RNG-Grundriss, Seite '+currentPage+'"></canvas><div class="sas-shopmap-pins" aria-label="Klassenzimmer im Grundriss">'+mapPins()+'</div></div>'+
+ '<div class="sas-shopmap-zoom" aria-label="Kartenvergrößerung"><button type="button" data-map-zoom="out" aria-label="Karte verkleinern">−</button><output id="rng-zoom-label">'+Math.round(mapZoom*100)+'%</output><button type="button" data-map-zoom="in" aria-label="Karte vergrößern">+</button><button type="button" data-map-zoom="fit">Einpassen</button></div>'+
+ '<div class="sas-shopmap-scroll" id="rng-plan-scroll" aria-label="Schulgrundriss, bei Vergrößerung verschiebbar"><div class="sas-shopmap-pdf" id="rng-plan-holder" style="width:'+(mapZoom*100)+'%"><canvas id="rng-floorplan-canvas" aria-label="RNG-Grundriss, Seite '+currentPage+'"></canvas><div class="sas-shopmap-pins" aria-label="Alle Räume im Grundriss">'+mapPins()+'</div></div></div>'+
  '<p class="sas-shopmap-hint" id="rng-plan-status" role="status">Originalplan, Seite '+currentPage+' laden …</p>'+
  '<p class="sas-shopmap-hint">'+esc(pageInfo)+'</p></section>'+
  '<section class="sas-shopmap-card"><div class="sas-shopmap-head"><h2>Alle Räume</h2><span id="rng-map-room-count">'+total+' Räume · '+rooms.length+' Shop-Klassenzimmer</span></div>'+
@@ -149,6 +153,8 @@ function draw(){
  '<div class="sas-shopmap-roomlist">'+(shown.length?shown.map(roomButton).join(""):'<p class="sas-shopmap-empty">'+(query?"Keine Raumbezeichnung gefunden.":"Auf dieser Planseite wurden keine Räume erkannt.")+'</p>')+'</div></section></div>'+
  '<section class="sas-shopmap-card"><h2>Vier Shop-Plätze je Raum</h2>'+roomDetails()+'</section>'+
  adminForm()+'<p id="shop-map-msg" class="sas-shopmap-msg" role="status" aria-live="polite"></p></section>';
+ lastDrawnPage=currentPage;
+ if(lastPage===currentPage){var pane=root.querySelector("#rng-plan-scroll");if(pane){pane.scrollLeft=priorX;pane.scrollTop=priorY;}}
  void paintPdf();
 }
 async function call(name,p){var r=await api.rpc(name,p||{});if(r.error)throw r.error;return r.data;}
@@ -167,7 +173,7 @@ async function addRoom(form){if(!admin)throw Error("Nicht berechtigt.");
  var result=await api.from("school_places").insert({name:name,kind:"room",floor_label:floor,detail:detail,active:true,classroom_shop_enabled:true,plan_page:page}).select("id").single();
  if(result.error)throw result.error;selected=result.data.id;chosen=0;await refresh("Raum mit vier Shop-Plätzen angelegt.");
 }
-async function show(context){root=context.target;api=context.api;userId=context.user.id;admin=context.profile&&context.profile.role==="admin";rooms=[];selected="";chosen=0;query="";busy=false;currentPage=4;currentBuilding="";pdfDocumentPromise=null;paintRun=0;
+async function show(context){root=context.target;api=context.api;userId=context.user.id;admin=context.profile&&context.profile.role==="admin";rooms=[];selected="";chosen=0;query="";busy=false;currentPage=4;currentBuilding="";pdfDocumentPromise=null;paintRun=0;mapZoom=window.matchMedia&&window.matchMedia("(max-width:650px)").matches?1.7:1;lastDrawnPage=0;
  root.addEventListener("input",function(e){
  if(e.target.id!=="sas-shopmap-search")return;
  query=e.target.value.trim().toLowerCase();
@@ -175,6 +181,12 @@ async function show(context){root=context.target;api=context.api;userId=context.
  if(list)list.innerHTML=items.length?items.map(roomButton).join(""):'<p class="sas-shopmap-empty">Kein passender Klassenraum gefunden.</p>';
 });
  root.addEventListener("click",function(e){var b=e.target.closest("button");if(!b||busy)return;
+ if(b.dataset.mapZoom){
+   mapZoom=b.dataset.mapZoom==="fit"?1:Math.max(1,Math.min(3,Math.round((mapZoom+(b.dataset.mapZoom==="in"?.25:-.25))*100)/100));
+   var h=root.querySelector("#rng-plan-holder"),z=root.querySelector("#rng-zoom-label");
+   if(h)h.style.width=(mapZoom*100)+"%";if(z)z.textContent=Math.round(mapZoom*100)+"%";
+   return;
+ }
  if(b.hasAttribute("data-building-reset")){currentBuilding="";selected="";chosen=0;query="";draw();return;}
  if(b.dataset.building){
   currentBuilding=currentBuilding===b.dataset.building?"":b.dataset.building;
