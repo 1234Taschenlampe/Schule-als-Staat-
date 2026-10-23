@@ -65,3 +65,16 @@ Mit `pdftotext -bbox-layout` wurden aus den **Grundrissbereichen** 46 genaue Rau
 ## Verantwortung
 
 Die offizielle PDF zeigt Räume, aber keine verbindliche Schulgenehmigung, welche Fläche wirklich als Geschäft genutzt werden darf. Die Admin-Genehmigung einer Shop-Anfrage ist daher weiterhin zwingend; Brandschutz und Fachraumregeln können zusätzlich Einschränkungen erfordern.
+
+## Nachtrag 23.10.2026: vollständige auswählbare Raumübersicht
+
+Fehlerursache: Vorher zeichnete `mapPins()` ausschließlich für Shop-Klassenzimmer mit gespeicherten `x_percent`/`y_percent` Markierungen. **D102** hatte keine Position, und die Fach-/Nebenräume aus der gedruckten Raumliste wurden gar nicht im Katalog geführt.
+
+Korrektur:
+- Zusätzlich zu den 47 buchbaren Klassenzimmern werden 57 Raumkennzeichnungen aus den vom Nutzer bereitgestellten offiziellen Grundriss-Screenshots als **auswählbare, nicht buchbare** Einträge geführt (UG, EG, 1.–3. OG). Die separate Raumliste ist durchsuchbar.
+- `page.getTextContent()` aus PDF.js bestimmt für erkennbare Raumnummern den Klickpunkt direkt aus dem Original-PDF. Bevorzugt wird der Raumtext innerhalb des Baukörpers; wenn er fehlt, wird der Raumnummern-Eintrag im **seitlichen Raumverzeichnis der PDF-Seite** auswählbar gemacht.
+- Die 46 bisherigen gültigen Koordinaten bleiben Fallback, falls eine PDF-Raumnummer nur als Vektorumriss vorliegt. Ein Raum ohne verifizierte physische Position bleibt in der Liste anklickbar. Es werden keine erfundenen Positionen in der Datenbank gespeichert.
+- Fach-, Kunst-, Chemie- und Verwaltungsräume erhalten **keine** Shop-Buchungsfunktion. Anfragen für solche Räume werden von der Datenbank weiterhin abgewiesen.
+- Testfunktion über synthetische PDF-Texte geprüft: Raummarker aus Baukörper und Raumverzeichnis, Duplikaterkennung, fehlender D102-Koordinate, und read-only Raumansicht.
+
+Hinweis: Ob jeder Schriftzug im PDF als Text verfügbar ist, hängt von der tatsächlichen PDF-Datei ab. Seiten und zugehörige Verzeichniseinträge aus den Screenshots sind unabhängig davon auswählbar. Die komplette Anklickbarkeit aller Grundrissflächen ohne Raumkennzeichnung ist nicht zugesichert.
