@@ -1,0 +1,35 @@
+name: RNG browser mobile and desktop checks
+on:
+  pull_request:
+    branches: [main]
+    paths: [shop-plan.js, shop-plan.css, tests/rng-mobile-browser.mjs, .github/workflows/rng-mobile-browser.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Get seven-page official PDF
+        run: |
+          curl -fL --retry 3 --connect-timeout 15 --max-time 90 \
+            'https://www.rng-wangen.de/wp-content/uploads/2024/07/230625_digitaler-uebersichtsplan.pdf' -o rng-floorplan.pdf
+          head -c 5 rng-floorplan.pdf | grep -a -q '%PDF-'
+      - name: Install temporary open-source browser runner
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Test 390px touch phone and 1280px desktop, all seven floors
+        run: node tests/rng-mobile-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rng-viewport-screenshots
+          path: rng-mobile-*.png
+          if-no-files-found: ignore
+          retention-days: 2

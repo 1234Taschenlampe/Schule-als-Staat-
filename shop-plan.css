@@ -99,3 +99,18 @@ button.sas-shopmap-stall:hover{background:#e5f6eb;border-color:#59a578}
 .sas-shopmap-pin.sas-shopmap-legend{height:16px;min-width:22px;font-size:7px;padding:0 2px;background:rgba(77,103,86,.54);border:1px dashed #b3d1c1;box-shadow:none}
 .sas-shopmap-pin.sas-shopmap-readonly.sas-shopmap-legend{background:rgba(85,105,129,.52);border-color:#c5d1dd}
 .sas-shopmap-pin.sas-shopmap-legend.active{background:#ffdf7b;color:#274533;border:1px solid #274533}
+
+/* Touch-friendly map viewing: scale the entire PDF and its room-hit layer
+   together, preserving their relative coordinates on any screen width. */
+.sas-shopmap-zoom{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 12px}
+.sas-shopmap-zoom button{min-width:40px;min-height:36px;padding:7px 10px;border-radius:9px;border:1px solid #cbd9d0;background:#fff;color:#275740;font:inherit;font-weight:700;cursor:pointer}
+.sas-shopmap-zoom button:hover,.sas-shopmap-zoom button:focus-visible{background:#ecf6f0;outline-color:#2f7954}
+.sas-shopmap-zoom output{font-size:13px;font-weight:700;min-width:44px;text-align:center;color:#3e5764}
+.sas-shopmap-scroll{width:100%;max-height:min(78vh,920px);overflow:auto;border-radius:11px;overscroll-behavior:contain;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+.sas-shopmap-scroll>.sas-shopmap-pdf{min-width:100%;max-width:none;border-radius:0}
+.sas-shopmap-anomaly{padding:11px 13px;border-radius:9px;background:#fff7ea;border:1px solid #ead2a9;color:#714e1c;font-size:13px;line-height:1.5}
+@media(max-width:650px){
+ .sas-shopmap-zoom button{min-width:44px;min-height:42px}
+ .sas-shopmap-pin{min-width:31px;min-height:25px;height:auto;font-size:9px;padding:3px 4px}
+ .sas-shopmap-scroll{max-height:72vh}
+}
