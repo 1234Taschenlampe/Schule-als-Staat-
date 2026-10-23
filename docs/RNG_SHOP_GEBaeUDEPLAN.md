@@ -108,6 +108,12 @@ auffindbar, ohne eine **erfundene** Kartenposition; der Widerspruch wird in der
 Raumansicht angezeigt. Die Schule muss klären, ob D102 und D105 dieselbe Fläche
 bezeichnen. Erst danach darf eine physische Pin-Zuordnung erfolgen.
 
+**Zusätzliche Unstimmigkeit:** Das allgemeine Raumverzeichnis auf PDF-Seite 2 nennt
+**A305** für „Bildende Kunst 1“, während der Grundriss und seine Legende auf
+Seite 7 **A306** zeigen. A305 wird deshalb nur im Verzeichnis ohne eigenen Pin
+geführt. Die Grundrissmarkierung A306 bleibt an der tatsächlich beschrifteten
+Position auswählbar.
+
 ### Datenmodell / Sicherheit / Buchungen
 
 - Die bestehenden **47** als `classroom_shop_enabled` freigegebenen Klassenzimmer
