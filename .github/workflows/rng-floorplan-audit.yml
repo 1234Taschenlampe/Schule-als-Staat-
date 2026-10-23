@@ -1,0 +1,26 @@
+name: RNG official seven-page PDF audit
+on:
+  pull_request:
+    branches: [main]
+    paths: [shop-plan.js, shop-plan.css, scripts/audit-rng-floorplan.py, .github/workflows/rng-floorplan-audit.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Obtain official PDF, read-only
+        run: |
+          curl --fail --location --retry 3 --connect-timeout 15 --max-time 90 \
+            --output rng-floorplan.pdf \
+            'https://www.rng-wangen.de/wp-content/uploads/2024/07/230625_digitaler-uebersichtsplan.pdf'
+          head -c 5 rng-floorplan.pdf | grep -a -q '%PDF-'
+      - name: Extract labeled room positions from all seven pages
+        run: python3 scripts/audit-rng-floorplan.py rng-floorplan.pdf rng-floorplan-audit.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rng-plan-coordinate-audit
+          path: rng-floorplan-audit.json
+          retention-days: 3
