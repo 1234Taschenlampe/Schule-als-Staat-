@@ -65,6 +65,57 @@ function shownRooms(){
    (query.length>0||currentPage===1||currentPage===2||Number(r.plan_page)===currentPage);
  }).sort(function(a,b){return a.name.localeCompare(b.name,"de",{numeric:true});});
 }
+/* Clickable coordinates from actual PDF text items, not hand-entered geometry.
+   The printed room legend is to the right of the plan and is excluded. */
+function markPdfRooms(page,viewport,textLayer){
+ if(page<3)return;
+ var found=new Map();
+ (textLayer.items||[]).forEach(function(item){
+  if(!item.transform||!item.str)return;
+  var raw=String(item.str).toUpperCase().replace(/\s+/g,"");
+  var hits=[...raw.matchAll(/([A-E])-?(\d{3})/g)];
+  if(!hits.length)return;
+  var origin=viewport.convertToViewportPoint(item.transform[4],item.transform[5]);
+  var measuredWidth=Math.max(0,Number(item.width||0)*viewport.scale);
+  var measuredHeight=Math.max(0,Number(item.height||0)*viewport.scale);
+  hits.forEach(function(m){
+   var code=m[1]+(m[0].includes("-")?"-":"")+m[2];
+   var x=100*(origin[0]+measuredWidth*((m.index+m[0].length/2)/Math.max(raw.length,1)))/viewport.width;
+   var y=100*(origin[1]-measuredHeight*.35)/viewport.height;
+   if(x<2||x>68||y<2||y>98)return;
+   var room=selectableRoom(code,page);
+   if(!found.has(room.name))found.set(room.name,{room:room,x:x,y:y});
+  });
+ });
+ var pins=[];
+ found.forEach(function(item){
+  var r=item.room,b=r.bookable!==false,free=4-(r.slots||[]).length;
+  var label=r.name+" · "+(b?free+" von 4 Shop-Plätzen frei":(r.detail||"Rauminformation, nicht buchbar"));
+  pins.push('<button type="button" class="sas-shopmap-pin'+(b?'':' sas-shopmap-readonly')+(selected===r.id?' active':'')+
+  '" data-room="'+esc(r.id)+'" style="left:'+item.x.toFixed(2)+'%;top:'+item.y.toFixed(2)+'%" title="'+esc(label)+
+  '" aria-label="'+esc(label)+'">'+esc(r.name)+'</button>');
+ });
+ // Some old PDF room labels may be drawn as outlines rather than searchable text.
+ // Keep preexisting verified coordinates in that case.
+ pageRooms(page).filter(function(r){
+  return r.bookable!==false&&r.x_percent!==null&&r.y_percent!==null&&!found.has(r.name);
+ }).forEach(function(r){
+  var x=Number(r.x_percent),y=Number(r.y_percent);
+  if(!Number.isFinite(x)||!Number.isFinite(y))return;
+  pins.push('<button type="button" class="sas-shopmap-pin'+(selected===r.id?' active':'')+
+   '" data-room="'+esc(r.id)+'" style="left:'+x+'%;top:'+y+'%" aria-label="'+esc(r.name)+
+   ' · '+(4-(r.slots||[]).length)+' von 4 Shop-Plätzen frei">'+esc(r.name)+'</button>');
+ });
+ var layer=root&&root.querySelector(".sas-shopmap-pins");
+ if(layer)layer.innerHTML=pins.join("");
+ var list=root&&root.querySelector(".sas-shopmap-roomlist");
+ if(list){
+  var shown=shownRooms();
+  list.innerHTML=shown.length?shown.map(roomButton).join(""):'<p class="sas-shopmap-empty">Keine passenden Räume.</p>';
+ }
+ var counter=root&&root.querySelector("#rng-map-room-count");
+ if(counter)counter.textContent=allRooms().length+" Räume · "+rooms.length+" Shop-Klassenzimmer";
+}
 function mapPins(){
  if(currentPage===1){
   var buildings=[["A",48.96,61.76],["B",43.86,44.91],["C",62.44,34],["D",47.98,11.31],["E",59.1,86.41]];
@@ -115,7 +166,14 @@ async function paintPdf(){
   var canvasCtx=targetCanvas.getContext("2d",{alpha:false});
   await page.render({canvasContext:canvasCtx,viewport:viewport}).promise;
   if(run!==paintRun)return;
-  if(el&&el.isConnected)el.textContent="Originalplan · Seite "+pageNum+" von "+pdf.numPages+" · Raumnummer antippen";
+  try{
+   var textLayer=await page.getTextContent();
+   if(run!==paintRun||!targetCanvas.isConnected)return;
+   markPdfRooms(pageNum,viewport,textLayer);
+  }catch(ignored){
+   // Preserve the known classroom pins and the complete official room index.
+  }
+  if(el&&el.isConnected)el.textContent="Originalplan · Seite "+pageNum+" von "+pdf.numPages+" · Raum antippen";
  }catch(e){
   if(run!==paintRun)return;
   pdfDocumentPromise=null;
@@ -138,7 +196,7 @@ function draw(){
  '<div class="sas-shopmap-pdf" id="rng-plan-holder"><canvas id="rng-floorplan-canvas" aria-label="RNG-Grundriss, Seite '+currentPage+'"></canvas><div class="sas-shopmap-pins" aria-label="Klassenzimmer im Grundriss">'+mapPins()+'</div></div>'+
  '<p class="sas-shopmap-hint" id="rng-plan-status" role="status">Originalplan, Seite '+currentPage+' laden …</p>'+
  '<p class="sas-shopmap-hint">'+esc(pageInfo)+'</p></section>'+
- '<section class="sas-shopmap-card"><div class="sas-shopmap-head"><h2>Alle Räume</h2><span>'+total+' Räume · '+rooms.length+' Shop-Klassenzimmer</span></div>'+
+ '<section class="sas-shopmap-card"><div class="sas-shopmap-head"><h2>Alle Räume</h2><span id="rng-map-room-count">'+total+' Räume · '+rooms.length+' Shop-Klassenzimmer</span></div>'+
  '<label class="sas-shopmap-search">Raumnummer suchen<input id="sas-shopmap-search" type="search" placeholder="z. B. C202 oder E101" value="'+esc(query)+'"></label>'+
  '<div class="sas-shopmap-roomlist">'+(shown.length?shown.map(roomButton).join(""):'<p class="sas-shopmap-empty">'+(query?"Keine Raumbezeichnung gefunden.":"Auf dieser Planseite wurden keine Räume erkannt.")+'</p>')+'</div></section></div>'+
  '<section class="sas-shopmap-card"><h2>Vier Shop-Plätze je Raum</h2>'+roomDetails()+'</section>'+
