@@ -67,7 +67,7 @@ function pageRooms(page){return allRooms().filter(function(room){return Number(r
 function shownRooms(){
  return allRooms().filter(function(r){
   var matched=(r.name+" "+r.floor+" "+r.detail).toLowerCase().includes(query);
-  return matched&&(!currentBuilding||r.name.startsWith(currentBuilding))&&
+  return matched&&(query.length>0||!currentBuilding||r.name.startsWith(currentBuilding))&&
    (query.length>0||currentPage===1||currentPage===2||Number(r.plan_page)===currentPage);
  }).sort(function(a,b){return a.name.localeCompare(b.name,"de",{numeric:true});});
 }
@@ -198,7 +198,7 @@ async function show(context){root=context.target;api=context.api;userId=context.
   if(currentBuilding)currentPage=currentBuilding==="B"?3:currentBuilding==="D"?5:4;
   selected="";chosen=0;query="";draw();return;
  }
- if(b.dataset.page){currentPage=Number(b.dataset.page);selected="";chosen=0;query="";draw();return;}
+ if(b.dataset.page){currentPage=Number(b.dataset.page);currentBuilding="";selected="";chosen=0;query="";draw();return;}
  if(b.dataset.room){selected=b.dataset.room;var room=findRoom(selected);if(room&&room.plan_page){currentPage=Number(room.plan_page);currentBuilding=room.name.charAt(0);}chosen=0;query="";draw();return;}
  if(b.dataset.slot){chosen=Number(b.dataset.slot);draw();root.querySelector('[name="name"]')?.focus();return;}
  if(b.hasAttribute("data-close")){chosen=0;draw();return;}
