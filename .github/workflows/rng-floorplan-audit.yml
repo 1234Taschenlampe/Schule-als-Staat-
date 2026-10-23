@@ -21,6 +21,15 @@ jobs:
         run: sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils
       - name: Extract labeled room positions from all seven pages
         run: python3 scripts/audit-rng-floorplan.py rng-floorplan.pdf rng-floorplan-audit.json
+      - name: Inspect first-floor drawing for unlabeled D102
+        run: |
+          pdftoppm -f 5 -l 5 -scale-to 1050 -png -singlefile rng-floorplan.pdf /tmp/rng-level-1
+          python3 - <<'PY'
+          import base64
+          s=base64.b64encode(open('/tmp/rng-level-1.png','rb').read()).decode()
+          for i in range(0,len(s),12000):
+              print('RNG_IMG_CHUNK '+s[i:i+12000])
+          PY
       - uses: actions/upload-artifact@v4
         with:
           name: rng-plan-coordinate-audit
