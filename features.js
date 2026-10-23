@@ -68,20 +68,17 @@ function renderGallery(){
 }
 function renderVisa(){
 const personal=admin()?data:data.filter(x=>x.applicant_id===ctx.user.id);
-return wrap(current,msg("ViSA-Anträge enthalten personenbezogene Daten (einschließlich Anschrift). Bitte nur mit Einwilligung und schulischer Datenschutzfreigabe nutzen."),
-'<div class="sas-columns">'+box("ViSA beantragen",form("visa",
- input("Vorname","first_name","text",'maxlength="80"')+input("Nachname","last_name","text",'maxlength="80"')
- +input("Herkunftsland","origin_country","text",'maxlength="80"')
- +input("Unterkunft","accommodation","text",'maxlength="100"')
- +input("Straße und Hausnummer","address_line","text",'maxlength="160"')
- +input("PLZ und Ort","postal_city","text",'maxlength="120"')
- +input("Sprache","preferred_language","text",'maxlength="60"')
- +input("Schule und Klasse","school_class","text",'maxlength="60"')
- +input("Geplantes Einreisedatum","planned_entry","date")
- +input("Kontakt-E-Mail","contact_email","email",'maxlength="200" value="'+escapeAttr(ctx.user.email)+'"')
- +'<label class="sas-checkbox"><input type="checkbox" name="acknowledged_privacy" required><span>Ich habe die Hinweise zur Verarbeitung meiner Angaben gelesen und beantrage die Bearbeitung durch die Schuladministration.</span></label>',
- "Antrag verbindlich einreichen"))
- +box(admin()?"Eingegangene Anträge":"Meine Anträge",personal.length?'<div class="sas-list">'+personal.map(v=>card(v.first_name+' '+v.last_name,fmtDate(v.submitted_at)+' · '+v.origin_country+' · '+v.school_class, badge(v.status)+(admin()?'<p class="sas-note">Unterkunft: '+escapeHtml(v.accommodation)+' · '+escapeHtml(v.address_line)+', '+escapeHtml(v.postal_city)+'</p>'+btn("Genehmigen","visa-approve",v.id)+btn("Ablehnen","visa-reject",v.id):'')+(v.reviewer_note?msg(v.reviewer_note):'')+(v.applicant_id===ctx.user.id&&v.status!=='approved'?btn('Antrag zurückziehen','visa-delete',v.id):''))).join("")+'</div>':empt("Noch keine ViSA-Anträge."))+'</div>');
+const legacy=personal.length?'<div class="sas-list">'+personal.map(v=>card(
+ v.first_name+' '+v.last_name,
+ fmtDate(v.submitted_at)+' · '+v.origin_country+' · '+v.school_class,
+ badge(v.status)+(admin()?'<p class="sas-note">Unterkunft: '+escapeHtml(v.accommodation)+' · '+escapeHtml(v.address_line)+', '+escapeHtml(v.postal_city)+'</p>':'')
+ +(v.reviewer_note?msg(v.reviewer_note):'')
+)).join("")+'</div>':empt("Keine historischen ViSA-Anträge vorhanden.");
+return wrap(current,msg("Das alte ViSA-Antragsformular ist aus Sicherheitsgründen geschlossen. Neue Gastanträge laufen ausschließlich über E-Mail-Verifizierung und nach Aktivierung über die serverseitig geprüfte Euro-Zahlung."),
+ '<div class="sas-columns">'
+ +box("Öffentliches ViSA-Onboarding",'<p class="sas-note">Für externe Besucher ohne Bürgerkonto. Derzeit sind E-Mail-Versand und Euro-Bezahlung noch nicht freigeschaltet.</p><a class="sas-btn primary" href="/#visa-onboarding" target="_blank" rel="noopener noreferrer">Öffentliches ViSA öffnen →</a>')
+ +box("Archiv – bisheriges ViSA-Verfahren",legacy)
+ +'</div>');
 }
 function renderPosts(){
 const section=current==="blog"?"blog":"news";
