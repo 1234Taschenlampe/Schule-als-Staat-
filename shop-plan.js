@@ -2,7 +2,7 @@
 (function(){
 "use strict";
 var PDF="https://www.rng-wangen.de/wp-content/uploads/2024/07/230625_digitaler-uebersichtsplan.pdf";
-var root,api,userId,admin,rooms=[],selected="",chosen=0,query="",busy=false,currentPage=4,pdfDocumentPromise=null,paintRun=0;
+var root,api,userId,admin,rooms=[],selected="",chosen=0,query="",busy=false,currentPage=4,currentBuilding="",pdfDocumentPromise=null,paintRun=0;
 function esc(v){return String(v==null?"":v).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
 function slot(room,n){return (room.slots||[]).find(function(x){return x.number===n;});}
 function msg(s,error){var t=root&&root.querySelector("#shop-map-msg");if(t){t.textContent=s;t.className="sas-shopmap-msg"+(error?" err":"");}}
@@ -32,12 +32,18 @@ function pageRooms(page){return rooms.filter(function(room){return Number(room.p
 function shownRooms(){
  return rooms.filter(function(r){
   var matched=(r.name+" "+r.floor+" "+r.detail).toLowerCase().includes(query);
-  return matched&&(query.length>0||Number(r.plan_page)===currentPage);
+  return matched&&(!currentBuilding||r.name.startsWith(currentBuilding))&&(query.length>0||Number(r.plan_page)===currentPage);
  });
 }
 function mapPins(){
+ if(currentPage===1){
+  var buildings=[["A",48.96,61.76],["B",43.86,44.91],["C",62.44,34],["D",47.98,11.31],["E",59.1,86.41]];
+  return buildings.map(function(b){
+   return '<button type="button" data-building="'+b[0]+'" class="sas-shopmap-pin sas-shopmap-building'+(currentBuilding===b[0]?' active':'')+'" style="left:'+b[1]+'%;top:'+b[2]+'%" title="Gebäude '+b[0]+' auswählen" aria-label="Gebäude '+b[0]+' auswählen">'+b[0]+'</button>';
+  }).join("");
+ }
  return pageRooms(currentPage).filter(function(r){
-  return r.x_percent!==null&&r.y_percent!==null&&Number.isFinite(Number(r.x_percent))&&Number.isFinite(Number(r.y_percent));
+  return (!currentBuilding||r.name.startsWith(currentBuilding))&&r.x_percent!==null&&r.y_percent!==null&&Number.isFinite(Number(r.x_percent))&&Number.isFinite(Number(r.y_percent));
  }).map(function(r){
   var x=Math.max(1,Math.min(99,Number(r.x_percent)));
   var y=Math.max(1,Math.min(99,Number(r.y_percent)));
@@ -47,10 +53,16 @@ function mapPins(){
  }).join("");
 }
 function floorNavigation(){
- return '<nav class="sas-shopmap-floors" aria-label="Gebäudeplan: Etage auswählen">'+FLOOR_TABS.map(function(p){
-  var count=pageRooms(p[0]).length;
+ var buildings='<div class="sas-shopmap-buildings" aria-label="Gebäudeteil wählen">'+
+  '<span>Gebäude</span>'+["A","B","C","D","E"].map(function(letter){
+   var count=rooms.filter(function(r){return r.name.startsWith(letter);}).length;
+   return '<button type="button" data-building="'+letter+'" class="'+(currentBuilding===letter?'active':'')+'" aria-pressed="'+(currentBuilding===letter)+'">Haus '+letter+' <small>'+count+' Räume</small></button>';
+  }).join("")+(currentBuilding?'<button type="button" data-building-reset>Alle Gebäude</button>':'')+'</div>';
+ var floors='<nav class="sas-shopmap-floors" aria-label="Gebäudeplan: Etage auswählen">'+FLOOR_TABS.map(function(p){
+  var count=pageRooms(p[0]).filter(function(r){return !currentBuilding||r.name.startsWith(currentBuilding);}).length;
   return '<button type="button" data-page="'+p[0]+'" class="'+(p[0]===currentPage?'active':'')+'"'+(p[0]===currentPage?' aria-current="page"':'')+'>'+esc(p[1])+(count?' <small>'+count+' Räume</small>':'')+'</button>';
  }).join("")+'</nav>';
+ return buildings+floors;
 }
 async function paintPdf(){
  var targetCanvas=root&&root.querySelector("#rng-floorplan-canvas");
@@ -119,7 +131,7 @@ async function addRoom(form){if(!admin)throw Error("Nicht berechtigt.");
  var result=await api.from("school_places").insert({name:name,kind:"room",floor_label:floor,detail:detail,active:true,classroom_shop_enabled:true,plan_page:page}).select("id").single();
  if(result.error)throw result.error;selected=result.data.id;chosen=0;await refresh("Raum mit vier Shop-Plätzen angelegt.");
 }
-async function show(context){root=context.target;api=context.api;userId=context.user.id;admin=context.profile&&context.profile.role==="admin";rooms=[];selected="";chosen=0;query="";busy=false;currentPage=4;pdfDocumentPromise=null;paintRun=0;
+async function show(context){root=context.target;api=context.api;userId=context.user.id;admin=context.profile&&context.profile.role==="admin";rooms=[];selected="";chosen=0;query="";busy=false;currentPage=4;currentBuilding="";pdfDocumentPromise=null;paintRun=0;
  root.addEventListener("input",function(e){
  if(e.target.id!=="sas-shopmap-search")return;
  query=e.target.value.trim().toLowerCase();
@@ -127,8 +139,14 @@ async function show(context){root=context.target;api=context.api;userId=context.
  if(list)list.innerHTML=items.length?items.map(roomButton).join(""):'<p class="sas-shopmap-empty">Kein passender Klassenraum gefunden.</p>';
 });
  root.addEventListener("click",function(e){var b=e.target.closest("button");if(!b||busy)return;
+ if(b.hasAttribute("data-building-reset")){currentBuilding="";selected="";chosen=0;query="";draw();return;}
+ if(b.dataset.building){
+  currentBuilding=currentBuilding===b.dataset.building?"":b.dataset.building;
+  if(currentBuilding)currentPage=currentBuilding==="B"?3:currentBuilding==="D"?5:4;
+  selected="";chosen=0;query="";draw();return;
+ }
  if(b.dataset.page){currentPage=Number(b.dataset.page);selected="";chosen=0;query="";draw();return;}
- if(b.dataset.room){selected=b.dataset.room;var room=rooms.find(function(x){return x.id===selected;});if(room&&room.plan_page)currentPage=Number(room.plan_page);chosen=0;query="";draw();return;}
+ if(b.dataset.room){selected=b.dataset.room;var room=rooms.find(function(x){return x.id===selected;});if(room&&room.plan_page){currentPage=Number(room.plan_page);currentBuilding=room.name.charAt(0);}chosen=0;query="";draw();return;}
  if(b.dataset.slot){chosen=Number(b.dataset.slot);draw();root.querySelector('[name="name"]')?.focus();return;}
  if(b.hasAttribute("data-close")){chosen=0;draw();return;}
  var id=b.dataset.cancel||b.dataset.approve||b.dataset.reject;if(!id)return;
