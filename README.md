@@ -1,5 +1,13 @@
 # Schule als Staat – V4 (Projektname; Staatsname noch offen)
 
+## Vorübergehender Schulstaat-Testbetrieb (23.10.2026)
+
+**Neue normale Schülerkonten können sich direkt registrieren und sofort abstimmen, ohne zusätzliche Schul- oder Konto-E-Mail-Verifizierung.** Der gesamte normale Schülerbereich einschließlich Schülerausweis und QR-Funktionen ist zugänglich; nur Administrator-, Operator-, Kassen- und Kontrollfunktionen bleiben gesondert berechtigt. Jede Abstimmung zählt je angemeldetem Konto höchstens eine Stimme. Bis zum späteren Listenabgleich sind Mehrfachkonten möglich; deshalb sind diese Abstimmungen **Testabstimmungen und keine verifizierten Schulwahlen**.
+
+Aktive Supabase-Migrationen `pre_roster_student_trial_access_v27` und `pre_roster_editable_id_cards_v28`: Neue Schüler erhalten automatisch `vote_eligible=true`, alle sieben bisherigen normalen Mitgliedskonten sind ebenfalls freigeschaltet, und QR-Anwesenheits-/Arbeitszeitfunktionen benötigen in der Testphase keine zusätzliche Schulverifizierung. Ein privates Verzeichnis `school_test_accounts` erfasst bisherige und neue Testkonten (nur IDs). **Keine Löschung wird vor Eingang und Prüfung der offiziellen Schul-Excel-Datei durchgeführt.** Nach geschütztem Import werden Testkonten sowie Testdaten und Test-Abstimmungen unter Wahrung des Administratorkontos kontrolliert bereinigt und die schulseitige Listen-Zuordnung eingeschaltet. Siehe [Details zum Schülerlisten-Onboarding](docs/SCHUELERLISTE_ONBOARDING.md).
+
+**Für öffentliche Gast-ViSA-Anträge bleibt die E-Mail-Bestätigung ausdrücklich bestehen**; der Gmail-Versand ist bis zum erfolgreichen End-to-End-Test und Bot-Schutz separat gesperrt.
+
 **Offizielle Live-Adresse:** https://schule-als-staat.schule-als-staat-jfe.workers.dev/
 
 **Hosting-Regel:** Ausschließlich Cloudflare Workers ist das produktive Hosting. GitHub bleibt Code- und Test-Repository. Die bisherige GitHub-Pages-Adresse führt nur noch auf Cloudflare weiter. Veröffentlichungen und Funktionstests müssen auf Cloudflare stattfinden. Die Worker-Uploads werden derzeit manuell durchgeführt; ein GitHub-Commit allein aktualisiert Cloudflare nicht.
