@@ -9,8 +9,6 @@ revoke truncate, trigger, references on all tables in schema public from anon, a
 revoke insert on table public.visa_applications from anon, authenticated;
 drop policy if exists sas_visa_submit on public.visa_applications;
 
--- Avoid reintroducing this class of privilege in newly created tables.
-alter default privileges for role postgres in schema public
-  revoke truncate, trigger, references on tables from anon, authenticated;
-alter default privileges for role supabase_admin in schema public
-  revoke truncate, trigger, references on tables from anon, authenticated;
+-- Future-table default privilege tightening needs a schema owner/admin role
+-- and is intentionally not changed by this migration. Revoke dangerous
+-- grants explicitly on each newly created table in future migrations.
