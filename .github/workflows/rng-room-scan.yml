@@ -21,7 +21,7 @@ jobs:
           sudo apt-get install -y -qq poppler-utils
           pdfinfo /tmp/rng-campus.pdf | head -24
           pdftotext -layout -enc UTF-8 /tmp/rng-campus.pdf /tmp/rng-campus.txt
-          pdftotext -bbox -enc UTF-8 /tmp/rng-campus.pdf /tmp/rng-campus.html
+          pdftotext -bbox-layout -enc UTF-8 /tmp/rng-campus.pdf /tmp/rng-campus.html
           python3 - <<'PY'
           import re
           import xml.etree.ElementTree as ET
