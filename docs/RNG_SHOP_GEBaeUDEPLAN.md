@@ -66,15 +66,68 @@ Mit `pdftotext -bbox-layout` wurden aus den **Grundrissbereichen** 46 genaue Rau
 
 Die offizielle PDF zeigt Räume, aber keine verbindliche Schulgenehmigung, welche Fläche wirklich als Geschäft genutzt werden darf. Die Admin-Genehmigung einer Shop-Anfrage ist daher weiterhin zwingend; Brandschutz und Fachraumregeln können zusätzlich Einschränkungen erfordern.
 
-## Nachtrag 23.10.2026: vollständige auswählbare Raumübersicht
+## Korrektur 23.10.2026: vollständige Original-Pin-Karte (PR #21)
 
-Fehlerursache: Vorher zeichnete `mapPins()` ausschließlich für Shop-Klassenzimmer mit gespeicherten `x_percent`/`y_percent` Markierungen. **D102** hatte keine Position, und die Fach-/Nebenräume aus der gedruckten Raumliste wurden gar nicht im Katalog geführt.
+Die vorherige PDF.js-Laufzeit-Texterkennung war **keine verlässliche Raumgeometrie**: Sie platzierte manche
+Pins auf Beschriftungen des seitlichen Raumverzeichnisses und übersah im PDF anders kodierte Zeichen.
+Diese Technik wurde entfernt.
 
-Korrektur:
-- Zusätzlich zu den 47 buchbaren Klassenzimmern werden 57 Raumkennzeichnungen aus den vom Nutzer bereitgestellten offiziellen Grundriss-Screenshots als **auswählbare, nicht buchbare** Einträge geführt (UG, EG, 1.–3. OG). Die separate Raumliste ist durchsuchbar.
-- `page.getTextContent()` aus PDF.js bestimmt für erkennbare Raumnummern den Klickpunkt direkt aus dem Original-PDF. Bevorzugt wird der Raumtext innerhalb des Baukörpers; wenn er fehlt, wird der Raumnummern-Eintrag im **seitlichen Raumverzeichnis der PDF-Seite** auswählbar gemacht.
-- Die 46 bisherigen gültigen Koordinaten bleiben Fallback, falls eine PDF-Raumnummer nur als Vektorumriss vorliegt. Ein Raum ohne verifizierte physische Position bleibt in der Liste anklickbar. Es werden keine erfundenen Positionen in der Datenbank gespeichert.
-- Fach-, Kunst-, Chemie- und Verwaltungsräume erhalten **keine** Shop-Buchungsfunktion. Anfragen für solche Räume werden von der Datenbank weiterhin abgewiesen.
-- Testfunktion über synthetische PDF-Texte geprüft: Raummarker aus Baukörper und Raumverzeichnis, Duplikaterkennung, fehlender D102-Koordinate, und read-only Raumansicht.
+### Nachgewiesene Raumpositionen
 
-Hinweis: Ob jeder Schriftzug im PDF als Text verfügbar ist, hängt von der tatsächlichen PDF-Datei ab. Seiten und zugehörige Verzeichniseinträge aus den Screenshots sind unabhängig davon auswählbar. Die komplette Anklickbarkeit aller Grundrissflächen ohne Raumkennzeichnung ist nicht zugesichert.
+Jede der sieben Seiten wurde mit dem kostenlosen Poppler-Werkzeug (`pdftotext -bbox-layout`)
+ausgewertet und visuell mit dem Originalplan abgeglichen.
+
+| Planseite | Inhalt | Im tatsächlichen Grundriss beschriftete Raumpositionen |
+| --- | --- | ---: |
+| 1 | Lageplan mit Gebäuden A–E | Gebäude direkt wählbar |
+| 2 | Alphabetisches Raumverzeichnis | ohne physische Raumpositionen |
+| 3 | Untergeschoss | 7 |
+| 4 | Erdgeschoss | 37 |
+| 5 | 1. Obergeschoss | 39 |
+| 6 | 2. Obergeschoss | 27 |
+| 7 | 3. Obergeschoss / Bildende Kunst | 5 |
+| **Summe** | | **115 Raumpositionen** |
+
+Die 115 eindeutigen Positionsdaten sind als `OFFICIAL_ROOM_POINTS` in `shop-plan.js`
+gespeichert. Alle Zahlen sind Prozentwerte der **tatsächlichen PDF-Seite**; Punkte aus dem
+gedruckten Legendentext wurden ausgeschlossen. Deshalb lassen sich diese Raumstellen
+unmittelbar **im Gebäudeumriss** und nicht nur im Raumverzeichnis anklicken.
+
+Zusätzliche im Gebäudeumriss gezeichnete Raumnummern (z. B. A-101/A-103, A002, A004,
+A005, A012, C109, C215, C207, D105, E110 und E210) sind zusätzlich zu den bisher
+hinterlegten Fach- und Verwaltungsräumen enthalten. Wo der offizielle Plan keine
+Raumnutzungsangabe macht, wird **keine Nutzung erfunden**.
+
+### Abweichung im amtlichen Plan: D102 vs. D105
+
+Das Raumverzeichnis der **PDF-Seite 5** klassifiziert **D102** als Klassenraum. In
+der gezeichneten Raumfläche steht jedoch **D105**; ein eigener Raum D102 ist dort
+nicht eindeutig beschriftet. Die Lage von D102 kann daher aus diesem PDF nicht
+belegt werden. D102 bleibt als bereits buchbarer Datenbankraum im Katalog
+auffindbar, ohne eine **erfundene** Kartenposition; der Widerspruch wird in der
+Raumansicht angezeigt. Die Schule muss klären, ob D102 und D105 dieselbe Fläche
+bezeichnen. Erst danach darf eine physische Pin-Zuordnung erfolgen.
+
+### Datenmodell / Sicherheit / Buchungen
+
+- Die bestehenden **47** als `classroom_shop_enabled` freigegebenen Klassenzimmer
+  stammen weiterhin **ausschließlich** aus Supabase `shop_room_catalog`.
+- Aus der offiziellen PDF ergänzte Nicht-Klassenzimmer sind **nur Frontend-Raumdaten**;
+  sie besitzen **keine** `school_places`-ID und werden **nicht** an die
+  Buchungs-RPC übergeben. Sie können angezeigt, aber nicht gebucht werden.
+- Für jedes bestehende freigegebene Klassenzimmer bleiben exakt **vier** Plätze;
+  keine Änderung an `request_shop_stall`, `school_shop_stalls`, den vorhandenen
+  Shopreservierungen, Freigaben, Benutzerkonten oder RLS-Regeln.
+- Zoom (+/−/Einpassen), seitliches Scrollen und Touch-Scrollen für Smartphone
+  ergänzt. Karte und Pin-Layer skalieren im selben Container.
+- `tests/rng-hotspots.mjs` überprüft Pins über alle Geschossseiten, Ausnahmen,
+  Nichtbuchbarkeit, genau vier Slots und mobile Bedienelemente.
+- `scripts/audit-rng-floorplan.py` sowie die GitHub-CI-Datei
+  `.github/workflows/rng-floorplan-audit.yml` reproduzieren die sieben
+  PDF-Seiten und exportieren eine JSON-Positionsprüfung ohne Adobe-/Bezahldienst.
+
+**Betriebsstatus:** PR #21 enthält Änderungen im Entwicklungsbranch. Ein erfolgreicher
+GitHub-Source-Check ersetzt **keinen** Browser-End-to-End-Test auf echten
+Smartphones. Änderungen an GitHub werden beim bestehenden Cloudflare Worker
+nicht automatisch veröffentlicht. Ein produktives Deployment muss separat
+ausgerollt und auf sämtlichen Stockwerken real geprüft werden.
