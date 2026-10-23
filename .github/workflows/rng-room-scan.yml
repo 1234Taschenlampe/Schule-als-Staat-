@@ -51,6 +51,11 @@ jobs:
                   tokens=[x for x in line if x.tag.endswith('word')]
                   words=[(t.text or '').strip() for t in tokens]
                   for ix,word in enumerate(words):
+                      if pi==1 and word.strip() in ('A','B','C','D','E'):
+                          t=tokens[ix]
+                          x=(float(t.attrib['xMin'])+float(t.attrib['xMax']))/2/w*100
+                          y=(float(t.attrib['yMin'])+float(t.attrib['yMax']))/2/h*100
+                          print('BUILDING_POSITION',pi,word.strip(),round(x,2),round(y,2))
                       name=word.replace(' ','').strip()
                       good=bool(re.fullmatch(r'[A-Z][0-3][0-9]{2}[a-zA-Z]?',name))
                       joined=False
