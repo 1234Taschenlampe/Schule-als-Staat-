@@ -17,6 +17,8 @@ jobs:
           URL="https://www.rng-wangen.de/wp-content/uploads/2024/07/230625_digitaler-uebersichtsplan.pdf"
           curl -fLsS --connect-timeout 12 --max-time 70 --retry 1 -o /tmp/rng-campus.pdf "$URL"
           file /tmp/rng-campus.pdf
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq poppler-utils
           pdfinfo /tmp/rng-campus.pdf | head -24
           pdftotext -layout -enc UTF-8 /tmp/rng-campus.pdf /tmp/rng-campus.txt
           pdftotext -bbox -enc UTF-8 /tmp/rng-campus.pdf /tmp/rng-campus.html
@@ -36,8 +38,7 @@ jobs:
           print('PDF_PAGES_END')
           print('PDF_WORD_POSITIONS_BEGIN')
           xml=ET.parse('/tmp/rng-campus.html').getroot()
-          for pi,p in enumerate(xml.iter(),1):
-              if not p.tag.endswith('page'):continue
+          for pi,p in enumerate((e for e in xml.iter() if e.tag.endswith('page')),1):
               try:w=float(p.attrib['width']);h=float(p.attrib['height'])
               except:continue
               print('PAGE_GEOMETRY',pi,round(w,1),round(h,1))
