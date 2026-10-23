@@ -40,23 +40,25 @@ var FLOOR_TABS=[
 /* Zusätzliches Raumverzeichnis nach den amtlichen Listen in den Grundriss-Screenshots.
    Fach- und Nebenräume sind auswählbar, aber keine Shop-Buchungsobjekte. */
 var OFFICIAL_OTHER_ROOMS=[[3,"B-101","Chemie 1"],[3,"B-102","Chemie Vorbereitung"],[3,"B-103","Chemie 2"],[3,"A-102","Werkraum"],[3,"A-104","Lehrmittelbibliothek"],[4,"D001","Musik 1"],[4,"D-101","Musik 2"],[4,"D-102","Raum im Musikbereich"],[4,"D-103","Raum im Musikbereich"],[4,"C001","NwT 3"],[4,"C004","Mediathek"],[4,"C006","Physik 2"],[4,"C007","Physik Vorbereitung"],[4,"C008","Physik 1"],[4,"C010","Bistro"],[4,"B001","NwT 1"],[4,"B002","NwT Vorbereitung"],[4,"B003","NwT 2"],[4,"A001","Erste Hilfe"],[4,"A009","Neß-Café"],[4,"A010","Hausverwaltung"],[4,"A011","Schulsozialarbeit"],[4,"A013","Schließfächer"],[4,"E108","Lehrmittel"],[5,"D101","Musik 3"],[5,"C101","Biologie 1"],[5,"C102","Biologie Vorbereitung"],[5,"C103","Biologie 2"],[5,"C104","Biologie 3"],[5,"C108","Medien"],[5,"C111","Sprechzimmer 2"],[5,"C112","Medien"],[5,"B101","Sitzungssaal"],[5,"A101","Kopierraum"],[5,"A102","Stundenplanraum"],[5,"A103","Archiv"],[5,"A104","Sekretariat"],[5,"A105","Rektorat"],[5,"A106","Rektorat"],[5,"A107","Lehrkräftezimmer"],[5,"E201","SFZ 4"],[5,"E203","Lehrmittel"],[5,"E204","Media"],[5,"E206","EDV 2"],[5,"E207","EDV 1"],[5,"E208","SFZ 1"],[5,"E213","SFZ 3"],[6,"A201","Sprechzimmer 1"],[6,"A203","Geografie Vorbereitung 1"],[6,"A204","Geografie 1"],[6,"A205","Geografie Vorbereitung 2"],[6,"A206","Geografie 2"],[7,"A301","Vorbereitung 3"],[7,"A302","Bildende Kunst 3"],[7,"A303","Vorbereitung 2"],[7,"A304","Bildende Kunst 2"],[7,"A306","Bildende Kunst 1"]];
-var FLOOR_DESCRIPTIONS={"3":"Untergeschoss","4":"Erdgeschoss","5":"1. Obergeschoss","6":"2. Obergeschoss","7":"3. Obergeschoss"};
+/* Physical room-label coordinates extracted from all seven original PDF pages in GitHub CI.\n   Numbers are percentages of the PDF page; legend coordinates are intentionally excluded. */\nvar OFFICIAL_ROOM_POINTS=[[3,"A-101",41.69,61.79],[3,"A-102",41.69,57.82],[3,"A-103",41.53,52.72],[3,"A-104",41.42,48.12],[3,"B-101",25.33,48.38],[3,"B-102",25.34,43.84],[3,"B-103",25.34,39.47],[4,"A001",31.38,67.01],[4,"A002",34.76,67.01],[4,"A003",41.63,64.41],[4,"A004",41.5,61.16],[4,"A005",41.49,59.88],[4,"A006",41.5,57.31],[4,"A007",41.49,52.8],[4,"A008",41.49,48.28],[4,"A009",33.1,62.54],[4,"A010",15.45,62.3],[4,"A011",11.58,62.3],[4,"A012",8.5,62.3],[4,"A013",5.08,64.2],[4,"B001",25.64,48.63],[4,"B002",25.65,44.15],[4,"B003",25.65,39.53],[4,"C001",38.81,40.47],[4,"C002",45.63,40.47],[4,"C003",51.33,40.47],[4,"C004",57.56,36.67],[4,"C006",56.37,26.98],[4,"C007",47.6,26.98],[4,"C008",39.06,26.98],[4,"C010",36.79,35.35],[4,"D-101",47.69,15.13],[4,"D-102",47.7,10.2],[4,"D-103",40.7,10.2],[4,"D001",34.55,17.82],[4,"E101",41.97,88.9],[4,"E103",42.91,94.49],[4,"E104",48.03,93.12],[4,"E105",48.02,89],[4,"E106",48.14,83.83],[4,"E107",48.14,79.49],[4,"E108",44.5,78.5],[4,"E109",41.95,80.87],[4,"E110",41.95,85.12],[5,"A101",28.02,66.87],[5,"A102",31.32,66.87],[5,"A103",34.86,66.87],[5,"A104",41.89,66.87],[5,"A105",41.88,63.01],[5,"A106",41.88,61.12],[5,"A107",40.69,53.44],[5,"A108",33.16,62.42],[5,"A109",26.52,62.42],[5,"A110",20.43,62.42],[5,"A111",13.06,62.33],[5,"A112",4.85,62.33],[5,"A113",4.85,66.21],[5,"B101",26.83,44.91],[5,"C101",38.64,40.45],[5,"C102",49.82,40.45],[5,"C103",57.8,40.45],[5,"C104",57.7,34.81],[5,"C106",57.7,26.85],[5,"C107",51.29,26.85],[5,"C108",45.12,26.85],[5,"C109",38.47,26.85],[5,"C111",38.42,33.14],[5,"C112",38.42,36.21],[5,"D101",47.55,12.55],[5,"D103",30.23,20.85],[5,"D104",34.57,15.57],[5,"D105",34.56,20.04],[5,"D108",34.58,9.06],[5,"E201",41.85,88.82],[5,"E203",41.86,94.07],[5,"E204",44.35,94.1],[5,"E205",48.12,94.1],[5,"E206",48.13,89.55],[5,"E207",48.12,83.73],[5,"E208",48.13,79.51],[5,"E209",43.01,78.41],[5,"E210",41.86,80.57],[5,"E213",41.83,84.36],[6,"A201",28.46,66.93],[6,"A202",33.23,66.93],[6,"A203",41.84,66.93],[6,"A204",41.83,63.28],[6,"A205",37.47,62.2],[6,"A206",32.84,62.2],[6,"A207",26.6,62.2],[6,"A208",20.25,62.2],[6,"A209",13.3,62.2],[6,"A210",5.1,62.2],[6,"A211",5.08,66.1],[6,"C201",39.22,40.28],[6,"C202",45.72,40.28],[6,"C203",51.67,40.28],[6,"C204",57.75,40.28],[6,"C206",57.75,35.45],[6,"C207",57.74,32.9],[6,"C210",57.52,26.9],[6,"C211",51.42,26.9],[6,"C212",45.46,26.9],[6,"C213",39.03,26.9],[6,"C215",38.98,32.91],[6,"C216",38.98,35.45],[6,"D201",30.26,21.09],[6,"D202",34.14,19.51],[6,"D203",34.41,15.57],[6,"D206",34.41,9.2],[7,"A301",41.4,62.65],[7,"A302",33.7,62.71],[7,"A303",27.23,62.71],[7,"A304",20.01,62.71],[7,"A306",8.24,64.15]];\nvar FLOOR_DESCRIPTIONS={"3":"Untergeschoss","4":"Erdgeschoss","5":"1. Obergeschoss","6":"2. Obergeschoss","7":"3. Obergeschoss"};
+var PIN_LOOKUP=new Map(OFFICIAL_ROOM_POINTS.map(function(v){return [v[0]+":"+v[1],[v[2],v[3]]];}));
 var EXTRA_ROOMS=OFFICIAL_OTHER_ROOMS.map(function(e){
- return {id:"plan:"+e[1],name:e[1],floor:"Gebäude "+e[1][0]+" · "+FLOOR_DESCRIPTIONS[e[0]],
-  detail:e[2],plan_page:e[0],slots:[],bookable:false,x_percent:null,y_percent:null};
+ var p=PIN_LOOKUP.get(e[0]+":"+e[1]);
+ return {id:"plan:"+e[1]+":"+e[0],name:e[1],floor:"Gebäude "+e[1][0]+" · "+FLOOR_DESCRIPTIONS[e[0]],
+  detail:e[2],plan_page:e[0],slots:[],bookable:false,x_percent:p?p[0]:null,y_percent:p?p[1]:null};
 });
-var DISCOVERED_ROOMS=[];
-function allRooms(){return rooms.concat(EXTRA_ROOMS,DISCOVERED_ROOMS);}
-function findRoom(id){return allRooms().find(function(r){return r.id===id;});}
-function selectableRoom(code,page){
- var existing=allRooms().find(function(r){return r.name===code&&Number(r.plan_page)===page;});
- if(existing)return existing;
- var found={id:"plan:"+code,name:code,floor:"Gebäude "+code[0]+" · "+(FLOOR_DESCRIPTIONS[page]||"Schulgebäude"),
-  detail:"Zusätzliche Raumkennzeichnung im Originalgrundriss",plan_page:page,slots:[],bookable:false,
-  x_percent:null,y_percent:null};
- DISCOVERED_ROOMS.push(found);return found;
+OFFICIAL_ROOM_POINTS.forEach(function(p){
+ if(EXTRA_ROOMS.some(function(r){return r.name===p[1]&&Number(r.plan_page)===p[0];}))return;
+ EXTRA_ROOMS.push({id:"plan:"+p[1]+":"+p[0],name:p[1],
+   floor:"Gebäude "+p[1][0]+" · "+FLOOR_DESCRIPTIONS[p[0]],
+   detail:"Raum im offiziellen RNG-Grundriss (nicht zur Shopbuchung freigegeben)",
+   plan_page:p[0],slots:[],bookable:false,x_percent:p[2],y_percent:p[3]});
+});
+function allRooms(){
+ var bookableKeys=new Set(rooms.map(function(r){return Number(r.plan_page)+":"+r.name;}));
+ return rooms.concat(EXTRA_ROOMS.filter(function(r){return !bookableKeys.has(Number(r.plan_page)+":"+r.name);}));
 }
-
+function findRoom(id){return allRooms().find(function(r){return r.id===id;});}
 function pageRooms(page){return allRooms().filter(function(room){return Number(room.plan_page)===page;});}
 function shownRooms(){
  return allRooms().filter(function(r){
@@ -65,60 +67,8 @@ function shownRooms(){
    (query.length>0||currentPage===1||currentPage===2||Number(r.plan_page)===currentPage);
  }).sort(function(a,b){return a.name.localeCompare(b.name,"de",{numeric:true});});
 }
-/* Clickable coordinates from actual PDF text items, not hand-entered geometry.
-   The printed room legend is to the right of the plan and is excluded. */
-function markPdfRooms(page,viewport,textLayer){
- if(page<3)return;
- var found=new Map();
- (textLayer.items||[]).forEach(function(item){
-  if(!item.transform||!item.str)return;
-  var raw=String(item.str).toUpperCase().replace(/\s+/g,"");
-  var hits=[...raw.matchAll(/([A-E])-?(\d{3})/g)];
-  if(!hits.length)return;
-  var origin=viewport.convertToViewportPoint(item.transform[4],item.transform[5]);
-  var measuredWidth=Math.max(0,Number(item.width||0)*viewport.scale);
-  var measuredHeight=Math.max(0,Number(item.height||0)*viewport.scale);
-  hits.forEach(function(m){
-   var code=m[1]+(m[0].includes("-")?"-":"")+m[2];
-   var x=100*(origin[0]+measuredWidth*((m.index+m[0].length/2)/Math.max(raw.length,1)))/viewport.width;
-   var y=100*(origin[1]-measuredHeight*.35)/viewport.height;
-   if(x<2||x>99||y<2||y>98)return;
-   var room=selectableRoom(code,page);
-   var onPlan=x<=68,previous=found.get(room.name);
-   // Prefer the real room label in the blueprint. If none exists, keep the
-   // printed room-directory entry as a clickable fallback (e.g. D102).
-   if(!previous||(onPlan&&!previous.onPlan))found.set(room.name,{room:room,x:x,y:y,onPlan:onPlan});
-  });
- });
- var pins=[];
- found.forEach(function(item){
-  var r=item.room,b=r.bookable!==false,free=4-(r.slots||[]).length;
-  var label=r.name+" · "+(b?free+" von 4 Shop-Plätzen frei":(r.detail||"Rauminformation, nicht buchbar"));
-  pins.push('<button type="button" class="sas-shopmap-pin'+(b?'':' sas-shopmap-readonly')+(item.onPlan?'':' sas-shopmap-legend')+(selected===r.id?' active':'')+
-  '" data-room="'+esc(r.id)+'" style="left:'+item.x.toFixed(2)+'%;top:'+item.y.toFixed(2)+'%" title="'+esc(label)+
-  '" aria-label="'+esc(label)+'">'+esc(r.name)+'</button>');
- });
- // Some old PDF room labels may be drawn as outlines rather than searchable text.
- // Keep preexisting verified coordinates in that case.
- pageRooms(page).filter(function(r){
-  return r.bookable!==false&&r.x_percent!==null&&r.y_percent!==null&&!found.has(r.name);
- }).forEach(function(r){
-  var x=Number(r.x_percent),y=Number(r.y_percent);
-  if(!Number.isFinite(x)||!Number.isFinite(y))return;
-  pins.push('<button type="button" class="sas-shopmap-pin'+(selected===r.id?' active':'')+
-   '" data-room="'+esc(r.id)+'" style="left:'+x+'%;top:'+y+'%" aria-label="'+esc(r.name)+
-   ' · '+(4-(r.slots||[]).length)+' von 4 Shop-Plätzen frei">'+esc(r.name)+'</button>');
- });
- var layer=root&&root.querySelector(".sas-shopmap-pins");
- if(layer)layer.innerHTML=pins.join("");
- var list=root&&root.querySelector(".sas-shopmap-roomlist");
- if(list){
-  var shown=shownRooms();
-  list.innerHTML=shown.length?shown.map(roomButton).join(""):'<p class="sas-shopmap-empty">Keine passenden Räume.</p>';
- }
- var counter=root&&root.querySelector("#rng-map-room-count");
- if(counter)counter.textContent=allRooms().length+" Räume · "+rooms.length+" Shop-Klassenzimmer";
-}
+/* Positions are pre-extracted on the official PDF (GitHub audit); runtime PDF text
+   must not move pins onto the room directory or lose vector-only labels. */
 function mapPins(){
  if(currentPage===1){
   var buildings=[["A",48.96,61.76],["B",43.86,44.91],["C",62.44,34],["D",47.98,11.31],["E",59.1,86.41]];
@@ -127,14 +77,16 @@ function mapPins(){
   }).join("");
  }
  return pageRooms(currentPage).filter(function(r){
-  return (!currentBuilding||r.name.startsWith(currentBuilding))&&r.x_percent!==null&&r.y_percent!==null&&Number.isFinite(Number(r.x_percent))&&Number.isFinite(Number(r.y_percent));
+  return (!currentBuilding||r.name.startsWith(currentBuilding))&&r.x_percent!==null&&r.y_percent!==null&&
+   Number.isFinite(Number(r.x_percent))&&Number.isFinite(Number(r.y_percent));
  }).map(function(r){
-  var x=Math.max(1,Math.min(99,Number(r.x_percent)));
-  var y=Math.max(1,Math.min(99,Number(r.y_percent)));
-  var active=selected===r.id;
-  var label=r.name+" · "+(4-(r.slots||[]).length)+" von 4 Shop-Plätzen frei";
-  return '<button type="button" data-room="'+esc(r.id)+'" class="sas-shopmap-pin'+(active?' active':'')+'" style="left:'+x+'%;top:'+y+'%" title="'+esc(label)+'" aria-label="'+esc(label)+'">'+esc(r.name)+'</button>';
+  var x=Math.max(1,Math.min(99,Number(r.x_percent))),y=Math.max(1,Math.min(99,Number(r.y_percent)));
+  var active=selected===r.id,bookable=r.bookable!==false;
+  var label=r.name+" · "+(bookable?(4-(r.slots||[]).length)+" von 4 Shop-Plätzen frei":"Info · nicht buchbar");
+  return '<button type="button" data-room="'+esc(r.id)+'" class="sas-shopmap-pin'+(bookable?'':' sas-shopmap-readonly')+
+   (active?' active':'')+'" style="left:'+x+'%;top:'+y+'%" title="'+esc(label)+'" aria-label="'+esc(label)+'">'+esc(r.name)+'</button>';
  }).join("");
+
 }
 function floorNavigation(){
  var buildings='<div class="sas-shopmap-buildings" aria-label="Gebäudeteil wählen">'+
@@ -169,14 +121,7 @@ async function paintPdf(){
   var canvasCtx=targetCanvas.getContext("2d",{alpha:false});
   await page.render({canvasContext:canvasCtx,viewport:viewport}).promise;
   if(run!==paintRun)return;
-  try{
-   var textLayer=await page.getTextContent();
-   if(run!==paintRun||!targetCanvas.isConnected)return;
-   markPdfRooms(pageNum,viewport,textLayer);
-  }catch(ignored){
-   // Preserve the known classroom pins and the complete official room index.
-  }
-  if(el&&el.isConnected)el.textContent="Originalplan · Seite "+pageNum+" von "+pdf.numPages+" · Raum antippen";
+  // All known physical room pins already use the inspected PDF geometry.\n  if(el&&el.isConnected)el.textContent="Originalplan · Seite "+pageNum+" von "+pdf.numPages+" · Raum antippen";
  }catch(e){
   if(run!==paintRun)return;
   pdfDocumentPromise=null;
@@ -222,7 +167,7 @@ async function addRoom(form){if(!admin)throw Error("Nicht berechtigt.");
  var result=await api.from("school_places").insert({name:name,kind:"room",floor_label:floor,detail:detail,active:true,classroom_shop_enabled:true,plan_page:page}).select("id").single();
  if(result.error)throw result.error;selected=result.data.id;chosen=0;await refresh("Raum mit vier Shop-Plätzen angelegt.");
 }
-async function show(context){root=context.target;api=context.api;userId=context.user.id;admin=context.profile&&context.profile.role==="admin";rooms=[];DISCOVERED_ROOMS=[];selected="";chosen=0;query="";busy=false;currentPage=4;currentBuilding="";pdfDocumentPromise=null;paintRun=0;
+async function show(context){root=context.target;api=context.api;userId=context.user.id;admin=context.profile&&context.profile.role==="admin";rooms=[];selected="";chosen=0;query="";busy=false;currentPage=4;currentBuilding="";pdfDocumentPromise=null;paintRun=0;
  root.addEventListener("input",function(e){
  if(e.target.id!=="sas-shopmap-search")return;
  query=e.target.value.trim().toLowerCase();
