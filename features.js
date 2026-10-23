@@ -8,7 +8,7 @@ const navigation=[
  ["bulletin","Schwarzes Brett","Offizielle Nachrichten"],
  ["blog","Blog","Projektbeiträge"],
  ["shops","Geschäfte","Geschäfte und ihre Kassen"],
- ["map","Raumplan","Orte und Räume"],
+ ["map","Schulplan & Shops","Vier Shops pro Klassenzimmer buchen"],
  ["rooms","Raumreservierung","Raumreservierung"],
  ["events","Veranstaltungen","Termine und Anmeldungen"],
  ["lost","Fundbüro","Verloren und gefunden"],
