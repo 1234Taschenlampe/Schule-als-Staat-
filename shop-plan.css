@@ -1,0 +1,54 @@
+/* School map and four stall booking layout; scoped to avoid impacting existing SaS components. */
+.sas-shopmap{max-width:1420px;margin:0 auto;display:grid;gap:20px;padding-bottom:30px;color:#1c2e3c}
+.sas-shopmap header h1{margin:5px 0 7px;font-size:clamp(28px,3vw,38px);letter-spacing:-.03em}
+.sas-shopmap header p{margin:0;color:#667487}
+.sas-shopmap-kicker{font-size:11px;letter-spacing:.11em;font-weight:800;color:#357951}
+.sas-shopmap-layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,1fr);gap:17px}
+.sas-shopmap-card,.sas-shopmap-admin{padding:19px;background:#fff;border:1px solid #e1e8eb;border-radius:19px;box-shadow:0 8px 24px rgba(25,49,71,.03)}
+.sas-shopmap-card>h2{font-size:19px;margin:0 0 18px}
+.sas-shopmap-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:13px}
+.sas-shopmap-head h2{margin:0;font-size:18px}
+.sas-shopmap-head>a{font-size:13px;color:#276846;font-weight:700;text-decoration:none}
+.sas-shopmap-head>span{font-size:12px;color:#6b7a8b}
+.sas-shopmap iframe{display:block;width:100%;height:510px;background:#f5f6f8;border:1px solid #dde4eb;border-radius:12px}
+.sas-shopmap-hint{font-size:12px;line-height:1.5;color:#68758a;margin:12px 0 0}
+.sas-shopmap-search{display:grid;gap:7px;font-size:12px;color:#667488;font-weight:700;margin-bottom:13px}
+.sas-shopmap-search input,.sas-shopmap-form input,.sas-shopmap-form textarea{width:100%;padding:10px 12px;border:1px solid #d1dbe1;border-radius:10px;background:#fff;color:#193044;font:inherit;font-size:14px;outline-offset:2px}
+.sas-shopmap-roomlist{max-height:525px;overflow-y:auto;display:grid;gap:9px;align-content:start}
+.sas-shopmap-room{display:grid;text-align:left;gap:8px;padding:12px 14px;border-radius:13px;border:1px solid #dfe8e3;background:#f8faf9;color:#1b3242;cursor:pointer}
+.sas-shopmap-room:hover,.sas-shopmap-room.active{background:#edf7f0;border-color:#44906a}
+.sas-shopmap-room>span{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.sas-shopmap-room>span strong{font-size:15px}
+.sas-shopmap-room>span b{font-size:12px;color:#397a51}
+.sas-shopmap-room>small{color:#68798a}
+.sas-shopmap-room>i{display:flex;gap:5px}
+.sas-shopmap-room>i em{width:26px;height:5px;border-radius:10px;background:#bae1c7}
+.sas-shopmap-room>i em.taken{background:#afb9c4}
+.sas-shopmap-selected-title{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:16px}
+.sas-shopmap-selected-title h3{margin:0;font-size:22px}
+.sas-shopmap-selected-title p{margin:3px 0 0;color:#6a788a;font-size:13px}
+.sas-shopmap-selected-title>b{padding:7px 12px;border-radius:30px;background:#e9f6ef;color:#367752;white-space:nowrap}
+.sas-shopmap-slots{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px}
+.sas-shopmap-stall{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;min-height:142px;gap:7px;padding:13px;border-radius:13px;text-align:left;color:#254235;border:1px solid #d5e9db;background:#f0faf4;min-width:0}
+button.sas-shopmap-stall{cursor:pointer}
+button.sas-shopmap-stall:hover{background:#e5f6eb;border-color:#59a578}
+.sas-shopmap-stall.taken{color:#405064;border-color:#e0e4ea;background:#f6f7f9}
+.sas-shopmap-stall strong{font-size:16px;overflow-wrap:anywhere}
+.sas-shopmap-stall small,.sas-shopmap-stall span{font-size:12px;color:#667588}
+.sas-shopmap-actions{display:flex;gap:6px;flex-wrap:wrap}
+.sas-shopmap-actions button{padding:6px 9px;border-radius:8px;border:1px solid #c8d4da;background:#fff;cursor:pointer;color:#235039;font-size:12px}
+.sas-shopmap-form{display:grid;gap:12px;padding:16px;background:#f7fbf8;border:1px solid #dbe8dc;border-radius:13px;margin-top:16px}
+.sas-shopmap-form h3{margin:0}
+.sas-shopmap-form label{display:grid;gap:6px;font-weight:700;font-size:13px;color:#596b75}
+.sas-shopmap-form>div:not(.sas-shopmap-fields){display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sas-shopmap-form button{background:#397e56;border:0;border-radius:10px;color:#fff;font-weight:700;padding:10px 13px;cursor:pointer}
+.sas-shopmap-form button[data-close]{background:#e7ecea;color:#355443}
+.sas-shopmap-form p{font-size:12px;color:#66768a;margin:0}
+.sas-shopmap-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.sas-shopmap-admin summary{cursor:pointer;font-weight:800}
+.sas-shopmap-admin>p{font-size:13px;color:#657386}
+.sas-shopmap-empty,.sas-shopmap-loading,.sas-shopmap-error{padding:22px;background:#f6f8fa;border-radius:12px;color:#637286;font-size:14px;line-height:1.6}
+.sas-shopmap-msg{margin:0;min-height:20px;color:#277447;font-size:13px}
+.sas-shopmap-msg.err{color:#a3303a}
+@media(max-width:1000px){.sas-shopmap-layout{grid-template-columns:1fr}.sas-shopmap iframe{height:430px}.sas-shopmap-roomlist{grid-template-columns:repeat(2,minmax(0,1fr));max-height:460px}}
+@media(max-width:660px){.sas-shopmap-card,.sas-shopmap-admin{padding:14px}.sas-shopmap iframe{height:340px}.sas-shopmap-roomlist{grid-template-columns:1fr}.sas-shopmap-slots{grid-template-columns:repeat(2,minmax(0,1fr))}.sas-shopmap-fields{grid-template-columns:1fr}}
