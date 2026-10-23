@@ -43,6 +43,7 @@ test("every physically labeled room renders as a directly clickable map button",
   assert.ok(room("A-101",3),"basement rooms not included in earlier index");
   assert.ok(room("D105",5),"physical label D105 exists");
   assert.equal(room("D102",5),undefined,"do not invent D102 geometry");
+  assert.equal(room("A305",7),undefined,"A305 exists in PDF index but not the physical page");
 });
 
 test("specialist, arts, music and administration rooms stay nonbookable",()=>{
