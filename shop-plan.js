@@ -82,16 +82,19 @@ function markPdfRooms(page,viewport,textLayer){
    var code=m[1]+(m[0].includes("-")?"-":"")+m[2];
    var x=100*(origin[0]+measuredWidth*((m.index+m[0].length/2)/Math.max(raw.length,1)))/viewport.width;
    var y=100*(origin[1]-measuredHeight*.35)/viewport.height;
-   if(x<2||x>68||y<2||y>98)return;
+   if(x<2||x>99||y<2||y>98)return;
    var room=selectableRoom(code,page);
-   if(!found.has(room.name))found.set(room.name,{room:room,x:x,y:y});
+   var onPlan=x<=68,previous=found.get(room.name);
+   // Prefer the real room label in the blueprint. If none exists, keep the
+   // printed room-directory entry as a clickable fallback (e.g. D102).
+   if(!previous||(onPlan&&!previous.onPlan))found.set(room.name,{room:room,x:x,y:y,onPlan:onPlan});
   });
  });
  var pins=[];
  found.forEach(function(item){
   var r=item.room,b=r.bookable!==false,free=4-(r.slots||[]).length;
   var label=r.name+" · "+(b?free+" von 4 Shop-Plätzen frei":(r.detail||"Rauminformation, nicht buchbar"));
-  pins.push('<button type="button" class="sas-shopmap-pin'+(b?'':' sas-shopmap-readonly')+(selected===r.id?' active':'')+
+  pins.push('<button type="button" class="sas-shopmap-pin'+(b?'':' sas-shopmap-readonly')+(item.onPlan?'':' sas-shopmap-legend')+(selected===r.id?' active':'')+
   '" data-room="'+esc(r.id)+'" style="left:'+item.x.toFixed(2)+'%;top:'+item.y.toFixed(2)+'%" title="'+esc(label)+
   '" aria-label="'+esc(label)+'">'+esc(r.name)+'</button>');
  });
