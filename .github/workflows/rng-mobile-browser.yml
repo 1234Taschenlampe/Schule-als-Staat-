@@ -22,10 +22,10 @@ jobs:
           head -c 5 rng-floorplan.pdf | grep -a -q '%PDF-'
       - name: Install temporary open-source browser runner
         run: |
-          npm install --no-save --no-audit --no-fund playwright@1.56.1
-          npx playwright install --with-deps chromium
+          npm install --no-save --no-audit --no-fund playwright-core@1.56.1
+          command -v google-chrome || command -v chromium
       - name: Test 390px touch phone and 1280px desktop, all seven floors
-        run: node tests/rng-mobile-browser.mjs
+        run: CHROME_PATH="$(command -v google-chrome || command -v chromium)" node tests/rng-mobile-browser.mjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:

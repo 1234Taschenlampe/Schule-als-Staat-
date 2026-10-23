@@ -1,4 +1,4 @@
-import { chromium } from "playwright";
+import { chromium } from "playwright-core";
 import { createServer } from "node:http";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -24,7 +24,7 @@ const server=createServer((req,res)=>{
  } catch(e){res.writeHead(500);res.end(String(e));}
 });
 await new Promise(resolve=>server.listen(0,"127.0.0.1",resolve));
-const browser=await chromium.launch({headless:true});
+const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_PATH||"/usr/bin/google-chrome",args:["--no-sandbox"]});
 const errors=[];
 try {
  for(const width of [390,1280]){
@@ -50,7 +50,12 @@ try {
   await page.locator('button[data-page="4"]').click();
   await page.locator('button[data-room="class-A003"]').first().click();
   assert.equal(await page.locator(".sas-shopmap-slots button[data-slot]").count(),4);
+  await page.locator("#sas-shopmap-search").fill("D102");
+  assert.equal(await page.locator('.sas-shopmap-roomlist button[data-room="class-D102"]').count(),1,
+    "search across all houses must ignore currently selected room's building");
   await page.locator('button[data-page="5"]').click();
+  assert.equal(await page.locator(".sas-shopmap-pins button").count(),39,
+    "floor switch must reset incidental building filter");
   await page.locator('#sas-shopmap-search').fill("D102");
   await page.locator('button[data-room="class-D102"]').first().click();
   assert.match(await page.locator(".sas-shopmap-anomaly").innerText(),/D105/);
