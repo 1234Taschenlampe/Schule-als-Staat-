@@ -78,3 +78,19 @@ Die drei Secrets von Stripe und der echte Preis bleiben unabhängig davon weiter
 - Private Gmail-Konten sind **nicht** für garantierte 2.000 E-Mails pro Tag geeignet.
 - Der Zugang zum Google-Postfach wird **ausschließlich für das Absenden** autorisiert, nicht für Lesen oder Löschen.
 - Bei einem Fehler im Acknowledge-Schritt ist ein doppelter Versand technisch möglich. Das Monitoring muss dieses Verhalten berücksichtigen.
+
+## Stand 23.10.2026 – automatisch vorbereitet, weiterhin gesperrt
+
+In Supabase ist die Funktion `visa-gmail-dispatch` (Version 7) mit dem geschützten Testmodus `{"mode":"check"}` bereitgestellt. Diese Prüfung benötigt einen gültigen `Authorization: Bearer <VISA_GMAIL_DISPATCH_SECRET>`-Header, erneuert ausschließlich das Google Access Token und gibt ohne Mailversand zurück, ob OAuth funktioniert.
+
+**Verbindungstest im Dashboard:** Edge Functions → `visa-gmail-dispatch` → Test; POST mit Body `{"mode":"check"}` und dem oben genannten privaten Bearer-Header. Die Funktion gibt bei erfolgreicher Token-Erneuerung `oauth_refresh_valid:true` und `sent_messages:0` zurück. Die Anzeige beweist keine erfolgreiche Gmail-Versandberechtigung und keinen tatsächlichen Mailversand.
+
+Migration `visa_gmail_safeguarded_cloud_scheduler_v26` installierte `pg_cron` und `pg_net` und erstellte den Job `visa-gmail-dispatch-safeguarded`, jede Minute. Der Job führt **keinen HTTP-Aufruf** aus, solange einer dieser Punkte fehlt:
+- `guest_visa_payment_settings.email_enabled = true`
+- `guest_visa_payment_settings.turnstile_site_key IS NOT NULL`
+- Im **Supabase Vault** befindet sich der gültige verschlüsselte Secret-Eintrag `visa_gmail_dispatch_secret` (mindestens 32 Zeichen)
+
+**Noch manuell erforderlich:** Dasselbe Passwort, das in Edge Function Secrets unter `VISA_GMAIL_DISPATCH_SECRET` liegt, muss **zusätzlich in Supabase Vault** als `visa_gmail_dispatch_secret` gespeichert werden. Der Wert muss identisch sein, sonst lehnt die Funktion die Cron-Aufrufe ab. Nicht als Klartext ins SQL-Editor-Verlaufsprotokoll oder GitHub kopieren. Aktuell ist die E-Mail-Funktion deaktiviert; Gmail-Versand wird dadurch nicht automatisch freigegeben.
+
+Die von Nutzern zuvor im Chat veröffentlichten OAuth-Client-Secrets müssen vor dem Echtbetrieb bei Google rotiert und in Supabase aktualisiert sein. Keine Tokens oder secrets in Screenshots teilen.
+
