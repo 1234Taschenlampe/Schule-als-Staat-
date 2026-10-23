@@ -27,7 +27,10 @@ test('dashboard and portal have usable role-aware navigation; user text is escap
   assert.equal(x.root.innerHTML.includes('data-nav="register"'),role!=='member');
   await x.click('apps');
   assert.match(x.root.innerHTML,/Alles an einem Ort/);
-  for(const id of ['idcard','gallery','visa','bulletin','blog','map','rooms','events','lost','jobs','laws','parties','courts'])assert.match(x.root.innerHTML,new RegExp('data-nav="'+id+'"'));
+  for(const id of ['idcard','gallery','map','rooms','shops','votes','lost'])assert.match(x.root.innerHTML,new RegExp('data-nav="'+id+'"'));
+  for(const id of ['visa','bulletin','blog','events','jobs','laws','parties','courts']){
+   assert.equal(x.root.innerHTML.includes('data-nav="'+id+'"'),role==='admin',id+' navigation permission mismatch');
+  }
   if(role==='member'){await x.click('admin');assert.match(x.root.innerHTML,/Alles an einem Ort/);}
  }
 });
@@ -39,8 +42,9 @@ test('module wrappers render each form only once',async()=>{
   const node={innerHTML:'',isConnected:true,addEventListener(){},querySelector(){return null;}};
   await feature.show({api,user:{id:'73abccce-04ad-49c0-a6b0-39234bc369c7',email:'ui@example.test'},profile:{role:'admin',display_name:'Test'},page,target:node});
   const forms=node.innerHTML.match(/data-feature-form=/g)||[];
-  assert.equal(forms.length,1,page+' must have exactly one form');
-  assert.ok(node.innerHTML.indexOf('</h1>')<node.innerHTML.indexOf('data-feature-form='));
+  const expected=page==='visa'?0:1; // Historical ViSA is read-only; public guest ViSA is separate.
+  assert.equal(forms.length,expected,page+' must have '+expected+' editable forms');
+  if(expected)assert.ok(node.innerHTML.indexOf('</h1>')<node.innerHTML.indexOf('data-feature-form='));
  }
 });
 test('late module responses cannot overwrite the newly selected module',async()=>{

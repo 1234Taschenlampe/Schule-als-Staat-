@@ -22,12 +22,12 @@ jobs:
         run: |
           node --check app.js
           node --check features.js
-          node --check verification.js
+          node --check shop-plan.js
           node --check roles.js
           node --check attendance.js
           node --check tutorial.js
           node --test tests/school-roles-and-attendance.mjs
-          node --test tests/school-verification.mjs
+          node --test tests/school-floorplan.mjs
           node --check config.js
           node --test tests/v4-source-check.mjs
           node --test tests/v6-functional-source-check.mjs
@@ -44,8 +44,10 @@ jobs:
           test -s _site/styles.css
           test -s _site/features.js
           test -s _site/features.css
-          test -s _site/verification.js
-          test -s _site/verification.css
+          test -s _site/shop-plan.js
+          test -s _site/shop-plan.css
+          test -s _site/public-visa.js
+          test -s _site/public-visa.css
           test -s _site/roles.js
           test -s _site/attendance.js
           test -s _site/tutorial.js

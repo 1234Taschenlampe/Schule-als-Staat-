@@ -52,3 +52,31 @@ button.sas-shopmap-stall:hover{background:#e5f6eb;border-color:#59a578}
 .sas-shopmap-msg.err{color:#a3303a}
 @media(max-width:1000px){.sas-shopmap-layout{grid-template-columns:1fr}.sas-shopmap iframe{height:430px}.sas-shopmap-roomlist{grid-template-columns:repeat(2,minmax(0,1fr));max-height:460px}}
 @media(max-width:660px){.sas-shopmap-card,.sas-shopmap-admin{padding:14px}.sas-shopmap iframe{height:340px}.sas-shopmap-roomlist{grid-template-columns:1fr}.sas-shopmap-slots{grid-template-columns:repeat(2,minmax(0,1fr))}.sas-shopmap-fields{grid-template-columns:1fr}}
+
+/* Real official PDF pages as canvas, with room coordinates derived from PDF text locations. */
+.sas-shopmap-floors{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px;background:#fff;border:1px solid #e1e8eb;border-radius:15px}
+.sas-shopmap-floors button{border:1px solid #dfe9e3;border-radius:10px;background:#f7faf8;color:#354d42;padding:10px 12px;font:inherit;font-size:13px;font-weight:750;cursor:pointer;text-align:left}
+.sas-shopmap-floors button.active{background:#316f4e;border-color:#316f4e;color:white}
+.sas-shopmap-floors button small{font-size:11px;font-weight:500;opacity:.83;white-space:nowrap}
+.sas-shopmap-pdf{position:relative;width:100%;aspect-ratio:595.28/841.89;border:1px solid #dce6e1;background:#f5f6f3;border-radius:11px;overflow:hidden}
+.sas-shopmap-pdf canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.sas-shopmap-pdf iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.sas-shopmap-pins{position:absolute;inset:0;pointer-events:none}
+.sas-shopmap-pin{pointer-events:auto;position:absolute;transform:translate(-50%,-50%);display:grid;place-items:center;min-width:28px;height:20px;padding:2px 3px;border:1px solid rgba(19,79,51,.85);border-radius:6px;background:rgba(37,124,78,.88);color:#fff;font-family:inherit;font-size:8px;font-weight:800;line-height:1.1;cursor:pointer;z-index:1;box-shadow:0 1px 3px #0003}
+.sas-shopmap-pin:hover,.sas-shopmap-pin:focus-visible{background:#224a39;border-color:#fff;outline:2px solid #275e43;outline-offset:2px;z-index:2;transform:translate(-50%,-50%) scale(1.26)}
+.sas-shopmap-pin.active{background:#ffdf7b;color:#274533;border-color:#123d24;z-index:3;font-weight:900}
+@media(max-width:650px){
+ .sas-shopmap-floors{gap:6px}
+ .sas-shopmap-floors button{padding:8px 9px;font-size:12px}
+ .sas-shopmap-pin{font-size:7px;min-width:25px;height:17px;border-radius:4px}
+ .sas-shopmap-slots{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
+/* Clickable campus building letters on the original site overview. */
+.sas-shopmap-buildings{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:12px;background:#fff;border:1px solid #e1e8eb;border-radius:15px}
+.sas-shopmap-buildings>span{font-size:13px;font-weight:800;color:#425c4b;margin-right:7px}
+.sas-shopmap-buildings button{border:1px solid #d4e4d9;background:#f8fbf9;color:#2f5741;border-radius:10px;padding:9px 11px;font:inherit;font-size:13px;font-weight:750;cursor:pointer}
+.sas-shopmap-buildings button.active{background:#316f4e;color:#fff;border-color:#316f4e}
+.sas-shopmap-buildings button small{opacity:.82;font-size:11px;font-weight:500}
+.sas-shopmap-pin.sas-shopmap-building{font-size:13px;font-weight:900;width:28px;height:28px;border-radius:50%;box-shadow:0 2px 7px #0003}
+@media(max-width:650px){.sas-shopmap-buildings{gap:5px}.sas-shopmap-buildings button{padding:7px 8px;font-size:12px}.sas-shopmap-pin.sas-shopmap-building{height:25px;width:25px}}

@@ -70,19 +70,19 @@ test("attendance permits only authorized checkers and uses server-side one-time 
  assert.match(attendanceSQL,/interval '2 minutes'/);
  assert.match(attendanceSQL,/revoke all on public.attendance_checkers,public.attendance_sessions,public.attendance_scans,public.attendance_passes from public,anon,authenticated/);
  assert.match(features,/id-attendance-qr/);
- assert.match(features,/id-school-qr/);
+ assert.doesNotMatch(features,/id-school-qr/);
 });
 
 test("first-visit tutorial is per-account and never asks for real passwords or pays",()=>{
  const sandbox={window:{},console,Date};
  vm.runInNewContext(tutorial,sandbox);
  assert.equal(sandbox.window.SAS_TUTORIAL.lessonsCount,6);
- assert.match(tutorial,/Tippe das Wort/);
- assert.match(tutorial,/normalize/);
+ assert.match(tutorial,/Rundgang/);
+ assert.match(tutorial,/data-tour="later"/);
  assert.match(tutorial,/student_onboarding/);
  assert.match(tutorial,/completed_at/);
- assert.match(tutorial,/Später weitermachen/);
- assert.match(tutorial,/KEIN Geld/);
+ assert.match(tutorial,/Später/);
+ assert.match(tutorial,/Im Tutorial wird nichts bezahlt/);
  assert.match(tutorialSQL,/student_onboarding_read/);
  assert.match(tutorialSQL,/student_onboarding_update/);
  assert.match(app,/SAS_TUTORIAL\.start/);
