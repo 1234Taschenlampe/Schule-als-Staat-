@@ -20,6 +20,11 @@ jobs:
           echo "CHECKING_SCHOOL_WORKER_PDF_PROXY"
           curl -fLsS --connect-timeout 12 --max-time 45 -o /tmp/rng-proxy.pdf "https://schule-als-staat.schule-als-staat-jfe.workers.dev/rng-floorplan.pdf"
           file /tmp/rng-proxy.pdf
+          echo "CHECKING_PDFJS_CDN"
+          curl -fLsS --connect-timeout 12 --max-time 40 -o /tmp/pdfjs.mjs "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.min.mjs"
+          curl -fLsS --connect-timeout 12 --max-time 40 -o /tmp/pdf.worker.mjs "https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.worker.min.mjs"
+          wc -c /tmp/pdfjs.mjs /tmp/pdf.worker.mjs
+          echo "PDFJS_FILES_AVAILABLE"
           cmp /tmp/rng-proxy.pdf /tmp/rng-campus.pdf && echo "SAME_ORIGINAL_PDF_BYTES" || echo "PDF_PROXY_CONTENT_DIFFERENT"
           sudo apt-get update -qq
           sudo apt-get install -y -qq poppler-utils
