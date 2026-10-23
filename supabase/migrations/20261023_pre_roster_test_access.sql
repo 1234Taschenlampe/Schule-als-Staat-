@@ -60,7 +60,7 @@ begin
 
   return new;
 end;
-$function$
+$function$;
 
 
 -- create_attendance_pass (retains existing identity and authorization boundaries)
@@ -87,7 +87,7 @@ begin
  on conflict(user_id) do update set token_hash=excluded.token_hash,issued_at=excluded.issued_at,expires_at=excluded.expires_at;
  return 'SAS-ATTEND:'||v_token;
 end;
-$function$
+$function$;
 
 
 -- scan_attendance_pass (retains existing identity and authorization boundaries)
@@ -121,7 +121,7 @@ begin
  return jsonb_build_object('ok',true,'already_present',not v_inserted,
   'display_name',v_name,'class_label',v_class);
 end;
-$function$
+$function$;
 
 
 -- create_work_scan_token (retains existing identity and authorization boundaries)
@@ -144,7 +144,7 @@ begin
  on conflict(user_id) do update set token_hash=excluded.token_hash,expires_at=excluded.expires_at;
  return 'SAS-WORK:'||v_token;
 end;
-$function$
+$function$;
 
 
 -- scan_work_token (retains existing identity and authorization boundaries)
@@ -176,7 +176,7 @@ begin
  end if;
  return jsonb_build_object('action',v_action,'work_day',v_day);
 end;
-$function$
+$function$;
 
 
 -- Deprecated school-verification QR endpoints must not be callable by browsers
