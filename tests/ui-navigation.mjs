@@ -27,8 +27,10 @@ test('dashboard and portal have usable role-aware navigation; user text is escap
   assert.equal(x.root.innerHTML.includes('data-nav="register"'),role!=='member');
   await x.click('apps');
   assert.match(x.root.innerHTML,/Alles an einem Ort/);
-  for(const id of ['idcard','gallery','bulletin','blog','map','rooms','events','lost','jobs','laws','parties','courts'])assert.match(x.root.innerHTML,new RegExp('data-nav="'+id+'"'));
-  assert.equal(x.root.innerHTML.includes('data-nav="visa"'),role==='admin');
+  for(const id of ['idcard','gallery','map','rooms','shops','votes','lost'])assert.match(x.root.innerHTML,new RegExp('data-nav="'+id+'"'));
+  for(const id of ['visa','bulletin','blog','events','jobs','laws','parties','courts']){
+   assert.equal(x.root.innerHTML.includes('data-nav="'+id+'"'),role==='admin',id+' navigation permission mismatch');
+  }
   if(role==='member'){await x.click('admin');assert.match(x.root.innerHTML,/Alles an einem Ort/);}
  }
 });
