@@ -132,8 +132,16 @@ Position auswählbar.
   `.github/workflows/rng-floorplan-audit.yml` reproduzieren die sieben
   PDF-Seiten und exportieren eine JSON-Positionsprüfung ohne Adobe-/Bezahldienst.
 
-**Betriebsstatus:** PR #21 enthält Änderungen im Entwicklungsbranch. Ein erfolgreicher
-GitHub-Source-Check ersetzt **keinen** Browser-End-to-End-Test auf echten
-Smartphones. Änderungen an GitHub werden beim bestehenden Cloudflare Worker
-nicht automatisch veröffentlicht. Ein produktives Deployment muss separat
-ausgerollt und auf sämtlichen Stockwerken real geprüft werden.
+**Betriebsstatus (23.10.2026):** PR #21 und der Nachbesserungs-PR #22 wurden nach
+bestandenem Quelltest und siebenseitigem PDF-Audit in `main` integriert. Die
+betroffenen Assets `/shop-plan.js` und `/shop-plan.css` wurden über die
+Cloudflare-API in den bestehenden Worker `schule-als-staat` eingespielt.
+Ein anschließender Worker-Script-Vergleich bestätigte: Ausgelieferte Assets
+entsprechen exakt dem aktuellen GitHub-Stand, der PDF-Proxy bleibt enthalten.
+Ein Playwright-Browsertest im **390px-Touch-Viewport** und im **1280px-Desktop-Viewport**
+prüfte alle sieben Tabs, Map-Pins, Nichtbuchbarkeit, vier Shopplätze, Zoom
+und die Gebäudefilter-Suche erfolgreich (lokaler Testserver mit gemocktem
+Shop-Katalog und Original-PDF). Die direkte öffentliche HTTP-Auslieferung
+und die Bedienung auf **einem realen Smartphone** konnten aus dieser Umgebung
+nicht separat bestätigt werden. Künftige GitHub-Pushes lösen weiterhin **kein**
+automatisches Cloudflare-Worker-Deployment aus.
