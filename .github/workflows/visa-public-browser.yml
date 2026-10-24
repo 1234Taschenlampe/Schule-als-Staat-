@@ -1,0 +1,25 @@
+name: ViSA public guest frontend checks
+on:
+  pull_request:
+    branches: [main]
+    paths: [public-visa.js, tests/visa-public-browser.mjs, .github/workflows/visa-public-browser.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  public-visa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Check Visa JavaScript syntax
+        run: node --check public-visa.js
+      - name: Install free test browser driver
+        run: |
+          npm install --no-save --no-audit --no-fund playwright-core@1.56.1
+          command -v google-chrome
+      - name: Browser test (no real emails, accounts, payments or requests)
+        run: CHROME_PATH="$(command -v google-chrome)" node tests/visa-public-browser.mjs
