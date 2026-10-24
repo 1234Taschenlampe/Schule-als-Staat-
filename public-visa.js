@@ -20,7 +20,10 @@ async function showPublic(api,node){
  try{
   const r=await api.rpc("visa_public_settings");if(r.error)throw r.error;
   if(!r.data?.email_enabled || !r.data?.turnstile_site_key){
-   status.textContent="Das ViSA-System wird eingerichtet. E-Mail-Verifizierung und echte Euro-Zahlung sind noch nicht freigeschaltet. Es wird kein Geld abgebucht.";button.disabled=true;return;
+   status.textContent="Das ViSA-Antragsverfahren ist noch nicht freigeschaltet. "+
+    (!r.data?.email_enabled?"Der E-Mail-Versand muss zuerst sicher eingerichtet werden. ":"Der Bot-Schutz ist noch nicht eingerichtet. ")+
+    "Zurzeit können keine ViSA-Anträge eingereicht werden; es wird nichts abgebucht.";
+   button.disabled=true;return;
   }
   status.textContent=r.data.payment_enabled?"E-Mail-Verifizierung und sicherer Euro-Checkout verfügbar.":"E-Mail-Bestätigung verfügbar. Die Zahlung wird freigeschaltet, sobald der ViSA-Preis beschlossen ist.";
   const turnstile=await loadTurnstile();
@@ -46,6 +49,38 @@ async function submit(api,formNode){
   out.className="sas-visa-success";
  }catch(e){out.textContent="Anfrage nicht möglich: "+e.message;out.className="sas-visa-error";}
  finally{if(window.turnstile&&widgetId!==undefined)try{window.turnstile.reset(widgetId);}catch(e){}btn.disabled=false;}
+}
+/* The public verification and payment routes must render without requiring an account. */
+function stage(message){
+ return '<section class="sas-public-visa" aria-labelledby="visa-stage-title">'+
+  '<div class="sas-public-visa-head"><span class="sas-kicker">SCHULE ALS STAAT · GÄSTE</span>'+
+  '<h1 id="visa-stage-title">ViSA-Status</h1></div>'+
+  '<p id="visa-stage-message" class="sas-note" role="status" aria-live="polite">'+esc(message)+'</p>'+
+  '<div id="visa-stage-actions"></div></section>';
+}
+/* Never accept a payment destination provided directly by a visitor.
+   Only the existing server-side checkout Edge Function creates a Stripe session. */
+async function checkout(api,token,button,feedback){
+ if(button.disabled)return;
+ button.disabled=true;
+ feedback.className="sas-note";
+ feedback.textContent="Sichere Zahlungsseite wird vorbereitet …";
+ try{
+  if(!/^[0-9a-f]{64}$/.test(token))throw Error("Der Bestätigungslink ist ungültig.");
+  const r=await api.functions.invoke("visa-create-checkout",{body:{token}});
+  if(r.error)throw new Error(r.error.message||"Der Checkout ist derzeit nicht verfügbar.");
+  const url=new URL(String(r.data?.url||""));
+  if(url.protocol!=="https:"||url.hostname!=="checkout.stripe.com"){
+   throw Error("Der Zahlungsanbieter hat kein gültiges Zahlungsziel bestätigt.");
+  }
+  feedback.textContent="Weiterleitung zum Zahlungsanbieter …";
+  window.location.assign(url.href);
+ }catch(e){
+  feedback.className="sas-visa-error";
+  feedback.textContent="Zahlung nicht möglich: "+(e?.message||"Unbekannter Fehler")+
+    " Es wurde keine Zahlung durch diese Seite ausgelöst.";
+  button.disabled=false;
+ }
 }
 async function showVerification(api,node,token){
  node.innerHTML=stage("E-Mail-Bestätigung wird auf dem Server geprüft …");
