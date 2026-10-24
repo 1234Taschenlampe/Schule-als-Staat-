@@ -17,7 +17,7 @@ const catalog=[
  {id:"test-D102",name:"D102",floor:"Gebäude D · 1. Obergeschoss",plan_page:5,x_percent:null,y_percent:null,detail:"Klassenraum, ungeklärte Lage",slots:[]}
 ];
 const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_PATH||"/usr/bin/google-chrome",args:["--no-sandbox"]});
-const failures=[];
+
 try{
   for(const width of [390,1280]){
     const page=await browser.newPage({viewport:{width,height:844},isMobile:width<500,hasTouch:width<500,deviceScaleFactor:2});
@@ -61,7 +61,7 @@ try{
     for(const [n,count] of [[3,7],[4,37],[5,39],[6,27],[7,5]]){
       await root.locator('button[data-page="'+n+'"]').click();
       assert.equal(await root.locator(".sas-shopmap-pins button").count(),count,"original geometric markers on page "+n);
-      await root.locator("#rng-plan-status").getByText(new RegExp("Originalplan · Seite "+n+" von 7")).waitFor({state:"visible",timeout:30000});
+      await page.waitForFunction(pageNo => document.querySelector("#rng-smoke-isolated #rng-plan-status")?.textContent?.startsWith("Originalplan · Seite "+pageNo+" von 7"),n,{timeout:30000});
       assert.equal(await root.locator("#rng-floorplan-canvas").evaluate(c=>c.width>500&&c.height>500),true,
         "original PDF canvas should render on page "+n);
     }
@@ -91,4 +91,4 @@ try{
     console.log("PASS: production-origin "+width+"px, 7 PDF pages, 115 markers, controls, JS/CSS hash, no write RPC");
     await page.close();
   }
-}catch(e){failures.push(e);throw e;}finally{await browser.close();}
+}finally{await browser.close();}
