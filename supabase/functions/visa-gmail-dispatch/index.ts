@@ -119,12 +119,35 @@ async function sendViaGmail(token, message) {
   }
 }
 
+// The pg_cron caller uses its own strong credential generated inside Supabase Vault.
+// Validate it using a restricted, service_role-only RPC; never return or log the token.
+async function authorizedViaVault(authHeader) {
+  if (!/^Bearer [a-f0-9]{64}$/.test(authHeader)) return false;
+  if (!supabaseUrl || !serviceKey) return false;
+  try {
+    const token = authHeader.slice("Bearer ".length);
+    const result = await fetch(supabaseUrl + "/rest/v1/rpc/visa_gmail_vault_authorize", {
+      method: "POST",
+      headers: {
+        "apikey": serviceKey,
+        "authorization": "Bearer " + serviceKey,
+        "content-type": "application/json"
+      },
+      body: JSON.stringify({ p_token: token })
+    });
+    return result.ok && (await result.json()) === true;
+  } catch {
+    return false;
+  }
+}
+
 Deno.serve(async (request) => {
   if (request.method !== "POST") return json(405, { error: "Method not allowed" });
   const dispatcherSecret = Deno.env.get("VISA_GMAIL_DISPATCH_SECRET") || "";
   const supplied = request.headers.get("authorization") || "";
-  if (dispatcherSecret.length < 32 ||
-      !timingSafeEqual(supplied, "Bearer " + dispatcherSecret)) {
+  const configuredSecretValid = dispatcherSecret.length >= 32 &&
+    timingSafeEqual(supplied, "Bearer " + dispatcherSecret);
+  if (!configuredSecretValid && !(await authorizedViaVault(supplied))) {
     return json(401, { error: "Unauthorized" });
   }
   const clientId = Deno.env.get("GMAIL_CLIENT_ID") || "";
