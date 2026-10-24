@@ -45,3 +45,29 @@ select jobname, active, schedule from cron.job where jobname='visa-gmail-dispatc
 ```
 
 **Wichtig:** Das verbesserte GitHub-Testing für den Dispatcher verwendet nur simulierte Secrets und Mock-Netzwerke. Es sendet keine Nachricht und kann eine echte OAuth-Autorisierung oder eine echte Gmail-Zustellung **nicht** ersetzen. Die Freischaltung bei fehlenden Schlüsseln wäre ein Sicherheitsfehler, keine Reparatur.
+
+## Ergebnis der tatsächlichen Reparatur am 24.10.2026
+
+Der Nutzer hatte bereits am 23.10. **fünf Edge Function Secrets** hinterlegt. Das war korrekt; Vault ist davon unabhängig. Der vorher fehlende Cron-Vault-Zugang wurde **direkt über Supabase** behoben:
+
+- Datenbank-RPC `public.visa_gmail_vault_authorize(text)` wurde erstellt. Nur `service_role` darf sie ausführen, weder `anon` noch `authenticated`.
+- Ein zufällig generierter 256-Bit-Schlüssel wurde unter `visa_gmail_dispatch_secret` **nur verschlüsselt im Vault** gespeichert. Der Schlüssel wurde nicht ausgelesen, protokolliert oder in GitHub hinterlegt.
+- Der vorhandene Edge-Secret `VISA_GMAIL_DISPATCH_SECRET` wurde **nicht verändert**. Der Dispatcher akzeptiert zusätzlich den DB-seitig geprüften Vault-Token.
+- Die laufende Edge Function wurde auf **Version 9** aktualisiert.
+- Im SQL-Netzwerktest `net.http_post(..., body: '{"mode":"check"}')` erreichte der Aufruf die geschützte Edge Function erfolgreich, authentifizierte sich und führte den **Google-OAuth-Refresh** aus; **es wurde keine E-Mail versendet**.
+- **Exakter Google-Fehler** (HTTP 400): `invalid_grant`, im authentifizierten HTTP-Ergebnis der Funktion bestätigt. Google nimmt den vorhandenen Refresh Token nicht an. Der Edge Function-Code gibt hierzu nur einen whitelisten Fehlercode aus, keine Secrets oder Google-Fehlerdetails.
+
+### Verbleibende erforderliche Kontoinhaber-Aktion
+
+Google muss **erneut die Zustimmung** zum Versand durch das berechtigte Gmail-Konto erhalten; ein neuer `GMAIL_REFRESH_TOKEN` muss über den zur **gleichen** `GMAIL_CLIENT_ID` und `GMAIL_CLIENT_SECRET` gehörenden OAuth-Client ausgestellt werden.
+
+Vorgehen:
+1. In <https://console.cloud.google.com/apis/credentials> im bestehenden Projekt denselben OAuth-Web-Client und `https://developers.google.com/oauthplayground` als erlaubte Redirect URI prüfen.
+2. OAuth Playground aufrufen: <https://developers.google.com/oauthplayground/>.
+3. Einstellungen: **Use your own OAuth credentials**; denselben Client ID/Client Secret verwenden, **Offline access**, **Force prompt = Consent**; ausschließlich Scope `https://www.googleapis.com/auth/gmail.send`.
+4. Google-Zustimmung mit dem berechtigten Versandkonto durchführen und im Schritt 2 einen **neuen Refresh Token** erzeugen.
+5. **Nur** das Secret `GMAIL_REFRESH_TOKEN` in <https://supabase.com/dashboard/project/wdebwgcferieedkpqbvk/settings/functions> auf den neuen Wert aktualisieren. Weder den Token in GitHub/Chat noch in Clientcode eintragen.
+6. Erneut das authentifizierte `mode=check` testen; nach `oauth_refresh_valid=true` sind Bot-Schutz (`TURNSTILE_SECRET` + `turnstile_site_key`), autorisierter Versandtest und `email_enabled=true` noch separat abzusichern.
+7. `payment_enabled` bis zur ausdrücklichen finanziellen Freigabe **false** lassen.
+
+**Begrenzung:** Ein Google-`invalid_grant` kann nicht serverseitig durch einen anderen Supabase-Code oder durch Wiederverwendung vorhandener Secrets behoben werden. Es bedarf einer erneuten interaktiven Autorisierung durch den Inhaber des Gmail-Kontos. Wenn die Google OAuth-App im Modus `External + Testing` läuft, können Refresh Tokens mit Gmail-Scope nach sieben Tagen auslaufen. Der Status muss vor einem dauerhaften Produktionsbetrieb geprüft werden.
