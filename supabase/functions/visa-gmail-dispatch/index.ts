@@ -57,7 +57,12 @@ async function authorizeGmail(clientId, clientSecret, refreshToken) {
       grant_type: "refresh_token"
     }).toString()
   });
-  if (!response.ok) throw Error("Gmail OAuth token renewal failed (" + response.status + ")");
+  if (!response.ok) {
+    const reason = await response.json().catch(() => ({}));
+    const known = ["invalid_grant","invalid_client","unauthorized_client","invalid_request","access_denied"];
+    const code = known.includes(reason?.error) ? reason.error : "unclassified_google_error";
+    throw Error("Gmail OAuth token renewal failed (" + response.status + ", " + code + ")");
+  }
   const token = await response.json();
   if (typeof token.access_token !== "string" || !token.access_token) {
     throw Error("Gmail did not return an access token");
@@ -119,12 +124,35 @@ async function sendViaGmail(token, message) {
   }
 }
 
+// The pg_cron caller uses its own strong credential generated inside Supabase Vault.
+// Validate it using a restricted, service_role-only RPC; never return or log the token.
+async function authorizedViaVault(authHeader) {
+  if (!/^Bearer [a-f0-9]{64}$/.test(authHeader)) return false;
+  if (!supabaseUrl || !serviceKey) return false;
+  try {
+    const token = authHeader.slice("Bearer ".length);
+    const result = await fetch(supabaseUrl + "/rest/v1/rpc/visa_gmail_vault_authorize", {
+      method: "POST",
+      headers: {
+        "apikey": serviceKey,
+        "authorization": "Bearer " + serviceKey,
+        "content-type": "application/json"
+      },
+      body: JSON.stringify({ p_token: token })
+    });
+    return result.ok && (await result.json()) === true;
+  } catch {
+    return false;
+  }
+}
+
 Deno.serve(async (request) => {
   if (request.method !== "POST") return json(405, { error: "Method not allowed" });
   const dispatcherSecret = Deno.env.get("VISA_GMAIL_DISPATCH_SECRET") || "";
   const supplied = request.headers.get("authorization") || "";
-  if (dispatcherSecret.length < 32 ||
-      !timingSafeEqual(supplied, "Bearer " + dispatcherSecret)) {
+  const configuredSecretValid = dispatcherSecret.length >= 32 &&
+    timingSafeEqual(supplied, "Bearer " + dispatcherSecret);
+  if (!configuredSecretValid && !(await authorizedViaVault(supplied))) {
     return json(401, { error: "Unauthorized" });
   }
   const clientId = Deno.env.get("GMAIL_CLIENT_ID") || "";
@@ -202,7 +230,14 @@ Deno.serve(async (request) => {
     }
     return json(200, { claimed: claimed.length, sent, retried, ackFailed });
   } catch (e) {
-    console.error("ViSA Gmail dispatch failed:", String(e?.message || e).slice(0,140));
+    const diagnostic = String(e?.message || e).slice(0,140);
+    console.error("ViSA Gmail dispatch failed:", diagnostic);
+    // Only authenticated check-mode callers receive a classified Google error.
+    // No token, client secret or Google response payload is returned.
+    if (mode === "check") {
+      const code = (diagnostic.match(/invalid_grant|invalid_client|unauthorized_client|invalid_request|access_denied/) || [])[0] || "unclassified";
+      return json(503, { error: "Gmail OAuth preflight failed", oauth_error_code: code });
+    }
     return json(503, { error: "Gmail dispatch unavailable" });
   }
 });
