@@ -1,42 +1,21 @@
 import assert from "node:assert/strict";
 import vm from "node:vm";
 import {readFileSync} from "node:fs";
+
 const src=readFileSync(new URL("../app.js",import.meta.url),"utf8");
-async function scenario(noSession,mode='success'){
+async function scenario(loginInput){
   const handlers={};
   const root={innerHTML:"",addEventListener:(name,fn)=>handlers[name]=fn};
-  const errors=[];const toasts={appendChild(el){errors.push(el.textContent);},querySelectorAll(){return []}};
-  const user={id:"d06806b7-fd65-4990-8e38-6d8e0ad5f874",email:"student@example.test"};
+  const errorTexts=[];
+  const toasts={appendChild(el){errorTexts.push(el.textContent);},querySelectorAll(){return []}};
   const calls=[];
-  let capturedSignup=null;
-  function from(table){
-    calls.push(table);
-    const q={
-      select(){return q;},eq(){return q;},order(){return q;},
-      single(){return Promise.resolve({data:table==="profiles"?{id:user.id,role:"member",vote_eligible:false,display_name:"Testnutzer"}:{balance_cents:0},error:null});},
-      limit(){return Promise.resolve({data:[],error:null});}
-    };
-    return q;
-  }
   const api={
     auth:{
       getSession:async()=>({data:{session:null},error:null}),
       onAuthStateChange(){},
-      signUp:async payload=>{
-        capturedSignup=payload;
-        calls.push('auth.signUp');
-        if(mode==='duplicate')return {data:null,error:{code:'user_already_exists',message:'User already registered'}};
-        if(mode==='rate-limit')return {data:null,error:{code:'over_email_send_rate_limit',message:'email rate limit exceeded'}};
-        return {data:{user,session:noSession?null:{user}},error:null};
-      },
-      signInWithPassword:async()=>{
-        calls.push('auth.signInWithPassword');
-        return mode==='confirmation-still-on'
-          ? {data:null,error:{code:'email_not_confirmed',message:'Email not confirmed'}}
-          : {data:{user,session:{user}},error:null};
-      }
+      signUp:async()=>{calls.push("auth.signUp");throw Error("PUBLIC SIGNUP MUST NOT RUN");},
+      signInWithPassword:async payload=>{calls.push(payload);return {data:{session:null},error:null};}
     },
-    from,
     rpc:async()=>({data:[],error:null})
   };
   const document={
@@ -45,52 +24,37 @@ async function scenario(noSession,mode='success'){
     querySelector(){return null;},
     addEventListener(){}
   };
-  class MockFormData{constructor(form){this.form=form;}get(k){return this.form.fields[k];}}
+  class MockFormData{constructor(form){this.fields=form.fields;}get(k){return this.fields[k];}}
   const sandbox={
-    window:{NV_CONFIG:{supabaseUrl:"https://test.invalid",supabaseAnonKey:"public-test",currencyLabel:"Einheiten"},supabase:{createClient:()=>api},addEventListener(){},scrollTo(){}},
+    window:{NV_CONFIG:{supabaseUrl:"https://test.invalid",supabaseAnonKey:"public-test"},
+      supabase:{createClient:()=>api},addEventListener(){},scrollTo(){}},
     document,history:{replaceState(){}},location:{hash:"",search:"",pathname:"/",origin:"https://test.invalid"},
     URLSearchParams,URL,Date,Intl,String,Array,Map,Set,Math,Number,FormData:MockFormData,
     setTimeout(){},setInterval(){},clearInterval(){},console
   };
   vm.runInNewContext(src,sandbox);
-  for(let i=0;i<10;i++)await Promise.resolve();
-  assert.match(root.innerHTML,/signup-form/);
+  for(let i=0;i<20;i++)await Promise.resolve();
+  assert.match(root.innerHTML,/Bürgerkennung oder Verwaltungs-E-Mail/);
+  assert.doesNotMatch(root.innerHTML,/<form id="signup-form"/);
   const button={disabled:false,isConnected:true};
-  const feedback={textContent:"",className:""};
+  handlers.submit({preventDefault(){},target:{
+    id:"signup-form",fields:{},querySelector:()=>button
+  }});
+  for(let i=0;i<30;i++)await Promise.resolve();
+  assert.equal(calls.length,0,"Cannot sign up via discarded hidden HTML form");
   const form={
-    id:"signup-form",
-    fields:{email:user.email,password:"example-for-test-123",repeat:"example-for-test-123",display_name:"Alex Muster",class_label:"10a"},
-    querySelector(key){return key==="#signup-feedback"?feedback:key==='[type="submit"]'?button:null;}
+    id:"password-login-form",
+    fields:{email:loginInput,password:"1234567"},
+    querySelector:()=>button
   };
   handlers.submit({preventDefault(){},target:form});
-  for(let i=0;i<120;i++)await Promise.resolve();
-  assert.ok(capturedSignup,"Supabase Auth must handle each new account");
-  assert.equal(capturedSignup.email,user.email);
-  assert.equal(capturedSignup.options.data.full_name,"Alex Muster");
-  assert.equal(capturedSignup.options.data.class_label,"10a");
-  if(mode==='duplicate'){
-    assert.match(feedback.textContent,/Konto bereits vergeben/);
-    assert.ok(!calls.includes("auth.signInWithPassword"),"Duplicate must never trigger password login");
-    assert.ok(!calls.includes("profiles"),"Duplicate must not enter member dashboard");
-  }else if(mode==='rate-limit'){
-    assert.ok(errors.some(x=>/Versandlimit|Limit/.test(x)),errors.join(" | "));
-    assert.ok(!calls.includes("profiles"));
-  }else if(mode==='confirmation-still-on'){
-    assert.match(feedback.textContent,/nicht sofort angemeldet|freigeschaltet/);
-    assert.ok(calls.includes("auth.signInWithPassword"));
-    assert.ok(!calls.includes("profiles"));
-  }else{
-    assert.match(root.innerHTML,/Guten Tag, Testnutzer/,"registration must open account dashboard: "+errors.join(" | "));
-    assert.ok(calls.includes("profiles"));
-    assert.ok(calls.includes("wallets"));
-    assert.equal(feedback.textContent,"");
-    if(noSession)assert.ok(calls.includes("auth.signInWithPassword"),"Missing session must use one password login fallback");
-    else assert.ok(!calls.includes("auth.signInWithPassword"),"Existing session must not trigger another login");
-  }
+  for(let i=0;i<60;i++)await Promise.resolve();
+  assert.equal(calls.length,1,"login uses exactly one Supabase API request");
+  const expected=/^SAS-[A-Z0-9]{10}$/.test(loginInput)?
+    loginInput.slice(4).toLowerCase()+"@accounts.schule-als-staat.invalid":loginInput;
+  assert.equal(calls[0].email,expected);
+  assert.equal(calls[0].password,"1234567");
 }
-await scenario(false);
-await scenario(true);
-await scenario(false,"duplicate");
-await scenario(false,"rate-limit");
-await scenario(true,"confirmation-still-on");
-console.log("Five student sign-up scenarios passed (Supabase API mocked, no real accounts created).");
+await scenario("SAS-ABCDEFGHJK");
+await scenario("admin@example.test");
+console.log("Citizen ID login, admin login and blocked self-signup passed (mocked).");
