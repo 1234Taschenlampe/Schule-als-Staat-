@@ -29,6 +29,7 @@ jobs:
           node --test tests/school-roles-and-attendance.mjs
           node --test tests/school-floorplan.mjs
           node --test tests/rng-hotspots.mjs
+          node --test tests/visa-gmail-dispatch.mjs
           node --check config.js
           node --test tests/v4-source-check.mjs
           node --test tests/v6-functional-source-check.mjs
