@@ -57,7 +57,12 @@ async function authorizeGmail(clientId, clientSecret, refreshToken) {
       grant_type: "refresh_token"
     }).toString()
   });
-  if (!response.ok) throw Error("Gmail OAuth token renewal failed (" + response.status + ")");
+  if (!response.ok) {
+    const reason = await response.json().catch(() => ({}));
+    const known = ["invalid_grant","invalid_client","unauthorized_client","invalid_request","access_denied"];
+    const code = known.includes(reason?.error) ? reason.error : "unclassified_google_error";
+    throw Error("Gmail OAuth token renewal failed (" + response.status + ", " + code + ")");
+  }
   const token = await response.json();
   if (typeof token.access_token !== "string" || !token.access_token) {
     throw Error("Gmail did not return an access token");
@@ -225,7 +230,14 @@ Deno.serve(async (request) => {
     }
     return json(200, { claimed: claimed.length, sent, retried, ackFailed });
   } catch (e) {
-    console.error("ViSA Gmail dispatch failed:", String(e?.message || e).slice(0,140));
+    const diagnostic = String(e?.message || e).slice(0,140);
+    console.error("ViSA Gmail dispatch failed:", diagnostic);
+    // Only authenticated check-mode callers receive a classified Google error.
+    // No token, client secret or Google response payload is returned.
+    if (mode === "check") {
+      const code = (diagnostic.match(/invalid_grant|invalid_client|unauthorized_client|invalid_request|access_denied/) || [])[0] || "unclassified";
+      return json(503, { error: "Gmail OAuth preflight failed", oauth_error_code: code });
+    }
     return json(503, { error: "Gmail dispatch unavailable" });
   }
 });
