@@ -19,6 +19,10 @@ function harness({missingGmail=false,emailEnabled=false}={}){
   };
   const fakeFetch=async (url,options)=>{
     hits.push(String(url));
+    if(String(url).endsWith("/rest/v1/rpc/visa_gmail_vault_authorize")){
+      const supplied=JSON.parse(options.body).p_token;
+      return new Response(JSON.stringify(supplied==="a".repeat(64)),{status:200});
+    }
     if(String(url).endsWith("/rest/v1/rpc/visa_public_settings"))
       return new Response(JSON.stringify({email_enabled:emailEnabled,turnstile_site_key:null}),{status:200});
     if(String(url)==="https://oauth2.googleapis.com/token")
@@ -30,8 +34,9 @@ function harness({missingGmail=false,emailEnabled=false}={}){
     URLSearchParams,Response,TextEncoder,btoa,fetch:fakeFetch,console
   },{filename:"visa-gmail-dispatch/index.ts",timeout:3000});
   async function send(mode,authorized=true){
+    const chosen=authorized===true?KEY:(typeof authorized==="string"?authorized:"invalid");
     const req=new Request("https://example.test/functions/v1/visa-gmail-dispatch",{
-      method:"POST",headers:{"authorization":"Bearer "+(authorized?KEY:"invalid")},
+      method:"POST",headers:{"authorization":"Bearer "+chosen},
       body:JSON.stringify({mode})
     });
     const resp=await handle(req);
@@ -64,4 +69,22 @@ test("disabled public email gating blocks dispatch before Gmail send and queue c
 test("unsupported mode must not make an external request",async()=>{
  const h=harness();const r=await h.send("send_all");
  assert.equal(r.status,400);assert.deepEqual(h.hits,[]);
+});
+
+test("generated Vault token authenticates without changing the existing Edge Secret",async()=>{
+ const h=harness({emailEnabled:false});
+ const result=await h.send("check","a".repeat(64));
+ assert.equal(result.status,200);
+ assert.equal(result.body.oauth_refresh_valid,true);
+ assert.deepEqual(h.hits,[
+  "https://example.supabase.co/rest/v1/rpc/visa_gmail_vault_authorize",
+  "https://example.supabase.co/rest/v1/rpc/visa_public_settings",
+  "https://oauth2.googleapis.com/token"
+ ]);
+});
+test("wrong random 64-hex token cannot trigger Gmail dispatch",async()=>{
+ const h=harness({emailEnabled:true});
+ const result=await h.send("dispatch","b".repeat(64));
+ assert.equal(result.status,401);
+ assert.deepEqual(h.hits,["https://example.supabase.co/rest/v1/rpc/visa_gmail_vault_authorize"]);
 });
