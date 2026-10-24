@@ -1,0 +1,25 @@
+name: School roster citizen credentials
+on:
+  pull_request:
+    branches: [main]
+    paths: [app.js, scripts/prepare-school-roster.py, scripts/provision-school-roster.mjs, tests/roster-citizen-access.mjs, tests/roster-offline-smoke.py, .github/workflows/roster-citizens.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  offline-roster:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install open-source PDF printing dependency
+        run: python3 -m pip install --break-system-packages --quiet reportlab
+      - name: Validate scripts and generate disposable example credentials
+        run: |
+          node --check app.js
+          node --check scripts/provision-school-roster.mjs
+          python3 -m py_compile scripts/prepare-school-roster.py
+          node --test tests/roster-citizen-access.mjs
