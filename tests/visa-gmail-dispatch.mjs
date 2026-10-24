@@ -5,7 +5,7 @@ import {readFileSync} from "node:fs";
 
 const source=readFileSync(new URL("../supabase/functions/visa-gmail-dispatch/index.ts",import.meta.url),"utf8");
 const KEY="test-dispatch-secret".padEnd(40,"x");
-function harness({missingGmail=false,emailEnabled=false}={}){
+function harness({missingGmail=false,emailEnabled=false,oauthError=null}={}){
   let handle;
   const hits=[];
   const env={
@@ -26,7 +26,9 @@ function harness({missingGmail=false,emailEnabled=false}={}){
     if(String(url).endsWith("/rest/v1/rpc/visa_public_settings"))
       return new Response(JSON.stringify({email_enabled:emailEnabled,turnstile_site_key:null}),{status:200});
     if(String(url)==="https://oauth2.googleapis.com/token")
-      return new Response(JSON.stringify({access_token:"test-token"}),{status:200});
+      return oauthError
+        ? new Response(JSON.stringify({error:oauthError,error_description:"REDACTED"}),{status:400})
+        : new Response(JSON.stringify({access_token:"test-token"}),{status:200});
     throw Error("Unsafe/unexpected outbound request: "+url);
   };
   vm.runInNewContext(source,{
@@ -87,4 +89,14 @@ test("wrong random 64-hex token cannot trigger Gmail dispatch",async()=>{
  const result=await h.send("dispatch","b".repeat(64));
  assert.equal(result.status,401);
  assert.deepEqual(h.hits,["https://example.supabase.co/rest/v1/rpc/visa_gmail_vault_authorize"]);
+});
+
+test("Google invalid_grant is classified without exposing secrets or error_description",async()=>{
+ const h=harness({emailEnabled:false,oauthError:"invalid_grant"});
+ const result=await h.send("check","a".repeat(64));
+ assert.equal(result.status,503);
+ assert.equal(result.body.error,"Gmail OAuth preflight failed");
+ assert.equal(result.body.oauth_error_code,"invalid_grant");
+ assert.ok(!JSON.stringify(result.body).includes("REDACTED"));
+ assert.ok(!h.hits.includes("https://gmail.googleapis.com/gmail/v1/users/me/messages/send"));
 });
