@@ -6,3 +6,11 @@ schule-als-staat-testkonten-*.csv
 node_modules/
 dist/
 _site/
+
+# Confidential school citizen roster exports – NEVER check in personal names/PINs
+**/citizens-private.json
+**/citizens-progress.json
+**/citizens-progress.json.tmp
+**/zugangsblaetter-vertraulich.pdf
+**/schuelerliste*.xlsx
+**/schuelerliste*.xls
