@@ -134,7 +134,14 @@
     root.innerHTML='<div class="app-shell"><aside class="sidebar"><div class="brand"><div class="brand-mark">S/S</div><div><div class="brand-name">Schule als Staat</div><div class="brand-sub">SCHULE ALS STAAT</div></div></div><div class="sidebar-foot"><span class="status"><i class="dot"></i> Backend nicht verbunden</span></div></aside><div class="main-area"><header class="topbar"><div>Schule als Staat / Einrichtung</div><span class="pill">V4</span></header><main class="content">'+header("PROJEKTSTATUS","V4 ist vorbereitet.","Die Anwendung braucht für mehrere Geräte eine sichere Datenbankverbindung.")+'<div class="grid two"><section class="card"><h2>Produktivsystem einrichten</h2><div class="divider"></div><p class="details">1. Supabase-Projekt anlegen.<br>2. Datei supabase/schema.sql ausführen.<br>3. Projekt-URL und Publishable Key in config.js eintragen.<br>4. E-Mail-Login und Redirect-URL konfigurieren.<br>5. Benutzerrollen vergeben und Testzahlung durchführen.</p>'+info("Ohne Backend werden bewusst keine erfolgreichen Zahlungen oder Kontostände vorgetäuscht.",true)+'<a class="btn primary" target="_blank" rel="noopener noreferrer" href="https://supabase.com/dashboard">Supabase öffnen</a></section><section class="card"><h2>Kamera-Diagnose</h2><div class="divider"></div><p class="details">Die Kameraberechtigung wird nur nach deiner Aktion angefragt. Test-Video wird nicht gespeichert.</p>'+btn("Kamerazugriff testen","camera-test")+'<p class="field-help">Für Smartphone-Kameras wird eine direkte HTTPS-Seite benötigt.</p></section></div></main></div></div>';
   }
   function login(){
-    root.innerHTML='<div class="welcome"><section class="welcome-left"><div class="brand" style="padding:0"><div class="brand-mark">S/S</div><div><div class="brand-name" >Schule als Staat</div><div class="brand-sub" >SCHULE ALS STAAT</div></div></div><a class="sas-public-visa-top" href="#visa-onboarding">ViSA-Onboarding für Gäste →</a><div><div class="eyebrow" >DEIN DIGITALER SCHULSTAAT</div><div class="welcome-hero">Gemeinsam<br>Staat machen.<br><span>Einfach digital.</span></div><p class="welcome-sub">Dein Ausweis, gemeinsame Entscheidungen, Veranstaltungen und alles für den Schulalltag. An einem Ort.</p></div><div class="small" >Schule als Staat · Gemeinsam gestalten.</div><a href="https://www.instagram.com/schule.als.staat_rng/" class="project-social" target="_blank" rel="noopener noreferrer" aria-label="Schule als Staat auf Instagram öffnen">Instagram · @schule.als.staat_rng ↗</a></section><section class="welcome-side"><div class="login-box"><nav class="sas-public-tabs" aria-label="Zugang zur Webseite"><span class="sas-public-tabs-current" aria-current="page">Anmelden</span><a href="#visa-onboarding">ViSA-Onboarding</a></nav>'+header("WILLKOMMEN","Jetzt anmelden.","Melde dich mit E-Mail-Adresse und Passwort an oder erstelle ein neues Konto.")+'<form id="password-login-form"><div class="form-group"><label for="account-email">E-Mail-Adresse</label><input class="field" type="email" autocomplete="username" name="email" id="account-email" placeholder="name@schule.de" required></div><div class="form-group"><label for="account-password">Passwort</label><input class="field" type="password" autocomplete="current-password" name="password" id="account-password" minlength="6" required></div><button type="submit" class="btn primary full">Mit Passwort anmelden</button></form><details class="alternate-auth" open><summary>Neu hier? Kostenloses Konto erstellen</summary><p class="field-help">Im aktuellen Testbetrieb kannst du dein Schülerkonto ohne zusätzliche Verifizierung sofort verwenden und an Abstimmungen teilnehmen. Die offizielle Schülerliste wird später eingebunden.</p><form id="signup-form"><div class="form-group"><label for="signup-name">Name oder Testname (optional)</label><input class="field" type="text" autocomplete="name" name="display_name" id="signup-name" maxlength="80" placeholder="z. B. Alex Muster"></div><div class="form-group"><label for="signup-class">Klasse (optional)</label><input class="field" type="text" name="class_label" id="signup-class" maxlength="24" placeholder="z. B. 10a"></div><div class="form-group"><label for="signup-email">E-Mail-Adresse</label><input class="field" type="email" autocomplete="email" name="email" id="signup-email" placeholder="name@schule.de" required></div><div class="form-group"><label for="signup-password">Neues Passwort (mindestens 12 Zeichen)</label><input class="field" type="password" autocomplete="new-password" name="password" id="signup-password" minlength="12" required></div><div class="form-group"><label for="signup-repeat">Passwort wiederholen</label><input class="field" type="password" autocomplete="new-password" name="repeat" id="signup-repeat" minlength="12" required></div><p id="signup-feedback" class="field-help" role="alert" aria-live="polite"></p><button type="submit" class="btn dark full">Konto erstellen</button></form></details><details class="alternate-auth"><summary>Passwort vergessen?</summary><p class="field-help">Für ein bestehendes Konto erhältst du einen Link, mit dem du selbst ein neues Passwort festlegen kannst. Je nach kostenlosem E-Mail-Limit kann der Versand verzögert sein.</p><form id="password-reset-request-form"><div class="form-group"><label for="password-reset-email">E-Mail-Adresse</label><input class="field" type="email" autocomplete="email" name="email" id="password-reset-email" placeholder="name@schule.de" required></div><button type="submit" class="btn dark full">Passwort-Link anfordern</button></form></details><p class="login-footer">Nur für berechtigte Teilnehmer. Gib dein Passwort niemals an andere weiter. Guthaben stellt kein Echtgeld dar.</p><a class="sas-visa-guest-link btn primary full" href="#visa-onboarding">ViSA-Onboarding für Gäste · Ohne Konto</a></div></section></div>';
+    root.innerHTML='<div class="welcome"><section class="welcome-left"><div class="brand" style="padding:0"><div class="brand-mark">S/S</div><div><div class="brand-name" >Schule als Staat</div><div class="brand-sub" >SCHULE ALS STAAT</div></div></div><a class="sas-public-visa-top" href="#visa-onboarding">ViSA-Onboarding für Gäste →</a><div><div class="eyebrow" >DEIN DIGITALER SCHULSTAAT</div><div class="welcome-hero">Gemeinsam<br>Staat machen.<br><span>Einfach digital.</span></div><p class="welcome-sub">Dein Ausweis, gemeinsame Entscheidungen, Veranstaltungen und alles für den Schulalltag. An einem Ort.</p></div><div class="small" >Schule als Staat · Gemeinsam gestalten.</div><a href="https://www.instagram.com/schule.als.staat_rng/" class="project-social" target="_blank" rel="noopener noreferrer" aria-label="Schule als Staat auf Instagram öffnen">Instagram · @schule.als.staat_rng ↗</a></section><section class="welcome-side"><div class="login-box"><nav class="sas-public-tabs" aria-label="Zugang zur Webseite"><span class="sas-public-tabs-current" aria-current="page">Anmelden</span><a href="#visa-onboarding">ViSA-Onboarding</a></nav>'+header("WILLKOMMEN","Jetzt anmelden.","Dein Konto wird von der Schule anhand der offiziellen Bürgerliste angelegt.")+'<form id="password-login-form"><div class="form-group"><label for="account-email">Bürgerkennung oder Verwaltungs-E-Mail</label><input class="field" type="text" autocomplete="username" name="email" id="account-email" placeholder="SAS-XXXXXXXXXX" maxlength="160" required></div><div class="form-group"><label for="account-password">Passwort</label><input class="field" type="password" autocomplete="current-password" name="password" id="account-password" minlength="6" required></div><button type="submit" class="btn primary full">Mit Passwort anmelden</button></form><p class="field-help">Ein Schülerkonto wird ausschließlich anhand der offiziellen Schulliste ausgegeben. Deine Bürgerkennung und dein Startpasswort erhältst du persönlich. Beim ersten Login musst du das Startpasswort ändern.</p><details class="alternate-auth"><summary>Passwort vergessen? (Verwaltung)</summary><p class="field-help">Für Bürgerkennungen ohne echte E-Mail-Adresse erfolgt die Rücksetzung nur über die Schulverwaltung. Nur vorhandene Verwaltungskonten mit echter E-Mail können hier einen Rücksetzlink anfordern.</p><form id="password-reset-request-form"><div class="form-group"><label for="password-reset-email">E-Mail-Adresse</label><input class="field" type="email" autocomplete="email" name="email" id="password-reset-email" placeholder="name@schule.de" required></div><button type="submit" class="btn dark full">Passwort-Link anfordern</button></form></details><p class="login-footer">Nur für gelistete Bürger und berechtigte Verwaltung. Gib deine Zugangsdaten niemals weiter. Guthaben stellt kein Echtgeld dar.</p><a class="sas-visa-guest-link btn primary full" href="#visa-onboarding">ViSA-Onboarding für Gäste · Ohne Konto</a></div></section></div>';
+  }
+  function rosterFirstLoginView(){
+    root.innerHTML='<div class="welcome"><section class="welcome-side" style="margin:auto"><div class="login-box">'+
+      header("ERSTE ANMELDUNG","Startpasswort ändern.","Dein einmaliger siebenstelliger Zugangscode muss durch ein persönliches Passwort ersetzt werden.")+
+      '<form id="roster-first-password-form"><div class="form-group"><label for="roster-password">Neues Passwort (mindestens 12 Zeichen)</label><input class="field" type="password" autocomplete="new-password" id="roster-password" name="password" minlength="12" required></div>'+
+      '<div class="form-group"><label for="roster-password-repeat">Passwort wiederholen</label><input class="field" type="password" autocomplete="new-password" id="roster-password-repeat" name="repeat" minlength="12" required></div>'+
+      '<button class="btn primary full" type="submit">Neues Passwort festlegen</button></form><p class="field-help">Verwende ein einzigartiges Passwort, das du nicht für andere Dienste nutzt.</p></div></section></div>';
   }
   function empty(label){return '<div class="empty">'+label+'</div>';}
   function ledgerRow(x){
@@ -239,6 +246,7 @@
   function render(){
     state.editing=false;
     if(!api)return setup();
+    if(state.user?.app_metadata?.sas_initial_password===true){rosterFirstLoginView();return;}
     if(state.recovering&&state.user){root.innerHTML=passwordRecoveryView();return;}
     if(window.SAS_PUBLIC_VISA){
       var visaHash=window.location.hash;
@@ -402,6 +410,21 @@
     var data=new FormData(form), submit=form.querySelector('[type="submit"]');
     if(submit)submit.disabled=true;
     try{
+      if(form.id==="roster-first-password-form"){
+        var pw=String(data.get("password")||"");
+        if(pw.length<12||pw.length>128||!/[A-Za-z]/.test(pw)||!/[^A-Za-z]/.test(pw))
+          throw Error("Mindestens 12 Zeichen mit Buchstaben und Zahlen oder Sonderzeichen verwenden.");
+        if(pw!==String(data.get("repeat")||""))throw Error("Die neuen Passwörter stimmen nicht überein.");
+        var changed=await api.auth.updateUser({password:pw});
+        if(changed.error)throw changed.error;
+        var refreshed=await api.auth.refreshSession();
+        if(refreshed.error)throw refreshed.error;
+        state.user=refreshed.data.user;
+        if(state.user?.app_metadata?.sas_initial_password===true)
+          throw Error("Passwort geändert, aber die Erstaktivierung wurde serverseitig noch nicht bestätigt.");
+        await fetchData();state.page="home";render();showToast("Persönliches Passwort gespeichert.");
+        return;
+      }
       if(form.id==="sas-myjob-form"){
         var chosen=String(data.get("title")||"").trim();
         await rpc("set_my_school_job_title",{p_title:chosen});
@@ -427,49 +450,15 @@
         showToast("Dein neues Passwort wurde gespeichert.");
         render();
       }
-      if(form.id==="signup-form"){
-        var feedback=form.querySelector("#signup-feedback");
-        if(feedback){feedback.textContent="";feedback.className="field-help";}
-        var newEmail=String(data.get("email")||"").trim().toLowerCase();
-        var newPass=String(data.get("password")||"");
-        if(newPass.length<12)throw Error("Bitte mindestens 12 Zeichen als Passwort verwenden.");
-        if(newPass!==String(data.get("repeat")||""))throw Error("Die Passwörter stimmen nicht überein.");
-        var displayName=String(data.get("display_name")||"").trim().slice(0,80);
-        var classLabel=String(data.get("class_label")||"").trim().slice(0,24);
-        var created=await api.auth.signUp({email:newEmail,password:newPass,options:{data:{full_name:displayName,class_label:classLabel}}});
-        if(signupAccountExists(created)){
-          if(feedback){
-            feedback.textContent="Konto bereits vergeben. Bitte melde dich an oder verwende „Passwort vergessen?“.";
-            feedback.className="info error";
-          }
-          return;
-        }
-        if(created.error)throw created.error;
-        var signUpSession=created.data&&created.data.session||null;
-        // If the service has returned a user without a session, attempt the
-        // ordinary password login once. Never send another signup request.
-        if(!signUpSession){
-          var signedIn=await api.auth.signInWithPassword({email:newEmail,password:newPass});
-          if(signedIn.error){
-            if(feedback){
-              feedback.textContent="Das Konto konnte nicht sofort angemeldet werden: "+friendlyAuthError(signedIn.error);
-              feedback.className="info error";
-            }
-            return;
-          }
-          signUpSession=signedIn.data&&signedIn.data.session||null;
-        }
-        if(!signUpSession||!signUpSession.user)throw Error("Es wurde keine gültige Anmeldung zurückgegeben. Bitte versuche die normale Anmeldung.");
-        state.user=signUpSession.user;
-        await claimDesignatedAdmin();
-        await fetchData();
-        state.page="home";
-        render();
-        showToast("Konto erfolgreich erstellt. Willkommen bei Schule als Staat!");
-      }
+      if(form.id==="signup-form")throw Error("Eigenständige Registrierung ist deaktiviert. Bürgerkonten vergibt die Schulverwaltung.");
       if(form.id==="password-login-form"){
         var response=await api.auth.signInWithPassword({
-          email:String(data.get("email")||"").trim(),
+          email:(function(){
+            var raw=String(data.get("email")||"").trim();
+            if(/^SAS-[A-Z0-9]{10}$/i.test(raw))return raw.slice(4).toLowerCase()+"@accounts.schule-als-staat.invalid";
+            if(raw.indexOf("@")<0)throw Error("Bitte die vollständige Bürgerkennung SAS-XXXXXXXXXX eingeben.");
+            return raw;
+          })(),
           password:String(data.get("password")||"")
         });
         if(response.error)throw response.error;
