@@ -137,8 +137,31 @@ Deno.serve(async (request) => {
       !clientSecret || !refreshToken || !/^[^@\s<>]+@[^@\s<>]+\.[A-Za-z]{2,}$/.test(sender)) {
     return json(503, { error: "Gmail sender not configured" });
   }
+  // Authorized configuration check: validates Gmail OAuth refresh without sending mail
+  // or leasing any queued verification messages.
+  let mode = "dispatch";
+  try {
+    const body = await request.json();
+    if (typeof body?.mode === "string") mode = body.mode;
+  } catch {
+    // An empty POST body is an ordinary dispatch request.
+  }
+  if (mode !== "check" && mode !== "dispatch") {
+    return json(400, { error: "Unsupported operation" });
+  }
   try {
     const settings = await rpc("visa_public_settings", {});
+    if (mode === "check") {
+      await authorizeGmail(clientId, clientSecret, refreshToken);
+      return json(200, {
+        ok: true,
+        oauth_refresh_valid: true,
+        email_enabled: settings?.email_enabled === true,
+        turnstile_site_key_present: Boolean(settings?.turnstile_site_key),
+        sent_messages: 0,
+        note: "Token refresh only; Gmail sending not tested"
+      });
+    }
     if (settings?.email_enabled !== true) {
       return json(503, { error: "ViSA email delivery is disabled" });
     }
