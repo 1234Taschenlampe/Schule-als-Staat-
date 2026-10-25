@@ -34,7 +34,7 @@ test("live existing Cloudflare website, PDF route and updated polling are preser
   assert.equal(app.status,200);
   const code=await app.text();
   assert.match(code,/safeRpc=new Set/);
-  assert.doesNotMatch(code,/setInterval\\(function\\(\\)/);
+  assert.doesNotMatch(code,/setInterval\(function\(\)/);
   assert.match(code,/lastResumeRefresh/);
   assert.match(code,/Daten auf Abruf/);
   assert.match(code,/overlordRefresh\(\)/);
