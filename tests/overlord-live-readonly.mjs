@@ -37,7 +37,7 @@ test("live existing Cloudflare website, PDF route and updated polling are preser
   assert.doesNotMatch(code,/setInterval\(function\(\)/);
   assert.match(code,/lastResumeRefresh/);
   assert.doesNotMatch(code,/Daten auf Abruf|Live-Auswertung|Live-Daten/);
-  assert.doesNotMatch(code,/btn\\("Aktualisieren","reload"/);
+  assert.doesNotMatch(code,/btn\("Aktualisieren","reload"/);
   assert.match(code,/sas-current-section/);
   assert.match(code,/rememberPage/);
   assert.match(code,/overlordRefresh\(\)/);
