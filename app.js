@@ -48,7 +48,7 @@
     el.className="toast"+(isError?" err":"");
     el.textContent=String(message);
     toasts.appendChild(el);
-    setTimeout(function(){if(el.isConnected)el.remove();},60000);
+    setTimeout(function(){if(el.isConnected)el.remove();},5500);
   }
   function friendlyAuthError(e){
     var code=String(e&&e.code||"").toLowerCase();
@@ -591,7 +591,7 @@
   document.addEventListener("keydown",function(e){if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="k"&&state.user){e.preventDefault();var d=document.getElementById("portal-search");if(d){if(d.open)d.close();else d.showModal();}}});
   document.addEventListener("visibilitychange",function(){if(document.hidden)void stopScanner();});
   window.addEventListener("pagehide",function(){void stopScanner();});
-  setInterval(function(){var a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))return;if(state.user&&["home","wallet","history","votes"].includes(state.page)&&!state.editing&&!document.hidden&&!state.busy&&!state.scanning&&!document.querySelector("dialog[open]"))void refresh(true);},5500);
+  setInterval(function(){var a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))return;if(state.user&&["home","wallet","history","votes"].includes(state.page)&&!state.editing&&!document.hidden&&!state.busy&&!state.scanning&&!document.querySelector("dialog[open]"))void refresh(true);},60000);
   async function start(){
     if(!api)return render();
     var session=await api.auth.getSession();
