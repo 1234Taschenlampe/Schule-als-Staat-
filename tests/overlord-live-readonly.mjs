@@ -33,7 +33,7 @@ test("live existing Cloudflare website, PDF route and updated polling are preser
   const app=await get("/app.js");
   assert.equal(app.status,200);
   const code=await app.text();
-  assert.match(code,/safeRpc=new Set/);
+  assert.match(code,/var safeRpc=new Set\(\[\]\)/);
   assert.doesNotMatch(code,/setInterval\(function\(\)/);
   assert.match(code,/lastResumeRefresh/);
   assert.doesNotMatch(code,/Daten auf Abruf|Live-Auswertung|Live-Daten/);
@@ -49,6 +49,7 @@ test("live polished mobile assets and cache/security headers are present",async(
  const html=await get("/");
  assert.equal(html.status,200);
  assert.match(await html.text(),/mobile-ui\.css/);
+ assert.match(await (await get("/")).text(),/app\.js\?v=20261025-startfix/);
  assert.equal(html.headers.get("cache-control"),"no-store");
  assert.match(html.headers.get("content-security-policy")||"",/default-src/);
  const css=await get("/mobile-ui.css");
@@ -56,6 +57,10 @@ test("live polished mobile assets and cache/security headers are present",async(
  assert.match(css.headers.get("content-type")||"",/text\/css/);
  assert.match(css.headers.get("cache-control")||"",/max-age=120/);
  assert.match(await css.text(),/\.bottom-nav/);
+ const script=await get("/app.js");
+ assert.equal(script.status,200);
+ assert.equal(script.headers.get("cache-control"),"no-store");
+ assert.match(await script.text(),/Das Schulportal konnte nicht geladen werden/);
  const attendance=await get("/work-hours.js");
  assert.equal(attendance.status,200);
  assert.doesNotMatch(await attendance.text(),/id="work-refresh"/);
