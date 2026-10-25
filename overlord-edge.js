@@ -6,10 +6,10 @@
  */
 const OVERLORD_ALLOWED_RPCS = Object.freeze(["poll_catalog","shop_room_catalog"]);
 const OVERLORD_LIMIT_PER_USER = 90;
-const OVERLORD_LIMIT_PER_IP = 900; // large school NATs need headroom
+const OVERLORD_LIMIT_PER_IP = 5000; // large school NATs need headroom
 const OVERLORD_WINDOW_MS = 60000;
 const OVERLORD_MAX_BODY_BYTES = 2048;
-const OVERLORD_MAX_INFLIGHT = 30;
+const OVERLORD_MAX_INFLIGHT = 80;
 const overlordState = {
   startedAt: Date.now(), requests: 0, forwarded: 0, rejected: 0, throttled: 0,
   errors: 0, upstream5xx: 0, active: 0, lastUpstreamStatus: 0,

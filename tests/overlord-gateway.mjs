@@ -96,12 +96,15 @@ test("429 protects per-token repeated requests; upstream 500 and 503 are not cac
  assert.equal(exhausted.status,429);assert.equal(exhausted.headers.get("retry-after"),"60");
  assert.equal(h.upstreamRpc,90);
 });
-test("60s polling replaces legacy 5.5s loop; gateway explicitly limits proxied RPCs",()=>{
+test("event-driven refresh removes permanent database polling and keeps manual updates",()=>{
  const app=readFileSync(new URL("../app.js",import.meta.url),"utf8");
- assert.match(app,/setInterval\(function\(\)\{[\s\S]*?\},60000\)/);
- assert.doesNotMatch(app,/setInterval\(function\(\)\{[\s\S]*?\},5500\)/);
+ assert.doesNotMatch(app,/setInterval\(function\(\)/);
+ assert.match(app,/addEventListener\("visibilitychange"/);
+ assert.match(app,/lastResumeRefresh/);
+ assert.match(app,/Date\.now\(\)-lastResumeRefresh<120000/);
  assert.match(app,/safeRpc=new Set\(\["poll_catalog","shop_room_catalog"\]\)/);
  assert.match(app,/var refreshPending=false/);
+ assert.match(app,/btn\("Aktualisieren","reload"/);
  assert.match(app,/role==="admin"/);
 });
 test("100 simultaneous synthetic requests complete without privileged operations or state changes",async()=>{
