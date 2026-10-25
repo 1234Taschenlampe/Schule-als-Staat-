@@ -305,6 +305,7 @@
     if(window.SAS_PUBLIC_VISA){
       var visaHash=window.location.hash;
       if(visaHash==="#visa-onboarding"||visaHash.indexOf("#visa-verify=")===0||visaHash==="#visa-payment-success"){
+        document.title="ViSA · Schule als Staat";
         root.innerHTML='<div class="sas-public-visa-page"><a class="sas-public-visa-back" href="#login">← Zur Anmeldung</a><div id="sas-visa-public-root"></div></div>';
         var visaRoot=document.getElementById("sas-visa-public-root");
         if(visaHash==="#visa-onboarding"){visaRoot.innerHTML=window.SAS_PUBLIC_VISA.form();void window.SAS_PUBLIC_VISA.showPublic(api,visaRoot);}
@@ -313,10 +314,11 @@
         return;
       }
     }
-    if(!state.user)return login();
+    if(!state.user){document.title="Anmelden · Schule als Staat";return login();}
     if(!state.profile||!state.wallet){root.textContent="Profil oder Guthaben konnte nicht geladen werden. Bitte Zugang und Datenbankkonfiguration prüfen.";return;}
     var views={home:dashboard,wallet:wallet,pay:pay,register:register,history:history,votes:votesPage,settings:settingsPage,apps:appDirectory,admin:settingsPage,overlord:overlordPage};
     if(!allowed(state.page)){state.page="home";}
+    document.title=label(state.page)+" · Schule als Staat";
     if(state.page==="overlord"){mount(overlordPage());void overlordRefresh();return;}
     if(state.page==="map"&&window.SAS_SHOP_PLAN){mount('<div id="sas-school-shop-plan"></div>');window.SAS_SHOP_PLAN.show({api:api,user:state.user,profile:state.profile,target:document.getElementById("sas-school-shop-plan")}).catch(fail);return;}
     if(state.page==="guestvisa"&&window.SAS_PUBLIC_VISA){mount('<div id="sas-guest-visa-admin"></div>');window.SAS_PUBLIC_VISA.showAdmin(api,document.getElementById("sas-guest-visa-admin")).catch(fail);return;}
@@ -426,7 +428,20 @@
       throw e;
     }finally{if(stream)stream.getTracks().forEach(function(t){t.stop();});}
   }
-  async function navigate(id){if(state.busy||(window.SAS_FEATURES&&window.SAS_FEATURES.isBusy())){showToast("Bitte warte, bis die Änderung gespeichert ist.");return;}if(!allowed(id))return;await stopScanner();if(window.SAS_ATTENDANCE)await window.SAS_ATTENDANCE.stop();if(window.SAS_WORK_HOURS)await window.SAS_WORK_HOURS.stop();state.page=id;state.editing=false;render();if(["home","wallet","history","votes"].includes(id))void refresh(true);window.scrollTo(0,0);var main=document.getElementById("main-content");if(main)main.focus({preventScroll:true});}
+  // Per-tab navigation context for native browser pull-to-refresh.
+  // No credentials or personal data are persisted.
+  function rememberPage(id){
+    if(!state.user || !allowed(id))return;
+    try{window.sessionStorage.setItem("sas-current-section:"+state.user.id,id);}catch(_){}
+  }
+  function restorePage(){
+    if(!state.user || deepLink)return;
+    try{
+      var saved=window.sessionStorage.getItem("sas-current-section:"+state.user.id);
+      if(saved && allowed(saved))state.page=saved;
+    }catch(_){}
+  }
+  async function navigate(id){if(state.busy||(window.SAS_FEATURES&&window.SAS_FEATURES.isBusy())){showToast("Bitte warte, bis die Änderung gespeichert ist.");return;}if(!allowed(id))return;await stopScanner();if(window.SAS_ATTENDANCE)await window.SAS_ATTENDANCE.stop();if(window.SAS_WORK_HOURS)await window.SAS_WORK_HOURS.stop();state.page=id;rememberPage(id);state.editing=false;render();if(["home","wallet","history","votes"].includes(id))void refresh(true);window.scrollTo(0,0);var main=document.getElementById("main-content");if(main)main.focus({preventScroll:true});}
   window.SAS_TUTORIAL_NAV=function(page){if(allowed(page))void navigate(page);};
   async function action(id,pollId){
     if(state.busy)return;
@@ -607,7 +622,7 @@
     var session=await api.auth.getSession();
     if(session.error)throw session.error;
     state.user=session.data.session&&session.data.session.user||null;
-    if(state.user){await claimDesignatedAdmin();await fetchData();}
+    if(state.user){await claimDesignatedAdmin();await fetchData();restorePage();}
 
     render();
     if(state.user&&window.SAS_TUTORIAL)void window.SAS_TUTORIAL.start(api,state.user.id);
