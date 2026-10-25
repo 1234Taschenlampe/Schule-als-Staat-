@@ -36,8 +36,27 @@ test("live existing Cloudflare website, PDF route and updated polling are preser
   assert.match(code,/safeRpc=new Set/);
   assert.doesNotMatch(code,/setInterval\(function\(\)/);
   assert.match(code,/lastResumeRefresh/);
-  assert.match(code,/Daten auf Abruf/);
+  assert.doesNotMatch(code,/Daten auf Abruf|Live-Auswertung|Live-Daten/);
+  assert.doesNotMatch(code,/btn\\("Aktualisieren","reload"/);
+  assert.match(code,/sas-current-section/);
+  assert.match(code,/rememberPage/);
   assert.match(code,/overlordRefresh\(\)/);
   const pdf=await get("/rng-floorplan.pdf","HEAD");
   assert.ok([200,502].includes(pdf.status),"Expected PDF or upstream school outage, got "+pdf.status);
+});
+
+test("live polished mobile assets and cache/security headers are present",async()=>{
+ const html=await get("/");
+ assert.equal(html.status,200);
+ assert.match(await html.text(),/mobile-ui\.css/);
+ assert.equal(html.headers.get("cache-control"),"no-store");
+ assert.match(html.headers.get("content-security-policy")||"",/default-src/);
+ const css=await get("/mobile-ui.css");
+ assert.equal(css.status,200);
+ assert.match(css.headers.get("content-type")||"",/text\/css/);
+ assert.match(css.headers.get("cache-control")||"",/max-age=120/);
+ assert.match(await css.text(),/\.bottom-nav/);
+ const attendance=await get("/work-hours.js");
+ assert.equal(attendance.status,200);
+ assert.doesNotMatch(await attendance.text(),/id="work-refresh"/);
 });
