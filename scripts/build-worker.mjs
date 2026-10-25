@@ -14,7 +14,7 @@ const names = [
   "brand-emblem.css", "public-visa.css", "shop-plan.css",
   "app.js", "features.js", "roles.js", "attendance.js", "tutorial.js",
   "config.js", "work-hours.js", "shop-management.js",
-  "admin-credit.js", "public-visa.js", "shop-plan.js"
+  "admin-credit.js", "public-visa.js", "shop-plan.js", "mobile-ui.css"
 ];
 const files = Object.fromEntries(
   names.map(name => ["/" + name, readFileSync(resolve(root, name), "utf8")])
