@@ -26,9 +26,9 @@ const types = Object.fromEntries(names.map(name => [
     : "application/javascript; charset=utf-8"
 ]));
 const config = readFileSync(resolve(root, "config.js"), "utf8");
-const url = /supabaseUrl:\\s*"([^"]+)"/.exec(config)?.[1];
-const publishableKey = /supabaseAnonKey:\\s*"([^"]+)"/.exec(config)?.[1];
-if (!/^https:\\/\\/[a-z0-9-]+\\.supabase\\.co$/.test(url || "") ||
+const url = /supabaseUrl:\s*"([^"]+)"/.exec(config)?.[1];
+const publishableKey = /supabaseAnonKey:\s*"([^"]+)"/.exec(config)?.[1];
+if (!/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(url || "") ||
     !/^sb_publishable_[A-Za-z0-9_-]+$/.test(publishableKey || ""))
   throw new Error("Missing public Supabase routing configuration");
 const overlordSource = readFileSync(resolve(root, "overlord-edge.js"), "utf8");
