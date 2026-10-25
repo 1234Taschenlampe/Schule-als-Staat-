@@ -1,0 +1,31 @@
+name: Overlord gateway and load/security smoke
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - app.js
+      - scripts/build-worker.mjs
+      - overlord-edge.js
+      - tests/overlord-gateway.mjs
+      - .github/workflows/overlord-gateway.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify-overlord:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build actual Cloudflare worker and validate JavaScript
+        run: |
+          node --check app.js
+          node --check overlord-edge.js
+          node --check scripts/build-worker.mjs
+          node scripts/build-worker.mjs
+          node --check dist/schule-als-staat-worker.js
+      - name: Security, authentication, load and 100-request concurrency checks
+        run: node --test tests/overlord-gateway.mjs
