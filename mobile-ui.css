@@ -9,7 +9,7 @@
     --canvas: #f7f8fa;
     --surface: #ffffff;
     --ink: #19212c;
-    --muted: #667181;
+    --muted: #526172;
     --border: #e2e7ed;
     --accent: #18538b;
     --accent-hover: #123e68;
@@ -17,8 +17,8 @@
     --radius: 15px;
     --shadow: none;
   }
-  html { scroll-padding-top: 72px; }
-  body { width: 100%; max-width: 100%; overflow-x: clip; color: var(--ink); }
+  html { scroll-padding-top: 72px; scroll-padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
+  body { width: 100%; max-width: 100%; color: var(--ink); }
   .app-shell, .main-area { min-width: 0; width: 100%; }
   .topbar {
     position: sticky;
