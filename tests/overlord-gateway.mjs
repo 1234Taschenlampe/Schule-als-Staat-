@@ -104,7 +104,7 @@ test("event-driven refresh removes permanent database polling and keeps manual u
  assert.match(app,/Date\.now\(\)-lastResumeRefresh<120000/);
  assert.match(app,/safeRpc=new Set\(\["poll_catalog","shop_room_catalog"\]\)/);
  assert.match(app,/var refreshPending=false/);
- assert.match(app,/btn\("Aktualisieren","reload"/);
+ assert.doesNotMatch(app,/btn\("Aktualisieren","reload"/);
  assert.match(app,/role==="admin"/);
 });
 test("100 simultaneous synthetic requests complete without privileged operations or state changes",async()=>{
