@@ -90,6 +90,14 @@ test("phone layouts fit without horizontal scroll or inaccessible navigation",as
       }
       await page.locator('.bottom-nav [data-nav="apps"]').click();
       await page.locator(".module-grid .module-tile").first().waitFor({state:"visible",timeout:9000});
+      assert.match(await page.title(),/Bereiche/);
+      if(width===390){
+        await page.reload({waitUntil:"domcontentloaded",timeout:15000});
+        await page.locator(".module-grid .module-tile").first().waitFor({state:"visible",timeout:9000});
+        assert.match(await page.title(),/Bereiche/,"native pull-to-refresh should restore the current module");
+        await page.locator('.bottom-nav [data-nav="home"]').click();
+        await page.locator(".dashboard-intro h1").waitFor({state:"visible",timeout:9000});
+      }
       const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-document.documentElement.clientWidth);
       assert.ok(overflow<=1,"overflow after app navigation at "+width);
     }else{
@@ -99,6 +107,37 @@ test("phone layouts fit without horizontal scroll or inaccessible navigation",as
     assert.deepEqual(errors,[],"Browser errors at "+width+" loggedIn="+loggedIn);
     await context.close();
    }
+  }
+ });
+});
+
+
+test("WCAG automated accessibility checks on login, dashboard and module navigation",async()=>{
+ await withBrowser(async(browser,origin)=>{
+  for(const loggedIn of [false,true]){
+   const {context,page,errors}=await openPage(browser,origin,390,loggedIn);
+   await page.addScriptTag({path:resolve(root,"node_modules/axe-core/axe.min.js")});
+   async function audit(view){
+     const result=await page.evaluate(async()=>{
+       const outcome=await window.axe.run(document,{
+         runOnly:{type:"tag",values:["wcag2a","wcag2aa","wcag21a","wcag21aa","wc22aa"]}
+       });
+       return outcome.violations.map(x=>({id:x.id,impact:x.impact,description:x.description,
+         nodes:x.nodes.slice(0,3).map(n=>({target:n.target,summary:n.failureSummary}))}));
+     });
+     assert.deepEqual(result,[],"Accessibility violations on "+view+": "+JSON.stringify(result));
+   }
+   await audit(loggedIn?"dashboard":"login");
+   if(loggedIn){
+     await page.locator('.bottom-nav [data-nav="apps"]').click();
+     await page.locator(".module-grid .module-tile").first().waitFor({state:"visible",timeout:9000});
+     await audit("module directory");
+     await page.locator('.bottom-nav [data-nav="settings"]').click();
+     await page.locator(".page-heading h1").waitFor({state:"visible",timeout:9000});
+     await audit("account settings");
+   }
+   assert.deepEqual(errors,[]);
+   await context.close();
   }
  });
 });
