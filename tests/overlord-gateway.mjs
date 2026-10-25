@@ -102,10 +102,34 @@ test("event-driven refresh removes permanent database polling and keeps manual u
  assert.match(app,/addEventListener\("visibilitychange"/);
  assert.match(app,/lastResumeRefresh/);
  assert.match(app,/Date\.now\(\)-lastResumeRefresh<120000/);
- assert.match(app,/safeRpc=new Set\(\["poll_catalog","shop_room_catalog"\]\)/);
+ assert.match(app,/safeRpc=new Set\(\[\]\)/);
  assert.match(app,/var refreshPending=false/);
  assert.doesNotMatch(app,/btn\("Aktualisieren","reload"/);
  assert.match(app,/role==="admin"/);
+});
+test("authenticated startup reads use direct Supabase rather than an intermediary",async()=>{
+ const source=readFileSync(new URL("../app.js",import.meta.url),"utf8");
+ const start=source.indexOf("var safeRpc=new Set([])");
+ const finish=source.indexOf("var api=ready?",start);
+ assert.ok(start>=0&&finish>start);
+ const snippet=source.slice(start,finish);
+ const called=[];
+ const sandbox={
+   URL,location:{origin:"https://schule-als-staat.schule-als-staat-jfe.workers.dev"},
+   cfg:{supabaseUrl:"https://wdebwgcferieedkpqbvk.supabase.co"},
+   fetch:async(url,opts)=>{called.push({url,opts});return{status:200};}
+ };
+ vm.runInNewContext(snippet+";globalFn=sasGatewayFetch;",sandbox);
+ const addresses=["poll_catalog","shop_room_catalog","my_school_roles","admin_list_users"];
+ for(const name of addresses){
+   const url="https://wdebwgcferieedkpqbvk.supabase.co/rest/v1/rpc/"+name;
+   await sandbox.globalFn(url,{method:"POST",body:"{}",headers:{authorization:"Bearer test.session.token"}});
+ }
+ assert.equal(called.length,4);
+ assert.ok(called.every(x=>String(x.url).startsWith("https://wdebwgcferieedkpqbvk.supabase.co/")));
+ assert.doesNotMatch(source,/root.textContent="Start fehlgeschlagen/);
+ assert.match(source,/Das Schulportal konnte nicht geladen werden/);
+ assert.match(source,/sas-start-retry/);
 });
 test("100 simultaneous synthetic requests complete without privileged operations or state changes",async()=>{
  const h=harness({delay:1});
