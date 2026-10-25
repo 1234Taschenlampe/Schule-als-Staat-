@@ -79,3 +79,23 @@ Worker in Cloudflare auf vorheriges Script zurückstellen.
 App.js unverändert aus dem vorherigen GitHub-Commit wieder einbinden.
 Keine Datenbankmigration und keine Änderung an `profiles`, `wallets`,
 `payment_requests`, `guest_visa_*` oder Benutzerkonten in diesem PR.
+
+## Nachschärfung für die 0-Euro-Grenze (25.10.2026)
+
+Cloudflare Workers Free dokumentiert derzeit **100.000 Requests pro Tag** auf dem
+Account. Eine 60-Sekunden-Aktualisierung würde bei 1.000 dauernd aktiven
+Bürgern an einem 8-Stunden-Schultag allein schon **480.000 Worker-RPC-Requests**
+auslösen, zusätzlich zum Webseiten-Traffic. Deshalb wurde das temporäre
+60-Sekunden-Polling **komplett entfernt**. Daten werden beim
+Seitenwechsel, nach Schreiboperationen, auf den sichtbaren Schaltflächen
+„Aktualisieren“ sowie beim erneuten Sichtbarwerden des Tabs nach
+mindestens zwei Minuten geladen. Nur die bereits vorhandenen expliziten
+Aktionen lösen weiter Aktualisierungen aus.
+
+Die Overlord-IP-Grenze ist wegen vieler Schüler hinter derselben Schul-IP
+auf 5.000 Leseanfragen/Minute und bis zu 80 gleichzeitige Proxy-Aufrufe
+**pro Worker-Isolat** angehoben; die Rate pro JWT bleibt bei 90/Minute.
+Dies verhindert nicht sämtliche DDoS-Angriffe, aber vermeidet bekannte
+False Positives einer geteilten Schul-IP. 
+
+* [Cloudflare Workers Free – Limits](https://developers.cloudflare.com/workers/platform/limits/)
