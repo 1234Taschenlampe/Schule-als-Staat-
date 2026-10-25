@@ -6,7 +6,7 @@
   // Send only approved read-only RPCs through same-origin Overlord.
   // Auth, personal tables, payment writes and all other operations remain on
   // Supabase with their existing authorization and RLS protections.
-  var safeRpc=new Set(["poll_catalog","shop_room_catalog"]);
+  var safeRpc=new Set([]); // Restore direct authenticated Supabase RPC until gateway integration is fixed.
   function sasGatewayFetch(input,options){
     var originalUrl=typeof input==="string"?input:input?.url||"";
     var url;
@@ -644,5 +644,16 @@
       });
     });
   }
-  void start().catch(function(e){root.textContent="Start fehlgeschlagen: "+String(e&&e.message||e);});
+  void start().catch(function(e){
+    // Never print opaque API response objects, JWTs, internal SQL or stack traces
+    // into the public interface. Provide a recoverable, usable failure state.
+    console.error("School portal startup failed",e);
+    root.innerHTML='<div class="welcome" style="min-height:100dvh"><section class="welcome-side" style="grid-column:1/-1"><div class="login-box">'+
+      '<div class="eyebrow">VERBINDUNG</div><h1>Das Schulportal konnte nicht geladen werden.</h1>'+
+      '<p class="lead">Die Daten konnten gerade nicht abgerufen werden. Bitte überprüfe die Verbindung und versuche es erneut.</p>'+
+      '<button type="button" class="btn primary full" id="sas-start-retry">Erneut versuchen</button>'+
+      '<p class="field-help">Dein Konto und dein Guthaben sind davon nicht betroffen.</p></div></section></div>';
+    var retry=document.getElementById("sas-start-retry");
+    if(retry)retry.addEventListener("click",function(){window.location.reload();});
+  });
 })();
