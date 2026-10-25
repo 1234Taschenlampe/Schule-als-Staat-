@@ -3,7 +3,26 @@
   "use strict";
   var cfg=window.NV_CONFIG||{}, root=document.getElementById("app"), toasts=document.getElementById("toast-root");
   var ready=Boolean(cfg.supabaseUrl&&cfg.supabaseAnonKey&&window.supabase&&window.supabase.createClient);
-  var api=ready?window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey):null;
+  // Send only approved read-only RPCs through same-origin Overlord.
+  // Auth, personal tables, payment writes and all other operations remain on
+  // Supabase with their existing authorization and RLS protections.
+  var safeRpc=new Set(["poll_catalog","shop_room_catalog"]);
+  function sasGatewayFetch(input,options){
+    var originalUrl=typeof input==="string"?input:input?.url||"";
+    var url;
+    try{url=new URL(originalUrl);}catch{return fetch(input,options);}
+    if(url.origin===cfg.supabaseUrl &&
+       url.pathname.startsWith("/rest/v1/rpc/") &&
+       safeRpc.has(url.pathname.split("/").pop()) &&
+       String(options?.method||"POST").toUpperCase()==="POST" &&
+       (!options?.body||options.body==="{}")){
+      return fetch(location.origin+"/api/v1/rpc/"+url.pathname.split("/").pop(),options);
+    }
+    return fetch(input,options);
+  }
+  var api=ready?window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey,{
+    global:{fetch:sasGatewayFetch}
+  }):null;
   var state={user:null,profile:null,wallet:null,ledger:[],cash:[],requests:[],users:[],polls:[],pollResults:[],schoolRoles:{operator:false,jobs:[]},page:"home",active:null,invoice:null,scanner:null,scanning:false,busy:false,editing:false,recovering:/(?:^|[&#?])type=recovery(?:&|$)/.test(location.hash)};
   var deepLink=new URLSearchParams(location.search).get("pay");
   var openPortalAfterLogin=false; // No old V3 demo portal; all live features are integrated.
@@ -29,7 +48,7 @@
     el.className="toast"+(isError?" err":"");
     el.textContent=String(message);
     toasts.appendChild(el);
-    setTimeout(function(){if(el.isConnected)el.remove();},5500);
+    setTimeout(function(){if(el.isConnected)el.remove();},60000);
   }
   function friendlyAuthError(e){
     var code=String(e&&e.code||"").toLowerCase();
@@ -86,20 +105,30 @@
     state.polls=await rpc("poll_catalog",{});
     state.pollResults=(state.profile.role==="admin"||state.schoolRoles?.operator)?await rpc("admin_poll_results",{}):[];
   }
+  var refreshPending=false;
   async function refresh(silent){
-    if(!state.user||state.busy||state.scanning)return;
-    var requestedPage=state.page;try{await fetchData();if(state.page===requestedPage&&(!silent||(!state.editing&&!document.querySelector("dialog[open]")&&["home","wallet","history","votes"].includes(state.page)))){if(silent&&window.scrollY>40)return;var scroll=window.scrollY;render();if(silent&&scroll>0)requestAnimationFrame(function(){window.scrollTo({top:scroll,behavior:"instant"});});}}
-    catch(e){if(!silent)fail(e);}
+    if(!state.user||state.busy||state.scanning||refreshPending)return;
+    refreshPending=true;
+    var requestedPage=state.page;
+    try{
+      await fetchData();
+      if(state.page===requestedPage&&(!silent||(!state.editing&&!document.querySelector("dialog[open]")&&["home","wallet","history","votes"].includes(state.page)))){
+        if(silent&&window.scrollY>40)return;
+        var scroll=window.scrollY;render();
+        if(silent&&scroll>0)requestAnimationFrame(function(){window.scrollTo({top:scroll,behavior:"instant"});});
+      }
+    }catch(e){if(!silent)fail(e);}
+    finally{refreshPending=false;}
   }
   var groups=[
     ["Mein Bereich",["idcard","gallery","workhours","myjob","wallet","pay","history"]],
     ["Schulleben",["bulletin","blog","events","lost"]],
     ["Organisation",["map","rooms","shops","shopmanage","jobs"]],
     ["Staat & Mitbestimmung",["votes","laws","parties","courts"]],
-    ["Verwaltung",["guestvisa","visa","register","admincredit","attendance","roles","admin","settings"]]
+    ["Verwaltung",["overlord","guestvisa","visa","register","admincredit","attendance","roles","admin","settings"]]
   ];
-  var descriptions={guestvisa:"Gast-ViSA-Anträge einsehen",admincredit:"Schulwährung per Ausweis-QR gutschreiben",workhours:"Arbeitszeit 12.–16. Juli 2027 per QR-Code erfassen",roles:"Schulberufe und Operatorrechte vergeben",attendance:"Anwesenheit per Schülerausweis scannen",home:"Dein persönlicher Überblick",idcard:"Deine persönliche Projektkarte",gallery:"Das passende Ausweisdesign wählen",visa:"Einreise beantragen und Status verfolgen",wallet:"Guthaben und Kontobewegungen",pay:"QR-Code scannen und Betrag prüfen",history:"Digitale Buchungen und Bargeld",bulletin:"Neuigkeiten aus unserem Schulstaat",blog:"Geschichten und Einblicke ins Projekt",events:"Termine entdecken und teilnehmen",lost:"Verlorenes suchen, Gefundenes melden",map:"Schulplan: vier Shops pro Klassenzimmer",rooms:"Räume für dein Vorhaben reservieren",shops:"Geschäfte und Kassen entdecken",jobs:"Aufgaben finden und sich bewerben",votes:"Gemeinsame Entscheidungen treffen",laws:"Regeln und Verordnungen nachlesen",parties:"Mitteilungen der Parteien",courts:"Öffentliche Gerichtsbekanntmachungen",register:"Verkäufe und QR-Zahlungen erfassen",admin:"Guthaben, Rollen und Stimmrecht verwalten",settings:"Profil, Passwort und Geräte"};
-  var iconPaths={guestvisa:"M4 4h16v16H4z M8 8h8 M8 12h8 M8 16h5",admincredit:"M12 2v20 M17 6H9a4 4 0 0 0 0 8h6a4 4 0 0 1 0 8H6",myjob:'M3 7h18v14H3z M8 7V3h8v4 M3 12h18',shopmanage:'M3 7h18 M5 7V4h14v3 M5 7v14h14V7 M9 12h6 M9 16h6',workhours:'M12 3v9l4 2 M21 12a9 9 0 1 1-9-9',roles:'M4 6h16 M4 12h16 M4 18h16 M6 8h3 M6 14h3',attendance:'M3 8V4h5 M16 4h5v4 M21 16v5h-5 M8 21H3v-5 M9 12l2 2 4-4',home:'M3 10l9-7 9 7v11H3z M9 21v-8h6v8',idcard:'M3 5h18v14H3z M7 9h3v4H7z M14 9h4 M14 13h4 M7 16h11',gallery:'M4 4h16v16H4z M8 8h3v3H8z M4 16l5-4 4 3 3-2 4 3',visa:'M6 3h12v18H6z M9 7h6 M9 11h6 M9 15h3',wallet:'M3 6h17v14H3z M3 6V4h14 M15 11h6v5h-6z',pay:'M4 8V4h4 M16 4h4v4 M20 16v4h-4 M8 20H4v-4 M8 10h3v3H8z M14 10h2 M14 14h3 M8 16h3',history:'M3 11a9 9 0 1 1 2 7 M3 4v7h7 M12 7v5l3 2',bulletin:'M4 5h16v14H4z M8 9h8 M8 13h5 M8 19v3 M16 19v3',blog:'M5 3h14v18H5z M8 7h8 M8 11h8 M8 15h5',events:'M4 5h16v16H4z M8 3v4 M16 3v4 M4 10h16 M8 14h2 M14 14h2',lost:'M10 17a7 7 0 1 0 0-14 7 7 0 0 0 0 14 M15 15l6 6 M7 10h6 M10 7v6',map:'M3 5l6-2 6 2 6-2v16l-6 2-6-2-6 2z M9 3v16 M15 5v16',rooms:'M5 3h14v18H5z M9 3v18 M14 12h1',shops:'M3 9l2-6h14l2 6 M3 9v3h18V9 M5 12v9h14v-9 M9 21v-6h6v6',jobs:'M3 7h18v14H3z M8 7V3h8v4 M3 12h18 M10 12v3h4v-3',votes:'M5 4h14v17H5z M8 8l2 2 5-5 M8 14h8 M8 17h5',laws:'M4 4h7v16H4z M13 4h7v16h-7z M7 8h1 M16 8h1',parties:'M8 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8 M2 21v-3a6 6 0 0 1 12 0v3 M16 4a4 4 0 0 1 0 8 M17 15a5 5 0 0 1 5 5',courts:'M12 3v18 M5 21h14 M4 6h16 M5 6l-3 8h6z M19 6l-3 8h6z',register:'M5 3h14v18H5z M8 6h8v4H8z M8 14h2 M14 14h2 M8 17h2 M14 17h2',settings:'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8 M12 2v3 M12 19v3 M2 12h3 M19 12h3 M5 5l2 2 M17 17l2 2 M5 19l2-2 M17 7l2-2',admin:'M12 3l8 3v6c0 5-8 9-8 9S4 17 4 12V6z M9 12l2 2 4-4',apps:'M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z',search:'M10 17a7 7 0 1 0 0-14 7 7 0 0 0 0 14 M15 15l6 6'};
+  var descriptions={overlord:"API-Schutz und Serverstatus (Admin)",guestvisa:"Gast-ViSA-Anträge einsehen",admincredit:"Schulwährung per Ausweis-QR gutschreiben",workhours:"Arbeitszeit 12.–16. Juli 2027 per QR-Code erfassen",roles:"Schulberufe und Operatorrechte vergeben",attendance:"Anwesenheit per Schülerausweis scannen",home:"Dein persönlicher Überblick",idcard:"Deine persönliche Projektkarte",gallery:"Das passende Ausweisdesign wählen",visa:"Einreise beantragen und Status verfolgen",wallet:"Guthaben und Kontobewegungen",pay:"QR-Code scannen und Betrag prüfen",history:"Digitale Buchungen und Bargeld",bulletin:"Neuigkeiten aus unserem Schulstaat",blog:"Geschichten und Einblicke ins Projekt",events:"Termine entdecken und teilnehmen",lost:"Verlorenes suchen, Gefundenes melden",map:"Schulplan: vier Shops pro Klassenzimmer",rooms:"Räume für dein Vorhaben reservieren",shops:"Geschäfte und Kassen entdecken",jobs:"Aufgaben finden und sich bewerben",votes:"Gemeinsame Entscheidungen treffen",laws:"Regeln und Verordnungen nachlesen",parties:"Mitteilungen der Parteien",courts:"Öffentliche Gerichtsbekanntmachungen",register:"Verkäufe und QR-Zahlungen erfassen",admin:"Guthaben, Rollen und Stimmrecht verwalten",settings:"Profil, Passwort und Geräte"};
+  var iconPaths={overlord:'M4 4h16v16H4z M8 16l3-4 3 2 3-5',guestvisa:"M4 4h16v16H4z M8 8h8 M8 12h8 M8 16h5",admincredit:"M12 2v20 M17 6H9a4 4 0 0 0 0 8h6a4 4 0 0 1 0 8H6",myjob:'M3 7h18v14H3z M8 7V3h8v4 M3 12h18',shopmanage:'M3 7h18 M5 7V4h14v3 M5 7v14h14V7 M9 12h6 M9 16h6',workhours:'M12 3v9l4 2 M21 12a9 9 0 1 1-9-9',roles:'M4 6h16 M4 12h16 M4 18h16 M6 8h3 M6 14h3',attendance:'M3 8V4h5 M16 4h5v4 M21 16v5h-5 M8 21H3v-5 M9 12l2 2 4-4',home:'M3 10l9-7 9 7v11H3z M9 21v-8h6v8',idcard:'M3 5h18v14H3z M7 9h3v4H7z M14 9h4 M14 13h4 M7 16h11',gallery:'M4 4h16v16H4z M8 8h3v3H8z M4 16l5-4 4 3 3-2 4 3',visa:'M6 3h12v18H6z M9 7h6 M9 11h6 M9 15h3',wallet:'M3 6h17v14H3z M3 6V4h14 M15 11h6v5h-6z',pay:'M4 8V4h4 M16 4h4v4 M20 16v4h-4 M8 20H4v-4 M8 10h3v3H8z M14 10h2 M14 14h3 M8 16h3',history:'M3 11a9 9 0 1 1 2 7 M3 4v7h7 M12 7v5l3 2',bulletin:'M4 5h16v14H4z M8 9h8 M8 13h5 M8 19v3 M16 19v3',blog:'M5 3h14v18H5z M8 7h8 M8 11h8 M8 15h5',events:'M4 5h16v16H4z M8 3v4 M16 3v4 M4 10h16 M8 14h2 M14 14h2',lost:'M10 17a7 7 0 1 0 0-14 7 7 0 0 0 0 14 M15 15l6 6 M7 10h6 M10 7v6',map:'M3 5l6-2 6 2 6-2v16l-6 2-6-2-6 2z M9 3v16 M15 5v16',rooms:'M5 3h14v18H5z M9 3v18 M14 12h1',shops:'M3 9l2-6h14l2 6 M3 9v3h18V9 M5 12v9h14v-9 M9 21v-6h6v6',jobs:'M3 7h18v14H3z M8 7V3h8v4 M3 12h18 M10 12v3h4v-3',votes:'M5 4h14v17H5z M8 8l2 2 5-5 M8 14h8 M8 17h5',laws:'M4 4h7v16H4z M13 4h7v16h-7z M7 8h1 M16 8h1',parties:'M8 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8 M2 21v-3a6 6 0 0 1 12 0v3 M16 4a4 4 0 0 1 0 8 M17 15a5 5 0 0 1 5 5',courts:'M12 3v18 M5 21h14 M4 6h16 M5 6l-3 8h6z M19 6l-3 8h6z',register:'M5 3h14v18H5z M8 6h8v4H8z M8 14h2 M14 14h2 M8 17h2 M14 17h2',settings:'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8 M12 2v3 M12 19v3 M2 12h3 M19 12h3 M5 5l2 2 M17 17l2 2 M5 19l2-2 M17 7l2-2',admin:'M12 3l8 3v6c0 5-8 9-8 9S4 17 4 12V6z M9 12l2 2 4-4',apps:'M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z',search:'M10 17a7 7 0 1 0 0-14 7 7 0 0 0 0 14 M15 15l6 6'};
   navs.push(["apps","Portal"],["admin","Administration"]);
   function icon(id){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+(iconPaths[id]||iconPaths.apps)+'"/></svg>';}
   function allowed(id){
@@ -108,7 +137,7 @@
     // Navigation is a convenience boundary; all privileged writes are checked by Supabase RPC/RLS.
     // Regular pupils see the everyday school-state features, not administration modules.
     var pupilPages=["home","apps","idcard","gallery","wallet","pay","history","map","rooms","shops","votes","lost","settings","workhours","myjob"];
-    if(id==="admincredit"||id==="admin"||id==="visa"||id==="guestvisa")return administrator;
+    if(id==="overlord"||id==="admincredit"||id==="admin"||id==="visa"||id==="guestvisa")return administrator;
     if(id==="register")return adminOrCashier();
     if(id==="roles")return administrator||operator;
     if(id==="attendance")return administrator||operator||Boolean(state.schoolRoles?.can_check_attendance);
@@ -231,6 +260,31 @@
     return header("MITBESTIMMUNG","Abstimmungen.","Der Name unseres Schulstaats steht noch nicht fest. Darüber und über weitere Entscheidungen stimmen wir gemeinsam ab.")+
       notice+'<h2 class="section-title">Unsere zwei Wettbewerbe</h2><div class="grid two"><section class="card poll-card"><div class="card-header"><h2>Staatsname</h2><span class="pill">Vorbereitung</span></div><p class="details">Hier stimmen wir über die eingereichten Namensvorschläge ab. Die Kandidaten werden noch ergänzt.</p><p class="field-help">Noch keine Abstimmung möglich.</p></section><section class="card poll-card"><div class="card-header"><h2>Staatsflagge</h2><span class="pill">Vorbereitung</span></div><p class="details">Hier erscheinen die Flaggenentwürfe mit ihren Bildern. Die Bilder und Kandidaten werden später ergänzt.</p><p class="field-help">Noch keine Abstimmung möglich.</p></section></div><h2 class="section-title">Weitere Abstimmungen</h2><div class="grid two">'+(blocks||'<section class="card">'+empty("Noch keine weiteren Abstimmungen veröffentlicht.")+'</section>')+'</div>'+adminResults;
   }
+  function overlordPage(){
+    return header("SYSTEM","Overlord.","Geschützter Systemstatus und API-Gateway. Keine personenbezogenen Daten.")+
+      '<section class="card"><h2>Gateway-Status</h2><p id="sas-overlord-result" class="details" role="status">Systemstatus wird geprüft …</p>'+
+      '<button class="btn dark" data-action="overlord-refresh" type="button">Diagnose aktualisieren</button></section>'+
+      '<section class="card"><h2>Reichweite der Kennzahlen</h2><p class="details">Die Zahlen gelten nur pro Cloudflare-Worker-Instanz. Es gibt keine globalen Zähler oder ein globales Rate-Limit. Direkte Supabase-API-Anfragen werden hier nicht erfasst. Die Daten werden nicht persistent gespeichert.</p></section>';
+  }
+  async function overlordRefresh(){
+    if(!state.user||state.profile?.role!=="admin")return;
+    var target=document.getElementById("sas-overlord-result");
+    if(!target)return;
+    try{
+      var session=await api.auth.getSession();
+      var jwt=session.data?.session?.access_token;
+      if(!jwt)throw Error("Keine gültige Sitzung");
+      var response=await fetch("/api/v1/overlord/metrics",{headers:{authorization:"Bearer "+jwt},cache:"no-store"});
+      if(!response.ok)throw Error("Status nicht verfügbar (HTTP "+response.status+")");
+      var data=await response.json();
+      if(state.page!=="overlord"||target!==document.getElementById("sas-overlord-result"))return;
+      var counters=data.counters||{};
+      target.textContent="Instanz-Laufzeit: "+(data.uptimeSeconds||0)+" s · "+
+        "Zugriffe: "+(counters.requests||0)+" · Weitergeleitet: "+(counters.forwarded||0)+
+        " · Abgewiesen: "+(counters.rejected||0)+" · Gedrosselt: "+(counters.throttled||0)+
+        " · Fehler: "+(counters.errors||0)+" · Gleichzeitig: "+(data.active||0);
+    }catch(e){target.textContent="Diagnose nicht verfügbar: "+(e?.message||"Unbekannter Fehler");}
+  }
   function settingsPage(){
     var memberOptions=(state.users||[]).map(function(u){return '<option value="'+esc(u.id)+'">'+esc(u.name)+' ('+esc(u.role)+')</option>';}).join("");
     var adminPanel=state.profile.role!=="admin"?"":'<h2 class="section-title">Administration</h2><div class="grid two"><section class="card"><div class="card-header"><h2>Guthaben ausgeben</h2><span class="pill blue">Nur Admin</span></div><form id="credit-form"><div class="form-group"><label for="credit-user">Mitglied</label><select id="credit-user" name="user_id" class="field" required>'+memberOptions+'</select></div><div class="form-group"><label for="credit-amount">Betrag in '+esc(units)+'</label><input id="credit-amount" name="amount" class="field" type="number" min=".01" max="10000" step=".01" required></div><div class="form-group"><label for="credit-note">Grund</label><input class="field" id="credit-note" name="note" maxlength="140" placeholder="z. B. Startguthaben"></div><button class="btn primary full" type="submit">Guthaben zuweisen</button></form><p class="field-help">Jede Ausgabe wird im digitalen Buchungsverlauf dokumentiert.</p></section><section class="card"><div class="card-header"><h2>Kassenberechtigung</h2><span class="pill">Rollen</span></div><form id="permission-form"><div class="form-group"><label for="permission-user">Mitglied</label><select class="field" id="permission-user" name="user_id" required>'+memberOptions+'</select></div><div class="form-group"><label for="permission-role">Berechtigung</label><select class="field" id="permission-role" name="enabled"><option value="true">Kassenpersonal</option><option value="false">Normales Mitglied</option></select></div><button class="btn dark full" type="submit">Berechtigung speichern</button></form><p class="field-help">Administratorrollen können hier nicht vergeben oder entfernt werden.</p></section></div>';
@@ -261,8 +315,9 @@
     }
     if(!state.user)return login();
     if(!state.profile||!state.wallet){root.textContent="Profil oder Guthaben konnte nicht geladen werden. Bitte Zugang und Datenbankkonfiguration prüfen.";return;}
-    var views={home:dashboard,wallet:wallet,pay:pay,register:register,history:history,votes:votesPage,settings:settingsPage,apps:appDirectory,admin:settingsPage};
+    var views={home:dashboard,wallet:wallet,pay:pay,register:register,history:history,votes:votesPage,settings:settingsPage,apps:appDirectory,admin:settingsPage,overlord:overlordPage};
     if(!allowed(state.page)){state.page="home";}
+    if(state.page==="overlord"){mount(overlordPage());void overlordRefresh();return;}
     if(state.page==="map"&&window.SAS_SHOP_PLAN){mount('<div id="sas-school-shop-plan"></div>');window.SAS_SHOP_PLAN.show({api:api,user:state.user,profile:state.profile,target:document.getElementById("sas-school-shop-plan")}).catch(fail);return;}
     if(state.page==="guestvisa"&&window.SAS_PUBLIC_VISA){mount('<div id="sas-guest-visa-admin"></div>');window.SAS_PUBLIC_VISA.showAdmin(api,document.getElementById("sas-guest-visa-admin")).catch(fail);return;}
     if(state.page==="roles"&&window.SAS_SCHOOL_ROLES){
@@ -379,6 +434,7 @@
       if(id==="open-search"){document.getElementById("portal-search").showModal();return;}
       if(id==="close-search"){document.getElementById("portal-search").close();return;}
       if(id.indexOf("to-")===0)return await navigate(id.slice(3));
+      if(id==="overlord-refresh")return await overlordRefresh();
       if(id==="camera-test")return await cameraTest();
       if(id==="restart-tutorial"&&window.SAS_TUTORIAL)return await window.SAS_TUTORIAL.reopen(api,state.user.id);
       if(id==="close-poll"){
