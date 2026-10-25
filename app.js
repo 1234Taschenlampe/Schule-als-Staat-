@@ -185,12 +185,12 @@
   function dashboard(){
     var open=(state.polls||[]).filter(function(p){return p.status==="open"&&!p.has_voted;}).length;
     var dateLabel=new Intl.DateTimeFormat("de-DE",{weekday:"long",day:"numeric",month:"long"}).format(new Date());
-    return '<div class="dashboard-intro"><div>'+header(dateLabel,"Guten Tag, "+esc(state.profile.display_name)+".","Dein Schulstaat. Deine Möglichkeiten.")+'</div><span class="live-label"><i class="dot connected"></i> Live-Daten</span></div>'+
+    return '<div class="dashboard-intro"><div>'+header(dateLabel,"Guten Tag, "+esc(state.profile.display_name)+".","Dein Schulstaat. Deine Möglichkeiten.")+'</div><span class="live-label"><i class="dot connected"></i> Daten auf Abruf</span>\'+btn("Aktualisieren","reload","")+\'</div>'+
       '<div class="overview-grid"><section class="card overview-card"><div class="card-header"><span class="module-icon">'+icon("idcard")+'</span><span class="pill">Persönlich</span></div><h2>Dein Schülerausweis</h2><p class="details">Deine Projektkarte und dein Lieblingsdesign.</p><button class="btn" data-nav="idcard">Ausweis öffnen <span aria-hidden="true">→</span></button></section><section class="card overview-card balance-card"><div class="card-header"><span class="module-icon">'+icon("wallet")+'</span><span class="pill">Schulwährung</span></div><div class="stat-label">Dein Guthaben</div><div class="stat-value">'+cashFmt(state.wallet.balance_cents)+'</div><p class="stat-caption">Interne Einheiten · kein Echtgeld</p><button class="btn primary" data-nav="pay">'+icon("pay")+' Bezahlen</button></section><section class="card overview-card"><div class="card-header"><span class="module-icon">'+icon("votes")+'</span><span class="pill">Mitgestalten</span></div><h2>'+open+' offene Abstimmung'+(open===1?'':'en')+'</h2><p class="details">'+(open?'Deine Stimme macht einen Unterschied.':'Hier findest du gemeinsame Entscheidungen.')+'</p><button class="btn" data-nav="votes">Zu den Abstimmungen <span aria-hidden="true">→</span></button></section></div>'+
       '<div class="section-heading"><div><h2>Entdecke dein Portal</h2><p>Alles, was unseren Schulstaat verbindet.</p></div><button class="btn subtle" data-nav="apps">Alle Bereiche →</button></div><div class="home-modules">'+["bulletin","events","map","rooms","lost","blog"].map(function(id){return '<button class="module-tile" data-nav="'+id+'"><span class="module-icon">'+icon(id)+'</span><span class="module-copy"><strong>'+esc(label(id))+'</strong><span>'+esc(descriptions[id])+'</span></span><span class="module-arrow" aria-hidden="true">→</span></button>';}).join("")+'</div><div class="section-heading"><h2>Letzte Kontobewegungen</h2><button class="btn subtle" data-nav="wallet">Zum Konto →</button></div><section class="card">'+latest(4)+'</section>';
   }
   function wallet(){
-    return header("DEIN KONTO","Mein Guthaben.","Alle deine digitalen Zahlungen auf einen Blick.")+'<div class="grid two"><section class="card ink"><div class="stat-label">Verfügbares Guthaben</div><div class="stat-value">'+cashFmt(state.wallet.balance_cents)+'</div><div class="stat-caption">Interne Schulwährung, kein Echtgeld</div></section><section class="card"><h2>Digital bezahlen</h2><p class="details" style="margin:17px 0">Du scannst den QR-Code einer Kasse, kontrollierst den Betrag und bestätigst selbst. Bargeld wird getrennt verbucht.</p>'+btn("Zum QR-Scanner","to-pay")+'</section></div><h2 class="section-title">Kontobewegungen</h2><section class="card">'+latest()+'</section>';
+    return header("DEIN KONTO","Mein Guthaben.","Alle deine digitalen Zahlungen auf einen Blick.")+\'<div class="button-row">\'+btn("Aktualisieren","reload","")+\'</div>\'+'<div class="grid two"><section class="card ink"><div class="stat-label">Verfügbares Guthaben</div><div class="stat-value">'+cashFmt(state.wallet.balance_cents)+'</div><div class="stat-caption">Interne Schulwährung, kein Echtgeld</div></section><section class="card"><h2>Digital bezahlen</h2><p class="details" style="margin:17px 0">Du scannst den QR-Code einer Kasse, kontrollierst den Betrag und bestätigst selbst. Bargeld wird getrennt verbucht.</p>'+btn("Zum QR-Scanner","to-pay")+'</section></div><h2 class="section-title">Kontobewegungen</h2><section class="card">'+latest()+'</section>';
   }
   function invoiceCard(){
     var r=state.invoice;if(!r)return "";
@@ -589,9 +589,21 @@
   });
   window.addEventListener("hashchange",function(){if(!state.user||document.querySelector(".sas-public-visa-page"))render();});
   document.addEventListener("keydown",function(e){if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="k"&&state.user){e.preventDefault();var d=document.getElementById("portal-search");if(d){if(d.open)d.close();else d.showModal();}}});
-  document.addEventListener("visibilitychange",function(){if(document.hidden)void stopScanner();});
+  // No continuously scheduled database reads: Workers Free has a daily
+  // request cap. A tab refreshes when it becomes visible after inactivity,
+  // while navigation, writes and the explicit Refresh buttons remain active.
+  var lastResumeRefresh=Date.now();
+  document.addEventListener("visibilitychange",function(){
+    if(document.hidden){void stopScanner();return;}
+    if(Date.now()-lastResumeRefresh<120000)return;
+    var focused=document.activeElement;
+    if(focused&&/^(INPUT|TEXTAREA|SELECT)$/.test(focused.tagName))return;
+    if(state.user&&["home","wallet","history","votes"].includes(state.page)&&!state.editing&&!state.busy&&!state.scanning&&!document.querySelector("dialog[open]")){
+      lastResumeRefresh=Date.now();
+      void refresh(true);
+    }
+  });
   window.addEventListener("pagehide",function(){void stopScanner();});
-  setInterval(function(){var a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))return;if(state.user&&["home","wallet","history","votes"].includes(state.page)&&!state.editing&&!document.hidden&&!state.busy&&!state.scanning&&!document.querySelector("dialog[open]"))void refresh(true);},60000);
   async function start(){
     if(!api)return render();
     var session=await api.auth.getSession();
