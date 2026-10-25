@@ -104,7 +104,7 @@ async function overlordHandle(request) {
   let params;
   try {
     const body=await request.text();
-    if(body.length>OVERLORD_MAX_BODY_BYTES)throw Error("oversized");
+    if(body.length>OVERLORD_MAX_BODY_BYTES){overlordState.rejected++;return overlordJson({error:"Payload too large"},413);}
     params=JSON.parse(body);
     if(!params || Array.isArray(params)||typeof params!=="object" || Object.keys(params).length)
       throw Error("unexpected parameter");
