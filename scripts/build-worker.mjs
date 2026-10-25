@@ -14,7 +14,7 @@ const names = [
   "brand-emblem.css", "public-visa.css", "shop-plan.css",
   "app.js", "features.js", "roles.js", "attendance.js", "tutorial.js",
   "config.js", "work-hours.js", "shop-management.js",
-  "admin-credit.js", "public-visa.js", "shop-plan.js"
+  "admin-credit.js", "public-visa.js", "shop-plan.js", "mobile-ui.css"
 ];
 const files = Object.fromEntries(
   names.map(name => ["/" + name, readFileSync(resolve(root, name), "utf8")])
@@ -65,7 +65,7 @@ const worker = [
   "'X-Frame-Options':'DENY',",
   "'Permissions-Policy':'camera=(self),microphone=()',",
   "'Strict-Transport-Security':'max-age=31536000; includeSubDomains',",
-  "'Cache-Control':'no-store',",
+  "'Cache-Control':path==='/index.html'||path==='/config.js'?'no-store':'public,max-age=120',",
   "'Content-Security-Policy':\"default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://challenges.cloudflare.com https://wdebwgcferieedkpqbvk.supabase.co wss://wdebwgcferieedkpqbvk.supabase.co; media-src 'self' blob:; font-src 'self' data: blob:; object-src 'none'; base-uri 'self'; frame-src 'self' https://challenges.cloudflare.com; worker-src 'self' blob: https://cdn.jsdelivr.net; frame-ancestors 'none'; form-action 'self'\"",
   "};",
   "return new Response(event.request.method==='HEAD'?null:ASSETS[path],{status:200,headers});",

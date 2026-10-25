@@ -1,0 +1,181 @@
+/*
+ * Mobile product interface — deliberately restrained.
+ * No fake "live" indicators, decorative glows, gradients or animated widgets.
+ * Existing official emblem, colors, QR operations and layouts stay intact.
+ * Loaded AFTER all feature styles. Desktop design remains untouched.
+ */
+@media (max-width: 780px) {
+  :root {
+    --canvas: #f7f8fa;
+    --surface: #ffffff;
+    --ink: #19212c;
+    --muted: #526172;
+    --border: #e2e7ed;
+    --accent: #18538b;
+    --accent-hover: #123e68;
+    --control-radius: 12px;
+    --radius: 15px;
+    --shadow: none;
+  }
+  html { scroll-padding-top: 72px; scroll-padding-bottom: calc(100px + env(safe-area-inset-bottom)); }
+  body { width: 100%; max-width: 100%; color: var(--ink); }
+  .app-shell, .main-area { min-width: 0; width: 100%; }
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    height: 60px;
+    padding: 0 18px;
+    background: rgba(255,255,255,.97);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: saturate(120%) blur(12px);
+  }
+  .topbar-left { display: block; font-size: 15px; font-weight: 730; letter-spacing: -.3px; color: #202d3b; }
+  .topbar-left > span, .topbar-left > b { display: none; }
+  .topbar-right { gap: 8px; }
+  .search-trigger, .profile-trigger { width: 44px; height: 44px; padding: 0; display: grid; place-items: center; }
+  .search-trigger { border-radius: 10px; }
+  .search-trigger svg { width: 21px; height: 21px; }
+  .profile-trigger .avatar { width: 36px; height: 36px; background: #edf1f5; color: #283d52; }
+  .content { width: 100%; padding: 26px 18px calc(105px + env(safe-area-inset-bottom)); }
+  .page-heading { margin-bottom: 22px; }
+  .page-heading .eyebrow { margin-bottom: 7px; font-size: 10px; letter-spacing: .7px; }
+  .page-heading h1 { font-size: clamp(25px, 7.2vw, 32px); font-weight: 720; letter-spacing: -.9px; line-height: 1.16; margin-bottom: 7px; }
+  .page-heading .lead { font-size: 13px; line-height: 1.55; max-width: 46ch; }
+  .dashboard-intro { margin-bottom: 10px; }
+  .dashboard-intro .page-heading { margin-bottom: 8px; }
+  .dashboard-intro .live-label, .live-label { display: none; }
+  .grid, .grid.two, .grid.three { grid-template-columns: 1fr; gap: 12px; }
+  .overview-grid { display: grid; grid-template-columns: minmax(0,1fr); gap: 12px; }
+  .overview-grid .balance-card { order: -1; }
+  .overview-card, .overview-card:last-child {
+    grid-column: auto;
+    min-height: 0;
+    align-items: stretch;
+    padding: 19px 20px;
+    gap: 0;
+  }
+  .overview-card .card-header, .overview-card:last-child .card-header { margin-bottom: 12px; gap: 8px; }
+  .overview-card h2 { font-size: 17px; line-height: 1.33; }
+  .overview-card .details { margin: 7px 0 13px; font-size: 13px; line-height: 1.5; }
+  .overview-card .btn { width: auto; max-width: 100%; min-height: 43px; align-self: flex-start; margin-top: 4px; padding: 10px 15px; font-size: 13px; }
+  .overview-card .stat-label { font-size: 12px; margin-bottom: 5px; }
+  .overview-card .stat-value { font-size: 31px; letter-spacing: -.8px; line-height: 1.15; }
+  .overview-card .stat-caption { font-size: 12px; margin: 6px 0 13px; }
+  .overview-card.balance-card { background: #eef4f9; border-color: #d7e3ee; }
+  .module-icon { width: 38px; height: 38px; border-radius: 11px; }
+  .module-icon svg { width: 19px; height: 19px; }
+  .overview-card .pill { font-size: 10px; }
+  .section-heading { margin: 29px 0 13px; gap: 10px; }
+  .section-heading h2, .section-title { font-size: 17px; line-height: 1.35; letter-spacing: -.25px; }
+  .section-title { margin: 25px 0 12px; }
+  .home-modules, .module-grid { display: grid; grid-template-columns: minmax(0,1fr); gap: 8px; }
+  .home-modules .module-tile, .module-tile {
+    min-width: 0;
+    min-height: 76px;
+    padding: 14px;
+    flex-direction: row;
+    align-items: center;
+    gap: 13px;
+    border-radius: 13px;
+    box-shadow: none;
+  }
+  .module-tile .module-copy strong { font-size: 14px; font-weight: 650; line-height: 1.4; }
+  .module-tile .module-copy>span { font-size: 12px; line-height: 1.45; margin-top: 2px; }
+  .home-modules .module-arrow, .module-tile .module-arrow { display: block; font-size: 17px; }
+  .card, .sas-panel { min-width: 0; padding: 20px; border-radius: 15px; box-shadow: none; }
+  .card-header { margin-bottom: 17px; }
+  .stat-value { font-size: 30px; }
+  .details { line-height: 1.55; }
+  .form-group { margin-bottom: 16px; }
+  .field, .sas-field input, .sas-field select, .sas-field textarea { min-height: 48px; font-size: 16px; }
+  .btn, .sas-btn { min-height: 44px; font-size: 13px; }
+  .bottom-nav {
+    position: fixed;
+    inset: auto 0 0;
+    width: 100%;
+    min-height: calc(66px + env(safe-area-inset-bottom));
+    padding: 5px max(7px,env(safe-area-inset-left)) calc(5px + env(safe-area-inset-bottom)) max(7px,env(safe-area-inset-right));
+    border-top: 1px solid #dfe5ec;
+    background: #fff;
+    box-shadow: 0 -5px 18px rgba(20,33,48,.035);
+    backdrop-filter: none;
+    grid-template-columns: repeat(5,minmax(0,1fr));
+    gap: 2px;
+  }
+  .bottom-button {
+    position: relative;
+    min-height: 56px;
+    padding: 7px 1px 5px;
+    gap: 4px;
+    border-radius: 11px;
+    font-size: 10.5px;
+    font-weight: 570;
+    letter-spacing: 0;
+    color: #647080;
+  }
+  .bottom-button svg { width: 21px; height: 21px; }
+  .bottom-button.active { color: #18538b; font-weight: 720; background: #eff4f9; }
+  .bottom-button:active, .module-tile:active { background: #e8eef5; }
+  .bottom-button:focus-visible { outline-offset: -3px; }
+  .page-footer { display: none; }
+  .poll-option { min-height: 50px; padding: 13px; margin: 7px 0; }
+  .confirm-line { gap: 16px; align-items: baseline; }
+  .confirm-line > b { min-width: 0; overflow-wrap: anywhere; }
+  .table-wrap { overflow-x: auto; max-width: 100%; -webkit-overflow-scrolling: touch; }
+  #toast-root { bottom: calc(80px + env(safe-area-inset-bottom)); left: 14px; right: 14px; max-width: none; }
+  .toast { padding: 13px 15px; border-radius: 11px; box-shadow: 0 4px 20px rgba(20,33,48,.12); }
+  #portal-search {
+    position: fixed;
+    inset: auto 0 0;
+    margin: auto 0 0;
+    width: 100%;
+    max-width: none;
+    max-height: min(90dvh,940px);
+    padding: 19px 18px calc(24px + env(safe-area-inset-bottom));
+    border-radius: 19px 19px 0 0;
+    overflow: auto;
+  }
+  .dialog-results { margin-top: 16px; }
+  .dialog-results .module-grid { gap: 7px; }
+  .dialog-results .module-tile { min-height: 66px; padding: 11px; }
+  .dialog-results .section-heading { margin: 20px 0 8px; }
+  .welcome { display: flex; flex-direction: column; min-height: 100dvh; background: #fff; }
+  .welcome-left {
+    flex: none;
+    padding: 22px 20px 20px;
+    gap: 15px;
+    background: #f7f9fb;
+    border-bottom: 1px solid #e4e9f0;
+  }
+  .welcome-left .brand { margin: 0; padding: 0 !important; gap: 10px; }
+  .welcome-left .brand-mark { width: 36px; height: 36px; flex-basis: 36px; }
+  .welcome-left .brand-name { font-size: 15px; }
+  .welcome-left .brand-sub { margin-top: 2px; font-size: 10px; }
+  .welcome-left .eyebrow { display: none; }
+  .welcome-hero { font-size: 30px; font-weight: 720; line-height: 1.12; letter-spacing: -1px; margin: 7px 0 0; }
+  .welcome-sub { font-size: 13px; line-height: 1.5; margin: 8px 0 0; max-width: 36ch; }
+  .welcome-side { flex: 1; align-items: flex-start; padding: 22px 20px calc(36px + env(safe-area-inset-bottom)); }
+  .login-box { max-width: 440px; margin: 0 auto; }
+  .login-box h1 { font-size: 25px; margin-bottom: 8px; }
+  .login-box .lead { font-size: 13px; margin-bottom: 19px; }
+  .login-footer { margin-top: 19px; font-size: 11px; }
+  .alternate-auth { margin-top: 14px; padding-top: 15px; }
+  .alternate-auth summary { font-size: 13px; padding: 4px 0; }
+  .sas-public-tabs { margin-bottom: 20px; }
+  .sas-id { min-width: 0; overflow-wrap: anywhere; }
+  .sas-space, .sas-two { min-width: 0; }
+  img,video,canvas { max-width: 100%; }
+}
+@media (max-width: 360px) {
+  .content { padding-inline: 14px; }
+  .topbar { padding-inline: 14px; }
+  .card, .sas-panel { padding: 17px; }
+  .overview-card { padding: 17px; }
+  .bottom-nav { gap: 0; padding-inline: 4px; }
+  .bottom-button { font-size: 10px; }
+  .module-tile { padding: 12px; gap: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .module-tile, .bottom-button { transition: none; }
+}
