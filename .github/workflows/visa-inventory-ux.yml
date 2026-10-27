@@ -1,0 +1,30 @@
+name: SaS inventory and guest Visa UI
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - shop-management.js
+      - mobile-ui.css
+      - tests/shop-inventory-browser.mjs
+      - tests/visa-turnstile-inventory-ui.mjs
+      - supabase/functions/visa-request/index.ts
+      - supabase/migrations/20261027_visa_turnstile_vault_access.sql
+      - .github/workflows/visa-inventory-ux.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: |
+          node --check shop-management.js
+          node --test tests/visa-turnstile-inventory-ui.mjs
+      - run: |
+          npm install --no-save --ignore-scripts playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - run: node --test tests/shop-inventory-browser.mjs
