@@ -1,0 +1,29 @@
+[Unit]
+Description=Schule als Staat ViSA GMX confirmation sender (isolated from Hermes)
+Documentation=https://github.com/1234Taschenlampe/Schule-als-Staat-
+Wants=network-online.target
+After=network-online.target
+ConditionPathExists=/etc/sas-visa-mail.env
+
+[Service]
+Type=oneshot
+User=sas-visa-mail
+Group=sas-visa-mail
+EnvironmentFile=/etc/sas-visa-mail.env
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/usr/bin/python3 -B /opt/sas-visa-mail/visa-mail-worker.py
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectHome=true
+ProtectSystem=strict
+ProtectKernelTunables=true
+ProtectKernelModules=true
+RestrictSUIDSGID=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+CapabilityBoundingSet=
+AmbientCapabilities=
+UMask=0077
+MemoryMax=128M
+CPUQuota=20%
+TimeoutStartSec=180
