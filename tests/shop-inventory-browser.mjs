@@ -10,6 +10,7 @@ test("actual Chromium user flow: shop owner views inventory and downloads a safe
   for(const width of [375,820,1024]){
    const page=await browser.newPage({viewport:{width,height:900},acceptDownloads:true});
    await page.setContent('<!doctype html><html lang="de"><meta name="viewport" content="width=device-width,initial-scale=1"><body><div id="host"></div></body></html>');
+   await page.addStyleTag({content:readFileSync(resolve(import.meta.dirname,"../styles.css"),"utf8")});
    await page.addStyleTag({content:readFileSync(resolve(import.meta.dirname,"../features.css"),"utf8")});
    await page.addStyleTag({content:readFileSync(resolve(import.meta.dirname,"../mobile-ui.css"),"utf8")});
    await page.addScriptTag({path:resolve(import.meta.dirname,"../shop-management.js")});
