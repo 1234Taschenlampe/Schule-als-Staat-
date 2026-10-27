@@ -124,6 +124,22 @@ async function sendViaGmail(token, message) {
   }
 }
 
+
+function resendMessage(item, from) {
+ const email=String(item.recipient||"");const token=String(item.token||"");const id=String(item.id||"");
+ if(!/^[^\s@<>\r\n]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/.test(email)||!/^[0-9a-f]{64}$/.test(token)||!/^[0-9a-f-]{36}$/i.test(id))throw Error("Invalid mail queue item");
+ return {from,to:[email],subject:"Schule als Staat: ViSA bestätigen",
+ text:"Bitte bestätige deine ViSA-E-Mail-Adresse:\nhttps://schule-als-staat.schule-als-staat-jfe.workers.dev/#visa-verify="+token+"\n\nGültigkeit: 7 Tage. Es wird nichts abgebucht."};
+}
+async function sendResend(item,from,key){
+ const r=await fetch("https://api.resend.com/emails",{method:"POST",headers:{
+ "authorization":"Bearer "+key,"content-type":"application/json",
+ "Idempotency-Key":"sas-visa-"+item.id},body:JSON.stringify(resendMessage(item,from))});
+ if(!r.ok)throw Error("Resend HTTP "+r.status);
+ const data=await r.json();
+ if(typeof data.id!=="string"||!data.id)throw Error("Resend message not accepted");
+}
+
 // The pg_cron caller uses its own strong credential generated inside Supabase Vault.
 // Validate it using a restricted, service_role-only RPC; never return or log the token.
 async function authorizedViaVault(authHeader) {
@@ -155,16 +171,18 @@ Deno.serve(async (request) => {
   if (!configuredSecretValid && !(await authorizedViaVault(supplied))) {
     return json(401, { error: "Unauthorized" });
   }
-  const clientId = Deno.env.get("GMAIL_CLIENT_ID") || "";
-  const clientSecret = Deno.env.get("GMAIL_CLIENT_SECRET") || "";
-  const refreshToken = Deno.env.get("GMAIL_REFRESH_TOKEN") || "";
-  const sender = Deno.env.get("GMAIL_SENDER_EMAIL") || "";
-
-  // Before claiming a mail, fail safely if any provider credential is missing.
-  if (!clientId.endsWith(".apps.googleusercontent.com") ||
-      !clientSecret || !refreshToken || !/^[^@\s<>]+@[^@\s<>]+\.[A-Za-z]{2,}$/.test(sender)) {
-    return json(503, { error: "Gmail sender not configured" });
-  }
+  const provider=Deno.env.get("VISA_EMAIL_PROVIDER")||"gmail";
+  if(!["gmail","resend"].includes(provider))return json(503,{error:"Unrecognized mail provider"});
+  const clientId=Deno.env.get("GMAIL_CLIENT_ID")||"";
+  const clientSecret=Deno.env.get("GMAIL_CLIENT_SECRET")||"";
+  const refreshToken=Deno.env.get("GMAIL_REFRESH_TOKEN")||"";
+  const sender=Deno.env.get("GMAIL_SENDER_EMAIL")||"";
+  const resendKey=Deno.env.get("RESEND_API_KEY")||"";
+  const resendFrom=Deno.env.get("RESEND_FROM_EMAIL")||"";
+  if(provider==="gmail"&&(!clientId.endsWith(".apps.googleusercontent.com")||!clientSecret||!refreshToken||!/^[^@\s<>]+@[^@\s<>]+\.[A-Za-z]{2,}$/.test(sender)))
+    return json(503,{error:"Gmail sender not configured"});
+  if(provider==="resend"&&(!/^re_[A-Za-z0-9_-]{12,}$/.test(resendKey)||!/^[^@\s<>]+@([A-Za-z0-9-]+\.)+[A-Za-z]{2,}$/.test(resendFrom)||resendFrom.toLowerCase().endsWith("@resend.dev")))
+    return json(503,{error:"Resend sender not configured"});
   // Authorized configuration check: validates Gmail OAuth refresh without sending mail
   // or leasing any queued verification messages.
   let mode = "dispatch";
@@ -179,22 +197,21 @@ Deno.serve(async (request) => {
   }
   try {
     const settings = await rpc("visa_public_settings", {});
-    if (mode === "check") {
-      await authorizeGmail(clientId, clientSecret, refreshToken);
-      return json(200, {
-        ok: true,
-        oauth_refresh_valid: true,
-        email_enabled: settings?.email_enabled === true,
-        turnstile_site_key_present: Boolean(settings?.turnstile_site_key),
-        sent_messages: 0,
-        note: "Token refresh only; Gmail sending not tested"
-      });
+    if(mode==="check"){
+      if(provider==="gmail"){
+        await authorizeGmail(clientId,clientSecret,refreshToken);
+        return json(200,{ok:true,oauth_refresh_valid:true,email_enabled:settings?.email_enabled===true,
+        turnstile_site_key_present:Boolean(settings?.turnstile_site_key),sent_messages:0,note:"Token refresh only; Gmail sending not tested"});
+      }
+      return json(200,{ok:true,provider:"resend",configuration_present:true,verified_delivery:false,
+      sent_messages:0,email_enabled:settings?.email_enabled===true,turnstile_site_key_present:Boolean(settings?.turnstile_site_key),
+      note:"Format check only; a real delivery test is required"});
     }
     if (settings?.email_enabled !== true) {
       return json(503, { error: "ViSA email delivery is disabled" });
     }
     // Renew the access token BEFORE claiming messages, to avoid unnecessary retries.
-    const gmailAccessToken = await authorizeGmail(clientId, clientSecret, refreshToken);
+    const gmailAccessToken = provider==="gmail" ? await authorizeGmail(clientId,clientSecret,refreshToken) : null;
 
     // Keep batches small: the SQL queue independently caps dispatch per day.
     const desired = Math.min(2, Math.max(1, Number(Deno.env.get("VISA_GMAIL_BATCH_SIZE") || 1)));
@@ -208,8 +225,8 @@ Deno.serve(async (request) => {
       let okay = false;
       let error = "";
       try {
-        const message = prepareMessage(item, sender);
-        await sendViaGmail(gmailAccessToken, message);
+        if(provider==="resend")await sendResend(item,resendFrom,resendKey);
+        else await sendViaGmail(gmailAccessToken,prepareMessage(item,sender));
         okay = true;
         sent++;
       } catch (e) {
@@ -231,13 +248,13 @@ Deno.serve(async (request) => {
     return json(200, { claimed: claimed.length, sent, retried, ackFailed });
   } catch (e) {
     const diagnostic = String(e?.message || e).slice(0,140);
-    console.error("ViSA Gmail dispatch failed:", diagnostic);
+    console.error("ViSA dispatch failed:", diagnostic);
     // Only authenticated check-mode callers receive a classified Google error.
     // No token, client secret or Google response payload is returned.
-    if (mode === "check") {
+    if (mode === "check" && provider === "gmail") {
       const code = (diagnostic.match(/invalid_grant|invalid_client|unauthorized_client|invalid_request|access_denied/) || [])[0] || "unclassified";
       return json(503, { error: "Gmail OAuth preflight failed", oauth_error_code: code });
     }
-    return json(503, { error: "Gmail dispatch unavailable" });
+    return json(503, { error: "ViSA email dispatch unavailable" });
   }
 });
