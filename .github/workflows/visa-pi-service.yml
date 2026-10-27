@@ -1,0 +1,21 @@
+name: Cluster3 ViSA SMTP service checks
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - scripts/visa-mail-systemd/**
+      - tests/visa-pi-service.mjs
+      - .github/workflows/visa-pi-service.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: node --test tests/visa-pi-service.mjs
+      - run: python3 -m py_compile scripts/visa-mail-worker.py

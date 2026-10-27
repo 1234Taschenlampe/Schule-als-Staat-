@@ -1,0 +1,30 @@
+import {test} from "node:test";
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+import {execFileSync} from "node:child_process";
+const base=new URL("../scripts/visa-mail-systemd/",import.meta.url);
+const read=x=>readFileSync(new URL(x,base),"utf8");
+test("systemd timer and service survive reboot without a resident process",()=>{
+ const t=read("sas-visa-mail.timer"),s=read("sas-visa-mail.service");
+ assert.match(t,/OnCalendar=\*-\*-\* \*:0\/2:00/);
+ assert.match(t,/Persistent=true/);
+ assert.match(t,/WantedBy=timers.target/);
+ assert.match(s,/Type=oneshot/);
+ assert.match(s,/User=sas-visa-mail/);
+ assert.match(s,/EnvironmentFile=\/etc\/sas-visa-mail.env/);
+ assert.match(s,/NoNewPrivileges=true/);
+ assert.match(s,/MemoryMax=128M/);
+ assert.match(s,/CPUQuota=20%/);
+ assert.doesNotMatch(s,/ExecStart=.*(--password|service_role|gmail\.com)/);
+});
+test("installer is shell-valid and never embeds authentication credentials",()=>{
+ const x=read("install.sh");
+ execFileSync("bash",["-n",new URL("install.sh",base).pathname]);
+ assert.match(x,/systemctl daemon-reload/);
+ assert.match(x,/chmod 0600/);
+ assert.doesNotMatch(x,/\beval\b|curl.*\|.*sh|set -x/);
+ const env=read("visa-mail.env.example");
+ assert.match(env,/VISA_SMTP_HOST=mail\.gmx\.net/);
+ assert.match(env,/VISA_MAIL_BRIDGE_URL=https:\/\//);
+ assert.doesNotMatch(env,/SUPABASE_SERVICE_ROLE_KEY/);
+});
