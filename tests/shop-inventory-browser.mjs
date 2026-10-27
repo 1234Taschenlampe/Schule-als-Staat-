@@ -16,7 +16,7 @@ test("actual Chromium user flow: shop owner views inventory and downloads a safe
    await page.evaluate(async()=>{
     const ownerId="fictional-owner",shopId="fictional-shop";
     const store={id:shopId,name:"Beispiel Shop",floor_label:"Haus A",owner_id:ownerId,kind:"shop"};
-    const q={eq(){return q},then(ok){return Promise.resolve({data:[store],error:null}).then(ok)}};
+    const q={select(){return q},eq(){return q},then(ok){return Promise.resolve({data:[store],error:null}).then(ok)}};
     const api={from(){return q},rpc:async(name)=>({
      data:name==="shop_catalog"?{
       shop:store,products:[
