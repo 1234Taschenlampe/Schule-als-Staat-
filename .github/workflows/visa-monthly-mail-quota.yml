@@ -1,0 +1,21 @@
+name: ViSA monthly free email quota
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - supabase/migrations/20261027_visa_monthly_mail_quota.sql
+      - tests/visa-monthly-mail-quota.mjs
+      - .github/workflows/visa-monthly-mail-quota.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: node --test tests/visa-monthly-mail-quota.mjs
