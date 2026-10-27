@@ -14,6 +14,7 @@ async function launch(role='member',email='ui@example.test',stubPublicVisa=false
  const document={getElementById:id=>id==='app'?root:id==='toast-root'?{appendChild:()=>{}}:id==='sas-visa-public-root'?visaRoot:null,addEventListener:()=>{},querySelector:()=>null,activeElement:null,hidden:false};
  const window={NV_CONFIG:{supabaseUrl:'https://example.test',supabaseAnonKey:'public'},supabase:{createClient:()=>api},addEventListener:(key,callback)=>windowListeners[key]=callback,scrollTo:()=>{},scrollY:0};
  const sandbox={window,document,location:{search:'',hash:'',href:'https://example.test/',origin:'https://example.test',pathname:'/'},URL,URLSearchParams,Intl,Date,console,setInterval:f=>intervals.push(f),setTimeout:()=>{},navigator:{},history:{replaceState:()=>{}}};
+ window.location=sandbox.location;
  if(stubPublicVisa)window.SAS_PUBLIC_VISA={form:()=>'<form id="guest-visa-form"></form>',showPublic:()=>{},showVerification:()=>{},showPaidRedirect:()=>{}};
  vm.runInNewContext(read('features.js'),sandbox);
  vm.runInNewContext(read('app.js'),sandbox);
