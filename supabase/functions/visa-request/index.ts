@@ -1,14 +1,25 @@
 // All anonymous guest applications must pass Cloudflare Turnstile on the server.
 // The public SQL insert RPC is denied; only this Edge Function uses service_role.
 const allowedOrigin="https://schule-als-staat.schule-als-staat-jfe.workers.dev";
+async function getTurnstileSecret(url:string,key:string):Promise<string>{
+ const r=await fetch(url+"/rest/v1/rpc/visa_turnstile_siteverify_secret",{
+  method:"POST",headers:{"apikey":key,"authorization":"Bearer "+key,"content-type":"application/json"},
+  body:"{}"
+ });
+ if(!r.ok)return "";
+ const value=await r.json();
+ return typeof value==="string"?value:"";
+}
 const headers={"content-type":"application/json","access-control-allow-origin":allowedOrigin,"vary":"Origin","cache-control":"no-store"};
 function response(status,message){return new Response(JSON.stringify({message}),{status,headers});}
 Deno.serve(async req=>{
  if(req.method==="OPTIONS")return new Response(null,{status:204,headers:{...headers,"access-control-allow-headers":"apikey, authorization, content-type","access-control-allow-methods":"POST, OPTIONS"}});
  if(req.method!=="POST")return response(405,"Method not allowed");
  if(req.headers.get("origin")!==allowedOrigin)return response(403,"Origin denied");
- const secret=Deno.env.get("TURNSTILE_SECRET"),url=Deno.env.get("SUPABASE_URL"),key=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
- if(!secret||!url||!key)return response(503,"ViSA-Verifizierung derzeit nicht freigeschaltet");
+ const url=Deno.env.get("SUPABASE_URL"),key=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+ if(!url||!key)return response(503,"ViSA-Verifizierung derzeit nicht freigeschaltet");
+ const secret=Deno.env.get("TURNSTILE_SECRET")||await getTurnstileSecret(url,key).catch(()=>"");
+ if(!secret)return response(503,"ViSA-Bot-Schutz derzeit nicht freigeschaltet");
  try{
   const raw=await req.text();
   if(raw.length>6000)return response(413,"Request too large");
