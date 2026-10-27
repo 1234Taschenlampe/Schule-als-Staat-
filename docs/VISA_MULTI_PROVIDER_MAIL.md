@@ -11,7 +11,7 @@ Die Supabase-Edge-Function `visa-gmail-dispatch` verarbeitet die vorhandene Mail
 3. Der autorisierte Aufruf `visa-gmail-dispatch` mit JSON `{"mode":"check"}` prüft die Konfigurationsformate. Er versendet bewusst keine Mail und beweist weder Domainprüfung noch Zustellung.
 4. Mindestens einen echten ViSA-Antrag mit Turnstile an ein kontrolliertes Postfach einschließlich empfangener Bestätigungs-E-Mail und erfolgreichem Linkklick prüfen. Erst nach diesem Ende-zu-Ende-Nachweis `guest_visa_payment_settings.email_enabled=true` setzen; `payment_enabled=false` lassen, bis Stripe und Preis separat freigegeben sind.
 
-Resend Free bietet 3.000 E-Mails pro Monat, höchstens 100 am Tag. Die **derzeitige SaS-DB-Warteschlange** begrenzt auf 100 Claim-Versuche/Tag und 3.000 neue Queue-Einträge **insgesamt**. Das ist nicht dasselbe wie die Resend-Monatsquote und bleibt bis zu einer gesonderten Migration restriktiver.
+Resend Free bietet 3.000 E-Mails pro Monat, höchstens 100 am Tag. Die SaS-Datenbank begrenzt seit der Migration `20261027_visa_monthly_mail_quota.sql` auf 100 Claim-Versuche pro Tag und 3.000 neue Queue-Einträge pro Berliner Kalendermonat. Die zusätzliche harte Resend-Free-Quote bleibt maßgeblich; kostenpflichtige Übermengen müssen deaktiviert bleiben.
 
 ## Gmail und Pi
 
