@@ -1,0 +1,19 @@
+name: School directory privacy checks
+on:
+  push:
+    branches: [main]
+    paths: [roles.js, config.js, supabase/migrations/20261027_directory_privacy.sql, tests/directory-privacy.mjs, .github/workflows/privacy-audit.yml]
+  pull_request:
+    branches: [main]
+    paths: [roles.js, config.js, supabase/migrations/20261027_directory_privacy.sql, tests/directory-privacy.mjs, .github/workflows/privacy-audit.yml]
+permissions:
+  contents: read
+jobs:
+  directory-privacy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+      - run: node --check roles.js && node --test tests/directory-privacy.mjs
