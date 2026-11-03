@@ -12,6 +12,12 @@ test("privacy notice is comprehensive and accessible without login", () => {
     assert.ok(html.includes('id="' + section + '"'), "missing section: " + section);
   }
   assert.match(html, /nicht vollständig anonym/i);
+  assert.match(html, /sas-privacy-promise/);
+  assert.match(html, /Nach dem Projekt werden alle nicht mehr benötigten personenbezogenen Projektdaten gelöscht/);
+  assert.match(html, /Geplanter Löschabschluss: 31. Juli 2027/);
+  assert.match(html, /unmittelbar nach ihrer Verwendung zu löschen/);
+  assert.match(html, /technische Löschung einschließlich der Prüfung von Backups ist noch nicht automatisiert/);
+  assert.match(html, /Was bleibt für die Auswertung übrig/);
   assert.match(html, /Verantwortlichkeit.*?Rechtsgrundlagen.*?Löschfristen/s);
   assert.match(html, /diese eigenständige Projektwebseite/i);
   assert.match(html, /Verantwortlichkeit der Projektwebseite: in Prüfung/);
