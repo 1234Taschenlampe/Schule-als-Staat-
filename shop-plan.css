@@ -119,3 +119,12 @@ button.sas-shopmap-stall:hover{background:#e5f6eb;border-color:#59a578}
 .sas-shopmap-admin-approve{margin-top:12px;padding:12px 14px;border-radius:12px;border:1px solid #e3cc8f;background:#fffdf4;color:#4d412b}
 .sas-shopmap-admin-approve p{margin:0 0 10px;line-height:1.5;font-size:13px}
 .sas-shopmap-admin-approve button{min-height:44px;max-width:100%;white-space:normal}
+
+/* Clear mobile floor-plan filters and direct room-booking action. */
+.sas-shopmap-roomfilter{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:11px 0 16px;color:#425366;font-size:13px}
+.sas-shopmap-roomfilter button{min-height:42px;padding:8px 13px;border-radius:999px;border:1px solid #cbd5e1;background:#fff;color:#254157;font:inherit;cursor:pointer}
+.sas-shopmap-roomfilter button[aria-pressed="true"]{background:#dcefff;border-color:#276e9d;color:#164f75;font-weight:700}
+.sas-shopmap-linked{margin-top:16px;padding:14px;border:1px solid #d6e3ed;border-radius:13px;background:#f6fafd}
+.sas-shopmap-linked p{font-size:13px;color:#41556b;margin:0 0 9px}
+.sas-shopmap-linked button{min-height:44px;border:1px solid #1d6297;border-radius:10px;background:#fff;padding:10px 14px;font:inherit;color:#195681;font-weight:700;cursor:pointer}
+@media(max-width:650px){.sas-shopmap-roomfilter{gap:6px}.sas-shopmap-roomfilter span{flex:0 0 100%}.sas-shopmap-linked button{width:100%}}
