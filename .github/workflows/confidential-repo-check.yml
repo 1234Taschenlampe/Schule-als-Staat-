@@ -1,0 +1,17 @@
+name: Prevent confidential school data in repository
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  confidential-data-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Check tracked files without printing personal data
+        run: python3 scripts/check-confidential-repo.py
