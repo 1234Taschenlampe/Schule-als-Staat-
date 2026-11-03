@@ -3,23 +3,24 @@ import assert from 'node:assert/strict';
 import vm from 'node:vm';
 import {readFileSync,writeFileSync,mkdirSync} from 'node:fs';
 const read=n=>readFileSync(new URL('../'+n,import.meta.url),'utf8');
-async function launch(role='member',email='ui@example.test',stubPublicVisa=false,schoolRoles={operator:false,jobs:[]}){
+async function launch(role='member',email='ui@example.test',stubPublicVisa=false,schoolRoles={operator:false,jobs:[]},clock=Date){
  const listeners={},intervals=[];
  const root={innerHTML:'',addEventListener:(k,v)=>listeners[k]=v};
  const windowListeners={},visaRoot={innerHTML:''};
+ const featureRoot={innerHTML:'',textContent:'',isConnected:true,addEventListener(){},querySelector(){return null;}};
  const user={id:'73abccce-04ad-49c0-a6b0-39234bc369c7',email};
  const profile={id:user.id,display_name:'Alex <Beispiel>',role,vote_eligible:true};
  const rows={profiles:profile,wallets:{balance_cents:12345},wallet_ledger:[],cash_sales:[],payment_requests:[]};
  const api={from:table=>{const q=new Proxy({},{get:(_,p)=>p==='then'?(ok)=>Promise.resolve(ok({data:rows[table]??[],error:null})):()=>q});return q;},rpc:async(name)=>({data:name==='my_school_roles'?schoolRoles:[],error:null}),auth:{getSession:async()=>({data:{session:{user}},error:null}),onAuthStateChange:()=>{}}};
- const document={getElementById:id=>id==='app'?root:id==='toast-root'?{appendChild:()=>{}}:id==='sas-visa-public-root'?visaRoot:null,addEventListener:()=>{},querySelector:()=>null,activeElement:null,hidden:false};
+ const document={getElementById:id=>id==='app'?root:id==='toast-root'?{appendChild:()=>{}}:id==='sas-visa-public-root'?visaRoot:id==='sas-live-module'?featureRoot:null,addEventListener:()=>{},querySelector:()=>null,activeElement:null,hidden:false};
  const window={NV_CONFIG:{supabaseUrl:'https://example.test',supabaseAnonKey:'public'},supabase:{createClient:()=>api},addEventListener:(key,callback)=>windowListeners[key]=callback,scrollTo:()=>{},scrollY:0};
- const sandbox={window,document,location:{search:'',hash:'',href:'https://example.test/',origin:'https://example.test',pathname:'/'},URL,URLSearchParams,Intl,Date,console,setInterval:f=>intervals.push(f),setTimeout:()=>{},navigator:{},history:{replaceState:()=>{}}};
+ const sandbox={window,document,location:{search:'',hash:'',href:'https://example.test/',origin:'https://example.test',pathname:'/'},URL,URLSearchParams,Intl,Date:clock,console,setInterval:f=>intervals.push(f),setTimeout:()=>{},navigator:{},history:{replaceState:()=>{}}};
  window.location=sandbox.location;
  if(stubPublicVisa)window.SAS_PUBLIC_VISA={form:()=>'<form id="guest-visa-form"></form>',showPublic:()=>{},showVerification:()=>{},showPaidRedirect:()=>{}};
  vm.runInNewContext(read('features.js'),sandbox);
  vm.runInNewContext(read('app.js'),sandbox);
  await new Promise(resolve=>setImmediate(resolve));
- return {root,listeners,windowListeners,visaRoot,intervals,document,sandbox,async click(id){listeners.click({preventDefault(){},target:{closest:()=>({dataset:{nav:id}})}});await new Promise(resolve=>setImmediate(resolve));}};
+ return {root,listeners,windowListeners,visaRoot,featureRoot,intervals,document,sandbox,async click(id){listeners.click({preventDefault(){},target:{closest:()=>({dataset:{nav:id}})}});await new Promise(resolve=>setImmediate(resolve));}};
 }
 test('dashboard and portal have usable role-aware navigation; user text is escaped',async()=>{
  for(const role of ['member','cashier','admin']){
@@ -51,9 +52,24 @@ test('prelaunch preview locks student modules but keeps polls, ID and account se
  await x.click('votes');
  assert.match(x.root.innerHTML,/Abstimmungen/);
  await x.click('idcard');
- assert.match(x.root.innerHTML,/Schülerausweis/);
+ assert.match(x.document.title,/Schülerausweis/);
+ assert.match(x.featureRoot.innerHTML,/Schülerausweis/);
  await x.click('settings');
  assert.match(x.root.innerHTML,/Passwort ändern/);
+});
+test('polls close for normal pupils after 3 December but ID remains available',async()=>{
+ class AfterNikolausmarkt extends Date { static now(){return Date.parse('2026-12-04T00:00:00Z');} }
+ const x=await launch('member','ui@example.test',false,{operator:false,jobs:[]},AfterNikolausmarkt);
+ assert.match(x.root.innerHTML,/Abstimmungsphase .* beendet/);
+ assert.match(x.root.innerHTML,/data-nav="votes"[^>]*disabled aria-disabled="true"/);
+ await x.click('votes');
+ assert.match(x.root.innerHTML,/Dein Schulstaat startet bald/);
+ await x.click('idcard');
+ assert.match(x.document.title,/Schülerausweis/);
+ const elevated=await launch('cashier','ui@example.test',false,{operator:false,jobs:[]},AfterNikolausmarkt);
+ assert.doesNotMatch(elevated.root.innerHTML,/sas-preview-locked/);
+ await elevated.click('votes');
+ assert.match(elevated.document.title,/Abstimmungen/);
 });
 test('existing higher school roles retain their previously permitted modules',async()=>{
  for(const [role,roles] of [
