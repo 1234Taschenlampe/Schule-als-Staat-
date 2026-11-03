@@ -9,7 +9,7 @@ const app=read("app.js");
 const plan=read("shop-plan.js");
 const html=read("index.html");
 const worker=read("scripts/build-worker.mjs");
-const context={window:{SAS_SHOP_PLAN:{knownRooms:(q)=>q.includes("a302")?[{name:"A302",floor:"Gebäude A · Kunst"}]:[]}}};
+const context={window:{SAS_SHOP_PLAN:{knownRooms:(q)=>q.toLowerCase().includes("a302")?[{name:"A302",floor:"Gebäude A · Kunst"}]:[]}}};
 vm.runInNewContext(source,context,{filename:"portal-extras.js"});
 const hub=context.window.SAS_PORTAL_EXTRAS;
 
@@ -62,7 +62,7 @@ test("global search finds real rooms, events and static school plan labels witho
  assert.ok(events.some(x=>x.title==="Kulturfest"&&x.page==="events"));
  const staticRooms=await hub.search({api},"A302");
  assert.ok(staticRooms.some(x=>x.title==="A302"&&x.page==="map"));
- assert.deepEqual(await hub.search({api},"C"),[]);
+ assert.equal((await hub.search({api},"C")).length,0);
  assert.doesNotMatch(source,/from\(["']profiles["']\)|from\(["']auth\.users["']\)/);
 });
 test("dashboard navigation is role-oriented and does not grant special rights",async()=>{
