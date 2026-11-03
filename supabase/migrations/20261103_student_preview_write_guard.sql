@@ -62,3 +62,35 @@ begin
   end loop;
 end
 $migration$;
+
+-- The school-wide polls teaser closes after 03 December 2026 in Berlin time.
+-- Only the initial-pupil preview is affected; privileged accounts retain their
+-- normal polling rights and the event's published poll data is not deleted.
+create or replace function sas_private.sas_student_preview_poll_cutoff_guard()
+returns trigger
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  v_uid uuid := (select auth.uid());
+begin
+  if (clock_timestamp() at time zone 'Europe/Berlin') >= timestamp '2026-12-04 00:00:00'
+     and v_uid is not null
+     and exists (select 1 from public.profiles p where p.id = v_uid and p.role = 'member')
+     and not exists (
+       select 1 from public.school_role_assignments a where a.user_id = v_uid
+     ) then
+    raise exception 'Die Abstimmungsphase zum Nikolausmarkt ist beendet.'
+      using errcode = '42501';
+  end if;
+  if tg_op = 'DELETE' then return old; end if;
+  return new;
+end;
+$$;
+revoke all on function sas_private.sas_student_preview_poll_cutoff_guard()
+  from public, anon, authenticated;
+drop trigger if exists sas_student_preview_poll_cutoff_guard on public.poll_ballots;
+create trigger sas_student_preview_poll_cutoff_guard
+  before insert or update on public.poll_ballots
+  for each row execute function sas_private.sas_student_preview_poll_cutoff_guard();
