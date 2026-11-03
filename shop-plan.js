@@ -22,8 +22,11 @@ function cell(room,n){var s=slot(room,n);
 function roomDetails(){
  var room=findRoom(selected);if(!room)return '<p class="sas-shopmap-empty">Wähle einen Raum im Plan oder Verzeichnis aus.</p>';
  if(room.bookable===false){
+  var releaseAction=admin?
+   '<div class="sas-shopmap-admin-approve"><p>Nur freigeben, wenn die Schule die Nutzung dieses Raums für Shops ausdrücklich genehmigt hat. Die Administration bestätigt dies vor der Aktivierung.</p>'+
+   '<button type="button" data-enable-room="'+esc(room.id)+'">Raum für vier Shop-Plätze freigeben</button></div>':"";
   return '<div class="sas-shopmap-selected-title"><div><h3>Raum '+esc(room.name)+'</h3><p>'+esc(room.floor)+'</p></div><b class="sas-shopmap-info-badge">Rauminformation</b></div>'+
-  '<p class="sas-shopmap-readonly-info"><strong>'+esc(room.detail||"Raum im Schulplan")+'</strong><span>Im Gebäudeplan vorhanden. Für diesen Raum können derzeit keine Shops gebucht werden.</span></p>';
+   '<p class="sas-shopmap-readonly-info"><strong>'+esc(room.detail||"Raum im Schulplan")+'</strong><span>Im Gebäudeplan vorhanden. Für diesen Raum können derzeit keine Shops gebucht werden.</span></p>'+releaseAction;
  }
  var discrepancy=room.name==="D102"?'<p class="sas-shopmap-anomaly" role="note">Der offizielle Raumindex nennt D102, die Zeichnung an der mutmaßlichen Stelle jedoch D105. Die Position von D102 konnte deshalb nicht zweifelsfrei bestätigt werden. Bitte vor der Nutzung mit der Schule abgleichen.</p>':"";
  var form=chosen&&!slot(room,chosen)?'<form id="sas-shopmap-apply" class="sas-shopmap-form"><h3>Platz '+chosen+' in '+esc(room.name)+' reservieren</h3><label>Shop-Name <input name="name" required minlength="3" maxlength="100" placeholder="z. B. Waffelstand"></label><label>Beschreibung <textarea name="description" maxlength="450" rows="3"></textarea></label><div><button type="submit">Anfrage senden</button><button type="button" data-close>Abbrechen</button></div><p>Der Platz bleibt bis zur Entscheidung der Administration reserviert. Ein Shop wird erst nach Genehmigung angelegt.</p></form>':"";
@@ -153,7 +156,7 @@ function draw(){
  '<div class="sas-shopmap-scroll" id="rng-plan-scroll" aria-label="Schulgrundriss, bei Vergrößerung verschiebbar"><div class="sas-shopmap-pdf" id="rng-plan-holder" style="width:'+(mapZoom*100)+'%"><canvas id="rng-floorplan-canvas" aria-label="RNG-Grundriss, Seite '+currentPage+'"></canvas><div class="sas-shopmap-pins" aria-label="Alle Räume im Grundriss">'+mapPins()+'</div></div></div>'+
  '<p class="sas-shopmap-hint" id="rng-plan-status" role="status">Originalplan, Seite '+currentPage+' laden …</p>'+
  '<p class="sas-shopmap-hint">'+esc(pageInfo)+'</p></section>'+
- '<section class="sas-shopmap-card"><div class="sas-shopmap-head"><h2>Alle Räume</h2><span id="rng-map-room-count">'+total+' Räume · '+rooms.length+' Shop-Klassenzimmer</span></div>'+
+ '<section class="sas-shopmap-card"><div class="sas-shopmap-head"><h2>Alle Räume</h2><span id="rng-map-room-count">'+total+' Räume · '+rooms.length+' für Shops freigegeben</span></div>'+
  '<label class="sas-shopmap-search">Raumnummer suchen<input id="sas-shopmap-search" type="search" placeholder="z. B. C202 oder E101" value="'+esc(query)+'"></label>'+
  '<div class="sas-shopmap-roomlist">'+(shown.length?shown.map(roomButton).join(""):'<p class="sas-shopmap-empty">'+(query?"Keine Raumbezeichnung gefunden.":"Auf dieser Planseite wurden keine Räume erkannt.")+'</p>')+'</div></section></div>'+
  '<section class="sas-shopmap-card"><h2>Vier Shop-Plätze je Raum</h2>'+roomDetails()+'</section>'+
@@ -170,6 +173,23 @@ async function apply(form){var r=rooms.find(function(x){return x.id===selected;}
  if(name.length<3||name.length>100||description.length>450)throw Error("Bitte einen gültigen Shopnamen und eine kurze Beschreibung eingeben.");
  await call("request_shop_stall",{p_room_id:r.id,p_slot_no:chosen,p_shop_name:name,p_description:description});
  chosen=0;await refresh("Shop-Platz reserviert. Die Freigabe durch die Administration steht noch aus.");
+}
+async function enableKnownRoom(id){
+ if(!admin)throw Error("Nur die Administration darf Räume freigeben.");
+ var item=EXTRA_ROOMS.find(function(r){return r.id===id;});
+ if(!item||![3,4,5,6,7].includes(Number(item.plan_page)))throw Error("Dieser Raum gehört nicht zum überprüften Gebäudeplan.");
+ if(rooms.some(function(r){return r.name.toUpperCase()===item.name.toUpperCase();}))
+  throw Error("Ein freigegebener Raum mit dieser Nummer existiert bereits.");
+ var description=item.detail.startsWith("Raum im offiziellen RNG-Grundriss (nicht zur")?"Raum im offiziellen RNG-Grundriss":item.detail;
+ var payload={name:item.name,kind:"room",floor_label:item.floor,
+  detail:description+" · Shop-Nutzung nach bestätigter Schulfreigabe.",
+  active:true,classroom_shop_enabled:true,plan_page:Number(item.plan_page),
+  x_percent:item.x_percent,y_percent:item.y_percent};
+ var result=await api.from("school_places").insert(payload).select("id").single();
+ if(result.error)throw result.error;
+ if(!result.data||!result.data.id)throw Error("Raum konnte nicht bestätigt werden.");
+ selected=result.data.id;chosen=0;
+ await refresh("Raum "+item.name+" ist nun mit vier Shop-Plätzen buchbar.");
 }
 async function addRoom(form){if(!admin)throw Error("Nicht berechtigt.");
  var d=new FormData(form),name=String(d.get("room")||"").trim().toUpperCase(),floor=String(d.get("floor")||"").trim(),detail=String(d.get("detail")||"").trim(),pageValue=String(d.get("page")||"").trim();
@@ -200,6 +220,14 @@ async function show(context){root=context.target;api=context.api;userId=context.
  }
  if(b.dataset.page){currentPage=Number(b.dataset.page);currentBuilding="";selected="";chosen=0;query="";draw();return;}
  if(b.dataset.room){selected=b.dataset.room;var room=findRoom(selected);if(room&&room.plan_page){currentPage=Number(room.plan_page);currentBuilding=room.name.charAt(0);}chosen=0;query="";draw();return;}
+ if(b.dataset.enableRoom){
+  if(!admin){msg("Nicht berechtigt.",true);return;}
+  var id=b.dataset.enableRoom,room=EXTRA_ROOMS.find(function(r){return r.id===id;});
+  if(!room){msg("Raum nicht gefunden.",true);return;}
+  if(!confirm("Hat die Schule die Shop-Nutzung für Raum "+room.name+" ausdrücklich freigegeben? Ohne Schulfreigabe nicht aktivieren."))return;
+  void execute(function(){return enableKnownRoom(id);});
+  return;
+ }
  if(b.dataset.slot){chosen=Number(b.dataset.slot);draw();root.querySelector('[name="name"]')?.focus();return;}
  if(b.hasAttribute("data-close")){chosen=0;draw();return;}
  var id=b.dataset.cancel||b.dataset.approve||b.dataset.reject;if(!id)return;
