@@ -114,3 +114,8 @@ button.sas-shopmap-stall:hover{background:#e5f6eb;border-color:#59a578}
  .sas-shopmap-pin{min-width:31px;min-height:25px;height:auto;font-size:9px;padding:3px 4px}
  .sas-shopmap-scroll{max-height:72vh}
 }
+
+/* Admin-only approval of a verified room listed on the official floor plan. */
+.sas-shopmap-admin-approve{margin-top:12px;padding:12px 14px;border-radius:12px;border:1px solid #e3cc8f;background:#fffdf4;color:#4d412b}
+.sas-shopmap-admin-approve p{margin:0 0 10px;line-height:1.5;font-size:13px}
+.sas-shopmap-admin-approve button{min-height:44px;max-width:100%;white-space:normal}
