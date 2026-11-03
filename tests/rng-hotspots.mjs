@@ -6,8 +6,8 @@ import {readFileSync} from "node:fs";
 const load=(path)=>readFileSync(new URL("../"+path,import.meta.url),"utf8");
 const source=load("shop-plan.js");
 const css=load("shop-plan.css");
-const probeCode=source.replace("window.SAS_SHOP_PLAN={show:show};",
-  "window.SAS_SHOP_PLAN={show:show};globalThis.__probe={"+
+const probeCode=source.replace("window.SAS_SHOP_PLAN={show:show,knownRooms:knownRooms};",
+  "window.SAS_SHOP_PLAN={show:show,knownRooms:knownRooms};globalThis.__probe={"+
   "points:OFFICIAL_ROOM_POINTS,extra:EXTRA_ROOMS,allRooms,roomDetails,floorNavigation,"+
   "page:(n,bookable)=>{currentPage=n;currentBuilding='';rooms=bookable||[];return mapPins();},"+
   "adminDetails:(id,enabled)=>{admin=enabled;rooms=[];selected=id;return roomDetails();},"+
@@ -100,4 +100,16 @@ test("listed-but-unreleased plan rooms can be activated by admins, never by ordi
   assert.equal(writes.length,1);
   assert.match(source,/Hat die Schule die Shop-Nutzung für Raum/);
   assert.match(css,/sas-shopmap-admin-approve/);
+});
+
+test("booking selection and map filter do not alter four-slot policy",()=>{
+  const bookable={id:"class-A003",name:"A003",plan_page:4,x_percent:41.63,y_percent:64.41,slots:[],floor:"EG"};
+  const details=p.details("class-A003",[bookable]);
+  assert.match(details,/data-nav="rooms"/);
+  assert.match(details,/data-book-room="class-A003"/);
+  assert.match(source,/data-map-filter="bookable"/);
+  assert.match(source,/mapFilter==="all"\|\|r\.bookable!==false/);
+  assert.match(source,/window\.SAS_PREFILL_ROOM=b\.dataset\.bookRoom/);
+  assert.equal([...details.matchAll(/data-slot="/g)].length,4);
+  assert.match(source,/function knownRooms\(term\)/);
 });
