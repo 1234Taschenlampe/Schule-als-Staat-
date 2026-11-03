@@ -33,7 +33,8 @@ test('dashboard and portal have usable role-aware navigation; user text is escap
   await x.click('apps');
   assert.match(x.root.innerHTML,/Alle Bereiche/);
   for(const id of ['idcard','gallery','map','rooms','shops','votes','lost'])assert.match(x.root.innerHTML,new RegExp('data-nav="'+id+'"'));
-  for(const id of ['visa','bulletin','blog','events','jobs','laws','parties','courts']){
+  assert.equal(x.root.innerHTML.includes('data-nav="visa"'),role==='admin','visa remains admin-only');
+  for(const id of ['bulletin','blog','events','jobs','laws','parties','courts']){
    assert.equal(x.root.innerHTML.includes('data-nav="'+id+'"'),role==='admin'||role==='member',id+' navigation preview mismatch');
   }
   if(role==='member'){await x.click('admin');assert.match(x.root.innerHTML,/Alle Bereiche/);}
