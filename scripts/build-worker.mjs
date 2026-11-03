@@ -10,7 +10,7 @@ import { resolve, dirname } from "node:path";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const names = [
-  "index.html", "styles.css", "features.css", "tutorial.css",
+  "index.html", "datenschutz.html", "styles.css", "features.css", "tutorial.css",
   "brand-emblem.css", "public-visa.css", "shop-plan.css", "portal-extras.css", "flag-voting.css", "flag-voting.js",
   "app.js", "features.js", "roles.js", "attendance.js", "tutorial.js",
   "config.js", "work-hours.js", "shop-management.js",
@@ -61,11 +61,11 @@ const worker = [
   "const headers={",
   "'Content-Type':TYPES[path],",
   "'X-Content-Type-Options':'nosniff',",
-  "'Referrer-Policy':'strict-origin-when-cross-origin',",
+  "'Referrer-Policy':'no-referrer',",
   "'X-Frame-Options':'DENY',",
   "'Permissions-Policy':'camera=(self),microphone=()',",
   "'Strict-Transport-Security':'max-age=31536000; includeSubDomains',",
-  "'Cache-Control':path==='/index.html'||path==='/config.js'||path==='/app.js'?'no-store':'public,max-age=120',",
+  "'Cache-Control':path==='/index.html'||path==='/datenschutz.html'||path==='/config.js'||path==='/app.js'?'no-store':'public,max-age=120',",
   "'Content-Security-Policy':\"default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' https://challenges.cloudflare.com https://wdebwgcferieedkpqbvk.supabase.co wss://wdebwgcferieedkpqbvk.supabase.co; media-src 'self' blob:; font-src 'self' data: blob:; object-src 'none'; base-uri 'self'; frame-src 'self' https://challenges.cloudflare.com; worker-src 'self' blob: https://cdn.jsdelivr.net; frame-ancestors 'none'; form-action 'self'\"",
   "};",
   "return new Response(event.request.method==='HEAD'?null:ASSETS[path],{status:200,headers});",
