@@ -35,6 +35,9 @@ function patch(source){
  if(!source.includes("path==='/rng-floorplan.pdf'")||!source.includes("overlordHandle("))
   throw Error("Required Worker routes were not found; abort");
  const a=segment(source,"ASSETS","TYPES"),t=segment(source,"TYPES","OVERLORD_SUPABASE_URL");
+ // Never silently change gateway routing by publishing a new public configuration.
+ if(a.data["/config.js"]!==bundle["/config.js"])throw Error("Public Supabase config changed: review Worker gateway configuration before deployment.");
+
  const assets={...a.data,...bundle};
  const types={...t.data,...Object.fromEntries(names.map(n=>["/"+n,type(n)]))};
  let result=source.slice(0,t.start)+"const TYPES="+JSON.stringify(types)+source.slice(t.end);
