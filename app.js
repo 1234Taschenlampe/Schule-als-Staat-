@@ -158,9 +158,9 @@
     if(administrator||operator)return true;
     return pupilPages.includes(id);
   }
-  // 04 December 2026 00:00 CET: the polling preview for pupils ends.
+  // 26 November 2026 00:00 CET: proposed cutoff for the Nikolausmarkt poll preview.
   // The official school-state launch does not automatically unlock other modules.
-  function previewVotingClosed(){return Date.now()>=Date.parse("2026-12-03T23:00:00Z");}
+  function previewVotingClosed(){return Date.now()>=Date.parse("2026-11-25T23:00:00Z");}
   function previewLocked(id){return isPreviewMember()&&(id==="votes"?previewVotingClosed():previewTeaserPages.has(id)&&!previewOpenPages.has(id));}
   function visible(id){return roleAllowed(id)||previewLocked(id);}
   function allowed(id){return roleAllowed(id)&&!previewLocked(id);}
