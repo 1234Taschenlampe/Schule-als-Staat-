@@ -23,7 +23,7 @@
   var api=ready?window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey,{
     global:{fetch:sasGatewayFetch}
   }):null;
-  var state={user:null,profile:null,wallet:null,ledger:[],cash:[],requests:[],users:[],polls:[],pollResults:[],schoolRoles:{operator:false,jobs:[]},page:"home",active:null,invoice:null,scanner:null,scanning:false,busy:false,editing:false,recovering:/(?:^|[&#?])type=recovery(?:&|$)/.test(location.hash)};
+  var state={user:null,profile:null,wallet:null,ledger:[],cash:[],requests:[],users:[],polls:[],pollResults:[],schoolRoles:{operator:false,jobs:[]},page:"home",active:null,invoice:null,scanner:null,scanning:false,busy:false,editing:false,legalStatus:null,recovering:/(?:^|[&#?])type=recovery(?:&|$)/.test(location.hash)};
   var deepLink=new URLSearchParams(location.search).get("pay");
   var openPortalAfterLogin=false; // No old V3 demo portal; all live features are integrated.
   if(deepLink)state.page="pay";
@@ -104,7 +104,7 @@
       api.from("payment_requests").select("*").order("created_at",{ascending:false}).limit(50)
     ]);
     rows.forEach(function(row){if(row.error)throw row.error;});
-    state.profile=rows[0].data; if(state.profile){var secureName=await rpc('my_secure_school_name',{});if(secureName)state.profile.display_name=secureName;} state.wallet=rows[1].data;state.ledger=rows[2].data||[];state.cash=rows[3].data||[];state.requests=rows[4].data||[];
+    state.profile=rows[0].data;state.legalStatus=await rpc('school_legal_status',{}); if(state.profile){var secureName=await rpc('my_secure_school_name',{});if(secureName)state.profile.display_name=secureName;} state.wallet=rows[1].data;state.ledger=rows[2].data||[];state.cash=rows[3].data||[];state.requests=rows[4].data||[];
     if(state.active)state.active=state.requests.find(function(x){return x.id===state.active.id;})||state.active;
     state.schoolRoles=await rpc("my_school_roles",{})||{operator:false,jobs:[]};
     state.users=state.profile.role==="admin"?await rpc("admin_list_users",{}):[];
@@ -205,12 +205,26 @@
   function login(){
     root.innerHTML='<div class="welcome"><section class="welcome-left"><div class="brand" style="padding:0"><div class="brand-mark">S/S</div><div><div class="brand-name" >Schule als Staat</div><div class="brand-sub" >SCHULE ALS STAAT</div></div></div><a class="sas-public-visa-top" href="#visa-onboarding">ViSA-Onboarding für Gäste →</a><div><div class="eyebrow" >DEIN DIGITALER SCHULSTAAT</div><div class="welcome-hero">Dein Schulstaat.</div><p class="welcome-sub">Ausweis, Guthaben, Berufe und Abstimmungen an einem Ort.</p></div><div class="small" >Schule als Staat · Gemeinsam gestalten.</div><a href="https://www.instagram.com/schule.als.staat_rng/" class="project-social" target="_blank" rel="noopener noreferrer" aria-label="Schule als Staat auf Instagram öffnen">Instagram · @schule.als.staat_rng ↗</a></section><section class="welcome-side"><div class="login-box"><nav class="sas-public-tabs" aria-label="Zugang zur Webseite"><span class="sas-public-tabs-current" aria-current="page">Anmelden</span><a href="#visa-onboarding">ViSA-Onboarding</a></nav>'+header("WILLKOMMEN","Jetzt anmelden.","Dein Konto wird von der Schule anhand der offiziellen Bürgerliste angelegt.")+'<form id="password-login-form"><div class="form-group"><label for="account-email">Bürgerkennung oder Verwaltungs-E-Mail</label><input class="field" type="text" autocomplete="username" name="email" id="account-email" placeholder="SAS-XXXXXXXXXX" maxlength="160" required></div><div class="form-group"><label for="account-password">Passwort</label><input class="field" type="password" autocomplete="current-password" name="password" id="account-password" minlength="6" required></div><button type="submit" class="btn primary full">Mit Passwort anmelden</button></form><p class="field-help">Ein Schülerkonto wird ausschließlich anhand der offiziellen Schulliste ausgegeben. Deine Bürgerkennung und dein Startpasswort erhältst du persönlich. Beim ersten Login musst du das Startpasswort ändern.</p><details class="alternate-auth"><summary>Passwort vergessen? (Verwaltung)</summary><p class="field-help">Für Bürgerkennungen ohne echte E-Mail-Adresse erfolgt die Rücksetzung nur über die Schulverwaltung. Nur vorhandene Verwaltungskonten mit echter E-Mail können hier einen Rücksetzlink anfordern.</p><form id="password-reset-request-form"><div class="form-group"><label for="password-reset-email">E-Mail-Adresse</label><input class="field" type="email" autocomplete="email" name="email" id="password-reset-email" placeholder="name@schule.de" required></div><button type="submit" class="btn dark full">Passwort-Link anfordern</button></form></details><p class="login-footer">Nur für gelistete Bürger und berechtigte Verwaltung. Gib deine Zugangsdaten niemals weiter. Guthaben stellt kein Echtgeld dar.</p><a class="sas-visa-guest-link btn primary full" href="#visa-onboarding">ViSA-Onboarding für Gäste · Ohne Konto</a></div></section></div>';
   }
+  function legalReceiptFields(){
+    return '<fieldset class="sas-legal-fieldset" aria-describedby="school-legal-help"><legend>Pflichtbestätigungen vor der Nutzung</legend>'+
+      '<label class="sas-legal-check"><input type="checkbox" name="notice_read" required> <span>Ich habe die <a href="/datenschutz.html" target="_blank" rel="noopener noreferrer">Datenschutzhinweise (Version 03.11.2026)</a> gelesen und zur Kenntnis genommen.</span></label>'+
+      '<label class="sas-legal-check"><input type="checkbox" name="rules_accepted" required> <span>Ich habe die <a href="/nutzungsregeln.html" target="_blank" rel="noopener noreferrer">Nutzungsregeln (Version 03.11.2026)</a> gelesen und akzeptiere sie.</span></label>'+
+      '<p class="field-help" id="school-legal-help">Die Bestätigungen werden mit Konto-ID, Dokumentversionen und Zeitpunkt gespeichert. Das ist keine pauschale Einwilligung in Datenverarbeitung. Freiwillige Datenverarbeitungen werden gesondert geregelt.</p></fieldset>';
+  }
+  function schoolLegalView(){
+    root.innerHTML='<div class="welcome"><section class="welcome-side" style="margin:auto;max-width:650px"><div class="login-box">'+
+      header("WICHTIGE HINWEISE","Datenschutz & Nutzungsregeln.","Bitte lies beide Dokumente. Danach kannst du die Schule-als-Staat-Webseite wie gewohnt verwenden.")+
+      '<form id="school-legal-form">'+legalReceiptFields()+
+      '<button class="btn primary full" type="submit">Bestätigen und fortfahren</button></form>'+
+      '<p class="field-help">Du kannst die Dokumente öffnen, ohne die Anmeldung zu verlassen.</p>'+
+      '<button type="button" class="btn full" data-action="logout">Abmelden</button></div></section></div>';
+  }
   function rosterFirstLoginView(){
     root.innerHTML='<div class="welcome"><section class="welcome-side" style="margin:auto"><div class="login-box">'+
       header("ERSTE ANMELDUNG","Startpasswort ändern.","Dein einmaliger siebenstelliger Zugangscode muss durch ein persönliches Passwort ersetzt werden.")+
       '<form id="roster-first-password-form"><div class="form-group"><label for="roster-password">Neues Passwort (mindestens 12 Zeichen)</label><input class="field" type="password" autocomplete="new-password" id="roster-password" name="password" minlength="12" required></div>'+
       '<div class="form-group"><label for="roster-password-repeat">Passwort wiederholen</label><input class="field" type="password" autocomplete="new-password" id="roster-password-repeat" name="repeat" minlength="12" required></div>'+
-      '<button class="btn primary full" type="submit">Neues Passwort festlegen</button></form><p class="field-help">Verwende ein einzigartiges Passwort, das du nicht für andere Dienste nutzt.</p></div></section></div>';
+      legalReceiptFields()+'<button class="btn primary full" type="submit">Neues Passwort festlegen</button></form><p class="field-help">Verwende ein einzigartiges Passwort, das du nicht für andere Dienste nutzt.</p></div></section></div>';
   }
   function empty(label){return '<div class="empty">'+label+'</div>';}
   function ledgerRow(x){
@@ -351,6 +365,7 @@
     if(!api)return setup();
     if(state.user?.app_metadata?.sas_initial_password===true){rosterFirstLoginView();return;}
     if(state.recovering&&state.user){root.innerHTML=passwordRecoveryView();return;}
+    if(state.user&&state.legalStatus?.needs_acknowledgement){schoolLegalView();return;}
     if(window.SAS_PUBLIC_VISA){
       var visaHash=window.location.hash;
       if(visaHash==="#visa-onboarding"||visaHash.indexOf("#visa-verify=")===0||visaHash==="#visa-payment-success"){
@@ -549,11 +564,19 @@
     var data=new FormData(form), submit=form.querySelector('[type="submit"]');
     if(submit)submit.disabled=true;
     try{
+      if(form.id==="school-legal-form"){
+        if(data.get("notice_read")!=="on"||data.get("rules_accepted")!=="on")throw Error("Bitte beide Pflichtbestätigungen auswählen.");
+        await rpc("acknowledge_school_legal",{p_notice_read:true,p_rules_accepted:true});
+        state.legalStatus=await rpc("school_legal_status",{});
+        render();showToast("Bestätigung gespeichert.");return;
+      }
       if(form.id==="roster-first-password-form"){
         var pw=String(data.get("password")||"");
         if(pw.length<12||pw.length>128||!/[A-Za-z]/.test(pw)||!/[^A-Za-z]/.test(pw))
           throw Error("Mindestens 12 Zeichen mit Buchstaben und Zahlen oder Sonderzeichen verwenden.");
         if(pw!==String(data.get("repeat")||""))throw Error("Die neuen Passwörter stimmen nicht überein.");
+        if(data.get("notice_read")!=="on"||data.get("rules_accepted")!=="on")throw Error("Bitte beide Pflichtbestätigungen auswählen.");
+        await rpc("acknowledge_school_legal",{p_notice_read:true,p_rules_accepted:true});
         var changed=await api.auth.updateUser({password:pw});
         if(changed.error)throw changed.error;
         var refreshed=await api.auth.refreshSession();
@@ -716,8 +739,8 @@
     if(state.user){await claimDesignatedAdmin();await fetchData();restorePage();}
 
     render();
-    if(state.user&&window.SAS_TUTORIAL)void window.SAS_TUTORIAL.start(api,state.user.id,{previewOnly:isPreviewMember(),pollsOpen:!previewVotingClosed()});
-    if(deepLink&&state.user&&!isPreviewMember()){try{await openInvoice(deepLink);}catch(e){fail(e);}}
+    if(state.user&&!state.legalStatus?.needs_acknowledgement&&window.SAS_TUTORIAL)void window.SAS_TUTORIAL.start(api,state.user.id,{previewOnly:isPreviewMember(),pollsOpen:!previewVotingClosed()});
+    if(deepLink&&state.user&&!state.legalStatus?.needs_acknowledgement&&!isPreviewMember()){try{await openInvoice(deepLink);}catch(e){fail(e);}}
     api.auth.onAuthStateChange(function(event,session){
       var next=session&&session.user||null;
       if(event==="PASSWORD_RECOVERY"){
@@ -727,10 +750,10 @@
         return;
       }
       if(next&&state.user&&next.id===state.user.id)return;
-      state.user=next;state.profile=null;state.wallet=null;state.ledger=[];state.cash=[];state.requests=[];state.users=[];state.polls=[];state.pollResults=[];state.schoolRoles={operator:false,jobs:[]};state.active=null;state.invoice=null;
+      state.user=next;state.profile=null;state.legalStatus=null;state.wallet=null;state.ledger=[];state.cash=[];state.requests=[];state.users=[];state.polls=[];state.pollResults=[];state.schoolRoles={operator:false,jobs:[]};state.active=null;state.invoice=null;
       if(window.SAS_TUTORIAL)window.SAS_TUTORIAL.logout();
       void stopScanner().then(async function(){
-        try{if(state.user){await claimDesignatedAdmin();await fetchData();}render();if(state.user&&window.SAS_TUTORIAL)void window.SAS_TUTORIAL.start(api,state.user.id,{previewOnly:isPreviewMember(),pollsOpen:!previewVotingClosed()});if(deepLink&&state.user&&!isPreviewMember())await openInvoice(deepLink);}
+        try{if(state.user){await claimDesignatedAdmin();await fetchData();}render();if(state.user&&!state.legalStatus?.needs_acknowledgement&&window.SAS_TUTORIAL)void window.SAS_TUTORIAL.start(api,state.user.id,{previewOnly:isPreviewMember(),pollsOpen:!previewVotingClosed()});if(deepLink&&state.user&&!isPreviewMember())await openInvoice(deepLink);}
         catch(e){fail(e);render();}
       });
     });
