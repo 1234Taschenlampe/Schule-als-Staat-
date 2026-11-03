@@ -17,6 +17,15 @@ p,li{font-size:1rem;line-height:1.75}li{margin-bottom:4px}small,.meta{color:#576
 .notice p{margin:6px 0}.callout{background:#eef3f8;padding:15px 20px;border-radius:10px}nav{background:#fff;border:1px solid #dee3eb;border-radius:12px;padding:18px 20px}nav ol{columns:2;gap:28px;padding-left:22px;margin:8px 0}nav li{break-inside:avoid}section{scroll-margin-top:20px}
 table{border-collapse:collapse;width:100%;font-size:.93rem}th,td{text-align:left;vertical-align:top;padding:10px;border-bottom:1px solid #dee3eb;line-height:1.55}th{background:#f0f3f6}
 footer{border-top:1px solid #dee3eb;color:#536176}footer p{font-size:.85rem}
+.sas-privacy-promise{background:#f0f5fa;border:2px solid #386590;border-radius:14px;padding:clamp(19px,4vw,28px);margin:18px 0 25px}
+.sas-privacy-promise h2{font-size:clamp(1.3rem,3.5vw,1.75rem);line-height:1.3;color:#133452;margin:0 0 12px;padding:0;border:none}
+.sas-privacy-promise p{margin:0 0 12px;line-height:1.65}.sas-privacy-promise p:last-child{margin-bottom:0}
+.sas-privacy-promise .sas-privacy-date{font-weight:650;color:#184871}
+.sas-privacy-benefits{margin:19px 0 22px;padding:0;list-style:none;display:grid;gap:10px}
+.sas-privacy-benefits li{border-left:3px solid #427baf;background:#fff;padding:12px 16px;border-radius:0 9px 9px 0}
+.sas-privacy-benefits li strong{display:block}
+.sas-privacy-clarity{padding:18px 20px;border:1px solid #d7dce6;background:#fff;border-radius:12px;margin:21px 0}
+.sas-privacy-clarity h2{font-size:1.15rem;border:0;margin:0 0 10px;padding:0}
 @media(max-width:600px){nav ol{columns:1}table{display:block;overflow-x:auto}}
 @media print{header,nav{display:none}body{background:white}main{max-width:none}}
 </style>
@@ -25,6 +34,21 @@ footer{border-top:1px solid #dee3eb;color:#536176}footer p{font-size:.85rem}
 <header><div><strong>Schule als Staat · Datenschutz</strong><a href="/">Zurück zur Webseite</a></div></header>
 <main id="hauptinhalt">
 <h1>Datenschutzhinweise</h1>
+<div class="sas-privacy-promise" role="note" aria-label="Löschung nach Projektabschluss">
+<h2><strong>Nach dem Projekt werden alle nicht mehr benötigten personenbezogenen Projektdaten gelöscht.</strong></h2>
+<p>Das digitale Portal ist für das zeitlich begrenzte Schulprojekt <strong>„Schule als Staat“ vom 12. bis 16. Juli 2027</strong> vorgesehen. Es ist nicht geplant, die persönlichen Schülerkonten dauerhaft weiterzubetreiben oder ihre Daten für andere Projekte zu übernehmen.</p>
+<p class="sas-privacy-date">Geplanter Löschabschluss: 31. Juli 2027.</p>
+<p><strong>Wichtig:</strong> Dieser Termin ist derzeit ein organisatorisches Ziel. Die technische Löschung einschließlich der Prüfung von Backups ist noch nicht automatisiert und muss von der zuständigen Stelle verbindlich freigegeben werden. Gesetzlich erforderliche Aufbewahrungen können Ausnahmen begründen. Für den Projektbericht sollen ausschließlich anonymisierte Gesamtergebnisse übrig bleiben.</p>
+</div>
+<ul class="sas-privacy-benefits" aria-label="So werden die Projektdaten geschützt">
+<li><strong>Ein zeitlich begrenztes Schulprojekt.</strong> Die Konten dienen der Vorbereitung und Durchführung des Schulstaats – nicht einem dauerhaften Mitgliederverzeichnis.</li>
+<li><strong>Verschlüsselte Namen.</strong> Die Namen der 991 importierten Schülerkonten liegen in einer gesondert geschützten Datenbanktabelle verschlüsselt vor. Im regulären Kontobestand werden technische Kennungen verwendet.</li>
+<li><strong>Passwörter nicht im Klartext.</strong> Die Anmeldepasswörter werden als kryptografische Hashwerte verwaltet; Lehrkräfte und Projektmitglieder können sie daraus nicht einfach ablesen.</li>
+<li><strong>Datenschutzrechte während der Laufzeit.</strong> Schüler können die Löschung ihrer Projektdaten beantragen, ohne einen Grund nennen zu müssen. Der entsprechende Antrag ist auch ohne vorherige Zustimmung zu den Nutzungsregeln erreichbar.</li>
+</ul>
+<div class="sas-privacy-clarity"><h2>Was dabei weiterhin wichtig ist</h2>
+<p>Die Verschlüsselung ist kein Ersatz für eine zulässige Rechtsgrundlage, sichere Zugriffsrechte oder die noch ausstehende Klärung der Verantwortlichkeit. Manche Vorgänge – insbesondere abgegebene Stimmen, Buchungen und technische Sicherheitsprotokolle – sind nicht automatisch anonym. Im Folgenden erklären wir deshalb auch die Grenzen und offenen Punkte.</p></div>
+
 <p class="lead">Informationen zur Verarbeitung personenbezogener Daten im digitalen Projektportal „Schule als Staat“ für Schülerinnen und Schüler, Lehrkräfte, Mitarbeitende und Gäste.</p>
 <p class="meta">Stand: 3. November 2026 · Geltungsbereich: diese eigenständige Projektwebseite, nicht die allgemeine Schulhomepage.</p>
 <div class="notice" role="note"><strong>Wichtiger Hinweis zur Freigabe</strong>
@@ -62,6 +86,8 @@ footer{border-top:1px solid #dee3eb;color:#536176}footer p{font-size:.85rem}
 <li><strong>Gast-ViSA:</strong> Bei Nutzung des gesonderten Gastverfahrens können Name, Herkunftsland, Einreisedatum, E-Mail-Adresse, freiwillige Schul-/Klassenangabe sowie Bearbeitungs-, Verifizierungs- und Zahlungsstatus verarbeitet werden. Diese Angaben unterliegen einem separaten Datenfluss; die Verschlüsselung des internen Bürgerverzeichnisses erstreckt sich nicht automatisch auf Gästeanträge.</li>
 <li><strong>Technische Daten:</strong> IP-Adresse, Zeitpunkt, angefragte URL, Browser-/Geräteinformationen und technische Fehlerdaten, soweit diese bei der Auslieferung über Hosting-, Sicherheits- und Datenbankanbieter anfallen.</li>
 </ul>
+<p><strong>Herkunft der offiziellen Kontenliste:</strong> Die Namen und schulischen Zuordnungen für die 991 importierten Bürgerkonten stammen aus einer vom Schulsekretariat bereitgestellten Schülerliste. Die ursprüngliche Datei wurde für den Kontoimport benötigt. Nach Angabe des Projektteams enthielt die Übermittlung den Hinweis, dass die Liste <strong>unmittelbar nach ihrer Verwendung zu löschen</strong> ist. Das betrifft insbesondere die Originaldatei und unnötige Kopien auf Geräten, in Downloads und anderen Ablagen – unabhängig davon, wann die Konten später gelöscht werden. Ob alle Originalkopien bereits entfernt wurden, ist noch gesondert zu prüfen; diese Datenschutzhinweise behaupten keine bereits abgeschlossene Löschung. Die noch benötigten Daten im System sind ebenfalls personenbezogene Daten und unterliegen einer gesondert zu prüfenden Rechtsgrundlage sowie dem Löschkonzept.</p>
+
 <p>Wer freiwillig Inhalte wie Freitext, Fotos, Beiträge oder Anträge hochlädt, muss damit rechnen, dass darin weitere personenbezogene Daten stehen. Bitte keine Gesundheitsdaten, privaten Kontaktdaten oder Informationen über andere Personen ohne Berechtigung eingeben.</p>
 </section>
 <section id="zwecke"><h2>3. Zwecke und Rechtsgrundlagen</h2>
@@ -112,10 +138,24 @@ footer{border-top:1px solid #dee3eb;color:#536176}footer p{font-size:.85rem}
 </section>
 <section id="speicherung"><h2>11. Speicherdauer, Löschung und Backups</h2>
 <p>Personenbezogene Daten werden grundsätzlich nur so lange benötigt, wie sie für die jeweilige Projektfunktion, zulässige Nachweise und die Bearbeitung von Vorgängen erforderlich sind. Nach dem Ende des Projekts sollen nicht mehr erforderliche Identitäts-, Nutzungs-, Prüf- und Antragsdaten gelöscht oder wirksam anonymisiert werden; gesetzliche oder erforderliche Nachweisfristen sind getrennt zu prüfen.</p>
+<p><strong>Zwei getrennte Löschvorgänge:</strong> Die ursprüngliche Schülerliste aus dem Sekretariat ist nach ihrem Verwendungshinweis unmittelbar nach der Nutzung zu entfernen. Die zeitlich begrenzt notwendigen Projektdaten in der Datenbank – etwa Konten, Ausweise und Guthaben – haben einen anderen Verarbeitungszweck und müssen nach einem abgestimmten Löschkonzept am Projektende oder früher, wenn sie nicht mehr erforderlich sind, gelöscht werden. Das geplante Abschlussdatum rechtfertigt keine weitere Aufbewahrung der Originaldatei.</p>
 <p><strong>Projektabschluss:</strong> Nach der Veranstaltungswoche vom <strong>12. bis 16. Juli 2027</strong> sollen alle für das Schulstaatsprojekt nicht mehr erforderlichen personenbezogenen Daten gelöscht werden. Als organisatorischer Zieltermin ist <strong>31. Juli 2027</strong> vorgesehen. Für den späteren Projektbericht sollen ausschließlich anonymisierte, nicht auf einzelne Personen zurückführbare Summen und Erfahrungen genutzt werden. Gesetzliche Aufbewahrungs- und Nachweispflichten sowie die gesonderten Fristen für Sicherungskopien bleiben zu prüfen. Eine automatische Löschung ist aktuell noch nicht eingerichtet; der Ablauf muss von der verantwortlichen Stelle freigegeben und technisch nachgewiesen werden.</p>
 <p><strong>Individuelle Löschanträge:</strong> Im persönlichen Bereich unter „Einstellungen → Datenschutz und Datenlöschung“ kann ein angemeldeter Schüler jederzeit einen Löschantrag stellen. Dieser Weg ist auch vor der Erstbestätigung der Nutzungsregeln zugänglich. Der gewünschte Löschungsgrund wird freiwillig abgefragt und kann mit „Keine Angabe“ beantwortet werden. Die Plattform speichert zu einem Antrag die technische Konto-ID, eine optionale Grundkategorie, den Zeitpunkt und den Bearbeitungsstatus. Sobald der Antrag eingeht, wird die Abstimmungsberechtigung gesperrt; die tatsächliche Datenlöschung erfordert eine Prüfung auf rechtliche Aufbewahrungspflichten. Alternativ können Betroffene Fragen zum Löschantrag an das Projektteam „Schule als Staat“ richten; die dafür formell verantwortliche Stelle muss noch bestimmt werden. Grundsätzlich wird nach Maßgabe von Art. 12 Abs. 3 DSGVO innerhalb eines Monats geantwortet.</p>
 <p><strong>Noch offen:</strong> Die verbindlichen Fristen je Datengruppe (insbesondere Stimmen, Transaktionen, Anwesenheit, Gastanträge, Logs und Sicherungskopien) sowie die tatsächlich eingesetzten automatischen Löschverfahren müssen mit der Schule festgelegt und dokumentiert werden. Es wird hier ausdrücklich nicht behauptet, dass bereits eine automatische Löschung zu einem bestimmten Datum umgesetzt sei. Backups können Daten über eine Löschung im Produktivbestand hinaus bis zum Ablauf ihrer gesonderten Vorhaltezeit enthalten.</p>
 </section>
+<div class="sas-privacy-clarity" aria-label="Häufige Fragen zur Löschung">
+<h2>Häufige Fragen zum Projektabschluss</h2>
+<h3>Was bleibt für die Auswertung übrig?</h3>
+<p>Für den schulischen Projektbericht sind organisatorische Erfahrungen und zusammengefasste Kennzahlen vorgesehen, etwa die Anzahl der Projektkonten, die Beteiligung an Abstimmungen oder die Nutzung bestimmter Funktionen. Es sollen keine Listen mit Schülernamen, individuellen Guthaben oder einzelnen Stimmabgaben in den Bericht übernommen werden. Kleinere Gruppen und seltene Ereignisse müssen so zusammengefasst werden, dass auch indirekt niemand erkennbar bleibt.</p>
+<h3>Gehen meine Daten bereits vor dem Schulstaatsende verloren?</h3>
+<p>Nein, nicht allein wegen der Veröffentlichung dieser Hinweise. Während des Projekts werden einzelne Daten für Kontoanmeldung, Ausweis oder berechtigte Projektvorgänge benötigt. Daten, die früher nicht mehr erforderlich sind, sollen jedoch auch früher entfernt werden. Ein individueller Löschantrag kann bereits während der Laufzeit gestellt werden; seine Voraussetzungen werden geprüft.</p>
+<h3>Was bedeutet die Verschlüsselung genau?</h3>
+<p>Die Verschlüsselung reduziert das Risiko, dass die offiziellen Namen bei einem unberechtigten Zugriff auf einzelne Datentabellen unmittelbar lesbar sind. Die Plattform muss den Namen für berechtigte Funktionen weiterhin entschlüsseln können. Verschlüsselte oder pseudonymisierte Daten bleiben deshalb personenbezogen. Auch die verwendeten Dienstleister und ihre Administratorberechtigungen gehören zur Sicherheitsprüfung.</p>
+<h3>Sind öffentliche Informationen aus dem Schulalltag frei verwendbar?</h3>
+<p>Nein. Dass registrierte Schülerinnen und Schüler innerhalb eines Schulportals bestimmte Namen sehen können, macht diese Daten nicht automatisch für ein anderes System oder einen anderen Zweck frei verfügbar. Für die Verwendung im Schulstaatsportal muss weiterhin geprüft werden, ob die Daten dafür erforderlich sind und welche Rechtsgrundlage die Verarbeitung trägt.</p>
+<h3>Was passiert mit technischen Sicherungskopien?</h3>
+<p>Eine Löschung aus der produktiven Datenbank entfernt nicht automatisch jeden Eintrag aus bereits erzeugten Backups. Für Sicherungskopien müssen Aufbewahrungs- und Wiederherstellungsregeln festgelegt werden. Nach Ablauf der entsprechenden Frist müssen auch die nicht mehr benötigten Sicherungsstände entfallen. Der konkrete Nachweis dafür ist noch offen.</p>
+</div>
 <section id="minderjaehrige"><h2>12. Besonderer Schutz Minderjähriger</h2>
 <p>Da die Plattform von Minderjährigen genutzt wird, sind Datensparsamkeit, verständliche Hinweise, enge Rollenrechte und ein Verzicht auf öffentliche Namenslisten besonders wichtig. Das bloße Vorhandensein eines Schüleraccounts stellt keine Einwilligung dar. Falls eine Verarbeitung auf Einwilligung beruht, müssen deren Freiwilligkeit, Alter, Einsichtsfähigkeit und gegebenenfalls die Beteiligung der Erziehungsberechtigten entsprechend dem Schul- und Datenschutzrecht geprüft werden. Aufnahmen, Wettbewerbsbeiträge oder die Veröffentlichung personenbezogener Inhalte benötigen eine gesonderte, geeignete Rechtsgrundlage.</p>
 </section>
