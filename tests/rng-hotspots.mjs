@@ -9,7 +9,9 @@ const css=load("shop-plan.css");
 const probeCode=source.replace("window.SAS_SHOP_PLAN={show:show};",
   "window.SAS_SHOP_PLAN={show:show};globalThis.__probe={"+
   "points:OFFICIAL_ROOM_POINTS,extra:EXTRA_ROOMS,allRooms,roomDetails,floorNavigation,"+
-  "page:(n,bookable)=>{currentPage=n;currentBuilding='';rooms=bookable||[];return mapPins();},"+
+  "page:(n,bookable)=>{currentPage=n;currentBuilding='';rooms=bookable||[];return mapPins();},
+  adminDetails:(id,enabled)=>{admin=enabled;rooms=[];selected=id;return roomDetails();},
+  enable:(id,ctx)=>{admin=ctx.admin;rooms=ctx.rooms||[];api=ctx.api;root=ctx.root;return enableKnownRoom(id);},"+
   "details:(id,bookable)=>{rooms=bookable||[];selected=id;return roomDetails();}"+
   "};");
 assert.notEqual(probeCode,source,"VM probe must reach scoped renderer");
@@ -76,4 +78,26 @@ test("mobile zoom and all seven navigation tabs remain operational",()=>{
   assert.match(css,/-webkit-overflow-scrolling:touch/);
   const navigation=p.floorNavigation();
   for(let n=1;n<=7;n++)assert.ok(navigation.includes('data-page="'+n+'"'));
+});
+
+test("listed-but-unreleased plan rooms can be activated by admins, never by ordinary users",async()=>{
+  assert.doesNotMatch(p.adminDetails("plan:A302:7",false),/data-enable-room/);
+  assert.match(p.adminDetails("plan:A302:7",true),/data-enable-room="plan:A302:7"/);
+  const writes=[];
+  const ctx={admin:true,rooms:[],root:{innerHTML:"",querySelector:()=>null},api:{
+    from:(name)=>({insert:(row)=>({select:()=>({single:async()=>{writes.push({name,row});return {data:{id:"new-A302"}};}})})}),
+    rpc:async(name)=>({data:name==="shop_room_catalog"?[{id:"new-A302",name:"A302",plan_page:7,x_percent:33.7,y_percent:62.71,slots:[]}]:null})
+  }};
+  await p.enable("plan:A302:7",ctx);
+  assert.equal(writes.length,1);
+  assert.equal(writes[0].name,"school_places");
+  assert.equal(writes[0].row.name,"A302");
+  assert.equal(writes[0].row.plan_page,7);
+  assert.equal(writes[0].row.x_percent,33.7);
+  assert.equal(writes[0].row.y_percent,62.71);
+  assert.equal(writes[0].row.classroom_shop_enabled,true);
+  await assert.rejects(()=>p.enable("plan:A301:7",{...ctx,admin:false}),/Administration/);
+  assert.equal(writes.length,1);
+  assert.match(source,/Hat die Schule die Shop-Nutzung für Raum/);
+  assert.match(css,/sas-shopmap-admin-approve/);
 });
