@@ -26,7 +26,7 @@ with tempfile.TemporaryDirectory() as temp:
     assert len(records)==3
     assert len({r["temporary_password"] for r in records})==3
     assert len({r["login_id"] for r in records})==3
-    assert all(len(r["temporary_password"])==7 for r in records)
+    assert all(len(r["temporary_password"])==8 for r in records)
     pdf=out/"zugangsblaetter-vertraulich.pdf"
     assert pdf.read_bytes()[:5]==b"%PDF-"
     assert len(pdf.read_bytes())>1600
@@ -35,4 +35,4 @@ with tempfile.TemporaryDirectory() as temp:
     dry=subprocess.run(["node",str(root/"scripts/provision-school-roster.mjs"),str(out/"citizens-private.json")],capture_output=True,text=True)
     assert dry.returncode==0,dry.stderr
     assert "kein Konto angelegt" in dry.stdout
-print("Roster PDF + unique seven-digit credentials + provisioning dry-run passed")
+print("Roster PDF + unique eight-digit credentials + provisioning dry-run passed")
