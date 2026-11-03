@@ -20,3 +20,14 @@
   flex:0 0 42px;overflow:hidden;
   box-shadow:0 0 0 1px rgba(9,45,27,.14);
 }
+
+/* Prelaunch: unavailable modules remain visible as non-interactive teasers. */
+.sas-preview-locked{opacity:1!important;cursor:not-allowed!important;color:#767e8d!important}
+.module-tile.sas-preview-locked{background:#f5f6f8;border:1px dashed #cbd0d8;box-shadow:none;filter:saturate(.55)}
+.module-tile.sas-preview-locked .module-icon{background:#e8eaee}
+.sas-preview-locked .sas-preview-lock,.sas-preview-locked .module-arrow{display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;color:#6e7685}
+.sas-preview-locked .sas-preview-lock svg,.sas-preview-locked .module-arrow svg{width:18px;height:18px}
+.module-tile.sas-preview-locked .module-copy span{color:#6f7682}
+.sas-preview-cards{grid-template-columns:repeat(2,minmax(0,1fr));margin:20px 0 34px}
+.sas-preview-cards .overview-card{min-height:226px}
+@media(max-width:700px){.sas-preview-cards{grid-template-columns:1fr}.sas-preview-cards .overview-card{min-height:185px}}
