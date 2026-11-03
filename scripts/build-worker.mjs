@@ -11,10 +11,10 @@ import { resolve, dirname } from "node:path";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const names = [
   "index.html", "styles.css", "features.css", "tutorial.css",
-  "brand-emblem.css", "public-visa.css", "shop-plan.css",
+  "brand-emblem.css", "public-visa.css", "shop-plan.css", "portal-extras.css",
   "app.js", "features.js", "roles.js", "attendance.js", "tutorial.js",
   "config.js", "work-hours.js", "shop-management.js",
-  "admin-credit.js", "public-visa.js", "shop-plan.js", "mobile-ui.css"
+  "admin-credit.js", "public-visa.js", "shop-plan.js", "mobile-ui.css", "portal-extras.js"
 ];
 const files = Object.fromEntries(
   names.map(name => ["/" + name, readFileSync(resolve(root, name), "utf8")])
