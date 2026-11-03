@@ -78,14 +78,15 @@ async function search(ctx,q){
   async()=>records(ctx.api.from("school_places").select("name,kind,floor_label").eq("active",true).ilike("name",pattern).order("name").limit(10)),
   async()=>records(ctx.api.from("school_events").select("title,starts_at").ilike("title",pattern).gte("ends_at",new Date().toISOString()).limit(6)),
   async()=>records(ctx.api.from("civic_posts").select("title").eq("kind","job").ilike("title",pattern).limit(6)),
-  async()=>records(ctx.api.from("portal_posts").select("title").eq("published",true).ilike("title",pattern).limit(6))
+  async()=>records(ctx.api.from("portal_posts").select("title,section").eq("published",true).ilike("title",pattern).limit(6))
  ];
- const r=await Promise.allSettled(tasks.map(fn=>fn()));
+ const roomCode=/^[A-E]-?\d{1,3}$/i.test(term);
+ const r=await Promise.allSettled(tasks.map((fn,i)=>roomCode&&i>0?Promise.resolve([]):fn()));
  const take=i=>r[i].status==="fulfilled"?r[i].value:[];
  let list=take(0).map(p=>({title:p.name,detail:p.floor_label||"",page:p.kind==="shop"?"shops":"map",focus:p.kind==="room"?p.name:null,category:p.kind==="shop"?"Geschäft":"Raum"}));
  list.push(...take(1).map(e=>({title:e.title,detail:time(e.starts_at),page:"events",category:"Veranstaltung"})));
  list.push(...take(2).map(e=>({title:e.title,detail:"Offene Stelle",page:"jobs",category:"Beruf"})));
- list.push(...take(3).map(e=>({title:e.title,detail:"Veröffentlichung",page:"bulletin",category:"Beitrag"})));
+ list.push(...take(3).map(e=>({title:e.title,detail:"Veröffentlichung",page:e.section==="blog"?"blog":"bulletin",category:"Beitrag"})));
  if(window.SAS_SHOP_PLAN?.knownRooms){
   const seen=new Set(list.filter(x=>x.category==="Raum").map(x=>x.title.toLowerCase()));
   for(const p of window.SAS_SHOP_PLAN.knownRooms(term)){
