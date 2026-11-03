@@ -222,7 +222,7 @@
   function dashboard(){
     if(isPreviewMember()){
       var active=(state.polls||[]).filter(function(p){return p.status==="open"&&!p.has_voted;}).length;
-      return header("VORSCHAU","Dein Schulstaat startet bald.","Bis zum Nikolausmarkt am 3. Dezember 2026 kannst du an offenen Abstimmungen teilnehmen und deinen Schülerausweis nutzen. Die anderen Bereiche zeigen bereits, was später möglich sein wird.")+
+      return '<div class="dashboard-intro">'+header("VORSCHAU","Dein Schulstaat startet bald.","Bis zum Nikolausmarkt am 3. Dezember 2026 kannst du an offenen Abstimmungen teilnehmen und deinen Schülerausweis nutzen. Die anderen Bereiche zeigen bereits, was später möglich sein wird.")+'</div>'+
         '<div class="overview-grid sas-preview-cards"><section class="card overview-card"><div class="card-header"><span class="module-icon">'+icon("votes")+'</span><span class="pill blue">Freigeschaltet</span></div><h2>Umfragen & Abstimmungen</h2><p class="details">'+active+' offene Abstimmung'+(active===1?'':'en')+' für dich.</p><button class="btn primary" data-nav="votes">Jetzt abstimmen</button></section>'+
         '<section class="card overview-card"><div class="card-header"><span class="module-icon">'+icon("idcard")+'</span><span class="pill blue">Freigeschaltet</span></div><h2>Dein Schülerausweis</h2><p class="details">Öffne deine persönliche Projektkarte.</p><button class="btn" data-nav="idcard">Ausweis öffnen</button></section></div>'+
         '<div class="section-heading"><div><h2>Das kommt noch</h2><p>Weitere Funktionen werden zum offiziellen Start freigegeben.</p></div></div>'+moduleGrid();
