@@ -23,7 +23,14 @@ test('users can request deletion without legal acknowledgement or a required rea
  assert.match(app,/if\(state.user\?\.app_metadata\?\.sas_initial_password/);
  assert.ok(app.indexOf('if(state.user&&state.showDeletionForm)')<app.indexOf('if(state.user?.app_metadata?.sas_initial_password'), 'deletion option before first login gate');
  assert.match(app,/option value="keine_angabe"/);
- assert.match(app,/window.confirm\("Willst du die Löschung wirklich beantragen/);
+ assert.match(app,/function deletionConsequences\(\)/);
+ assert.match(app,/function dataDeletionReasonsForm\(\)/);
+ assert.match(app,/id="data-deletion-explanation"/);
+ assert.match(app,/data-action="deletion-proceed" disabled/);
+ assert.match(app,/state\.deletionReadToEnd/);
+ assert.match(app,/state\.deletionStage===2/);
+ assert.match(app,/type="radio" name="reason" value="keine_angabe"/);
+ assert.match(app,/Will ich nicht angeben/);
  assert.match(app,/request_my_school_data_deletion/);
  assert.match(sql,/update public.profiles set vote_eligible=false/);
  assert.match(sql,/sas_private.school_deletion_voting_guard/);
@@ -43,6 +50,9 @@ test('privacy and rules are directly reachable, and closure does not overpromise
  const privacy=read('datenschutz.html'),terms=read('nutzungsregeln.html'),index=read('index.html');
  assert.match(index,/href="\/nutzungsregeln.html"/);
  assert.match(privacy,/31\. Juli 2027/);
+ assert.match(privacy,/Verantwortlichkeit der Projektwebseite: in Prüfung/);
+ assert.match(privacy,/Projektteam „Schule als Staat“/);
+ assert.doesNotMatch(privacy,/Schulischer Datenschutzkontakt:/);
  assert.match(privacy,/Eine automatische Löschung ist aktuell noch nicht eingerichtet/);
  assert.match(terms,/keine kommerziellen Allgemeinen Geschäftsbedingungen/);
  assert.match(read('scripts/build-worker.mjs'),/"nutzungsregeln\.html"/);
