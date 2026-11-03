@@ -104,7 +104,7 @@
       api.from("payment_requests").select("*").order("created_at",{ascending:false}).limit(50)
     ]);
     rows.forEach(function(row){if(row.error)throw row.error;});
-    state.profile=rows[0].data;state.legalStatus=await rpc('school_legal_status',{});state.deletionStatus=await rpc('my_school_deletion_status',{}); if(state.profile){var secureName=await rpc('my_secure_school_name',{});if(secureName)state.profile.display_name=secureName;} state.wallet=rows[1].data;state.ledger=rows[2].data||[];state.cash=rows[3].data||[];state.requests=rows[4].data||[];
+    state.profile=rows[0].data;state.legalStatus=await rpc('school_legal_status',{});state.deletionStatus=await rpc('my_school_deletion_status',{}); if(state.profile){var secureName=await rpc('my_secure_school_name',{});if(typeof secureName==='string'&&secureName.trim())state.profile.display_name=secureName.trim();} state.wallet=rows[1].data;state.ledger=rows[2].data||[];state.cash=rows[3].data||[];state.requests=rows[4].data||[];
     if(state.active)state.active=state.requests.find(function(x){return x.id===state.active.id;})||state.active;
     state.schoolRoles=await rpc("my_school_roles",{})||{operator:false,jobs:[]};
     state.users=state.profile.role==="admin"?await rpc("admin_list_users",{}):[];
