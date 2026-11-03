@@ -20,8 +20,12 @@ test("privacy notice is comprehensive and accessible without login", () => {
 });
 test("privacy link stays visible across login and app pages", () => {
   const index = read("index.html");
-  assert.match(index, /<a class="sas-legal-link" href="\/datenschutz\.html"/);
-  assert.match(index, /body:has\(\.bottom-nav\)/);
+  assert.match(index, /<footer class="sas-site-footer"/);
+  assert.match(index, /href="\/datenschutz\.html"/);
+  assert.match(index, /href="\/nutzungsregeln\.html"/);
+  assert.match(index, /position:relative;z-index:1;background:#111820/);
+  assert.doesNotMatch(index, /sas-legal-link/);
+  assert.match(index, /@media\(max-width:780px\).*?sas-site-footer/s);
   assert.match(read("public-visa.js"), /<a href="\/datenschutz\.html"/);
 });
 test("official worker publishes notice with conservative headers", () => {
