@@ -14,6 +14,9 @@ test("privacy notice is comprehensive and accessible without login", () => {
   assert.match(html, /nicht vollständig anonym/i);
   assert.match(html, /Verantwortlichkeit.*?Rechtsgrundlagen.*?Löschfristen/s);
   assert.match(html, /diese eigenständige Projektwebseite/i);
+  assert.match(html, /Verantwortlichkeit der Projektwebseite: in Prüfung/);
+  assert.match(html, /Projektteam „Schule als Staat“/);
+  assert.doesNotMatch(html, /Schulischer Datenschutzkontakt:/);
 });
 test("privacy link stays visible across login and app pages", () => {
   const index = read("index.html");
