@@ -25,7 +25,7 @@ function apiFixture(){
   school_places:[{name:"C202",kind:"room",floor_label:"2. OG",active:true},{name:"Cookieshop",kind:"shop",floor_label:"EG",active:true}],
   school_events:[{title:"Kulturfest",starts_at:"2027-07-14T10:00:00Z",ends_at:"2027-07-14T16:00:00Z"}],
   civic_posts:[{title:"Kassendienst",kind:"job"}],
-  portal_posts:[{title:"Eröffnung",section:"news",published:true}]
+  portal_posts:[{title:"Eröffnung",section:"news",published:true},{title:"Projektblog",section:"blog",published:true}]
  };
  const queried=[];
  const api={rpc:async(name)=>({data:name==="shop_room_catalog"?[
@@ -60,6 +60,8 @@ test("global search finds real rooms, events and static school plan labels witho
  assert.ok(rooms.some(x=>x.title==="C202"&&x.page==="map"));
  const events=await hub.search({api},"Kultur");
  assert.ok(events.some(x=>x.title==="Kulturfest"&&x.page==="events"));
+ const blogs=await hub.search({api},"Projektblog");
+ assert.ok(blogs.some(x=>x.title==="Projektblog"&&x.page==="blog"));
  const staticRooms=await hub.search({api},"A302");
  assert.ok(staticRooms.some(x=>x.title==="A302"&&x.page==="map"));
  assert.equal((await hub.search({api},"C")).length,0);
