@@ -24,6 +24,7 @@ jobs:
           node --check features.js
           node --check shop-plan.js
           node --check portal-extras.js
+          node --check scripts/deploy-worker-safe.mjs
           node --check roles.js
           node --check attendance.js
           node --check tutorial.js
