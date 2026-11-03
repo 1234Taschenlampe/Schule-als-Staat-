@@ -1,0 +1,24 @@
+/* Anonyme Staatsflaggenwahl: dezente Stoffbewegung, interaktive Rückseite */
+.sas-flag-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:16px;margin-top:16px}
+.sas-flag-card{min-width:0;border:1px solid #dbe3ed;border-radius:15px;background:#fff;padding:13px;box-shadow:0 4px 15px rgba(16,38,68,.05)}
+.sas-flag-flipper{display:block;width:100%;padding:0;background:transparent;border:0;cursor:pointer;text-align:left;perspective:900px;border-radius:10px}
+.sas-flag-flipper:focus-visible{outline:3px solid #2563eb;outline-offset:4px}
+.sas-flag-inner{position:relative;display:block;aspect-ratio:4/3;transform-style:preserve-3d;transition:transform .65s cubic-bezier(.22,.7,.2,1)}
+.sas-flag-card.is-flipped .sas-flag-inner{transform:rotateY(180deg)}
+.sas-flag-face{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;border-radius:10px;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.sas-flag-front{background:linear-gradient(140deg,#ebf2fa,#dbe7f5)}
+.sas-flag-back{transform:rotateY(180deg);background:#f1f5fa;color:#193550;padding:15px;align-items:stretch;justify-content:flex-start;overflow-y:auto}
+.sas-flag-fabric{display:block;width:93%;aspect-ratio:3/2;object-fit:fill;transform-origin:left center;filter:drop-shadow(5px 9px 5px rgba(18,39,70,.23));animation:sas-flag-wave 5.5s ease-in-out infinite;will-change:transform}
+.sas-flag-back strong{display:block;font-size:13px;margin-bottom:7px}
+.sas-flag-back-text{font-size:12px;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}
+.sas-flag-hint{display:block;color:#617085;font-size:11px;text-align:center;padding:7px 2px 2px}
+.sas-flag-select{display:flex;align-items:center;gap:9px;border-radius:8px;margin-top:7px;padding:9px;background:#f6f9fd;cursor:pointer}
+.sas-flag-select input{width:17px;height:17px;accent-color:#14549c}
+.sas-flag-select span{font-weight:650;font-size:13px;color:#1f3651}
+.sas-flag-card:has(.sas-flag-select input:checked){border-color:#3972aa;box-shadow:0 0 0 2px rgba(39,105,184,.15)}
+.sas-flag-vote-footer{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-top:15px}
+.sas-flag-overview-note{font-size:12px;color:#52657d;margin-top:7px}
+.sas-flag-vote-footer .btn[disabled]{opacity:.55;cursor:not-allowed}
+@keyframes sas-flag-wave{0%,100%{transform:perspective(450px) rotateY(-3deg) skewY(0deg) scaleX(1)}25%{transform:perspective(450px) rotateY(3deg) skewY(-1.3deg) scaleX(.987)}50%{transform:perspective(450px) rotateY(-2deg) skewY(1.2deg) scaleX(.996)}75%{transform:perspective(450px) rotateY(4deg) skewY(-.7deg) scaleX(.983)}}
+@media(max-width:600px){.sas-flag-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,190px),1fr));gap:12px}.sas-flag-card{padding:10px}}
+@media(prefers-reduced-motion:reduce){.sas-flag-fabric{animation:none;will-change:auto}.sas-flag-inner{transition:none}}
