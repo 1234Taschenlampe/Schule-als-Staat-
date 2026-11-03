@@ -49,10 +49,10 @@ function iso(value){const t=new Date(value);if(!Number.isFinite(t.getTime()))thr
 function topLink(){return headerActions(linkPage("Abstimmungen","votes")+linkPage("Konto und Zahlungen","wallet"));}
 function cardTheme(d){const m=/^custom:(#[0-9a-fA-F]{6})$/.exec(d||"");if(!m)return {cls:"sas-id-"+escapeAttr(d||"classic"),style:""};const rgb=[1,3,5].map(i=>parseInt(m[1].slice(i,i+2),16));const bright=(rgb[0]*299+rgb[1]*587+rgb[2]*114)/1000;return {cls:"sas-id-custom",style:' style="--sas-card-bg:'+m[1]+';--sas-card-ink:'+(bright>145?"#14231c":"#ffffff")+';"'};}
 function renderId(){
-const c=data[0],design=c?.design||"classic",theme=cardTheme(design),name=c?.display_name||ctx.profile.display_name,identityLocked=false; // Pre-roster test phase: no identity-verification lock.
+const c=data[0],design=c?.design||"classic",theme=cardTheme(design),name=c?.display_name||ctx.profile.display_name,identityLocked=ctx.profile.role!=="admin"; // Offizielle Schulidentitaet ist fuer Buerger schreibgeschuetzt.
 return wrap(current,
- box("Mein digitaler Schülerausweis",'<div class="sas-id '+theme.cls+'"'+theme.style+'><div class="sas-id-top"><strong>Schule als Staat</strong><span>PERSONALAUSWEIS</span></div><div><small>Mitglied · Selbstauskunft</small><h2>'+escapeHtml(name)+'</h2><p>Klasse '+escapeHtml(c?.class_label||"nicht angegeben")+'</p></div><span class="sas-id-bottom">ID · '+escapeHtml(ctx.user.id.slice(0,8).toUpperCase())+' · NICHT ALS IDENTITÄTSNACHWEIS GÜLTIG</span><div class="sas-id-inline-qr" id="sas-permanent-card-qr" aria-label="Persönlicher Schülerausweis-QR-Code"><span class="sas-note">QR-Code wird geladen …</span></div></div>'
- +msg("Im Testbetrieb ist keine Schulverifizierung erforderlich. Der Ausweis ist ein Projektausweis, kein amtlicher Identitätsnachweis. Die Zuordnung zur offiziellen Schülerliste folgt später.")
+ box("Mein digitaler Schülerausweis",'<div class="sas-id '+theme.cls+'"'+theme.style+'><div class="sas-id-top"><strong>Schule als Staat</strong><span>PERSONALAUSWEIS</span></div><div><small>Mitglied · Schulzuordnung</small><h2>'+escapeHtml(name)+'</h2><p>Klasse '+escapeHtml(c?.class_label||"nicht angegeben")+'</p></div><span class="sas-id-bottom">ID · '+escapeHtml(ctx.user.id.slice(0,8).toUpperCase())+' · NICHT ALS IDENTITÄTSNACHWEIS GÜLTIG</span><div class="sas-id-inline-qr" id="sas-permanent-card-qr" aria-label="Persönlicher Schülerausweis-QR-Code"><span class="sas-note">QR-Code wird geladen …</span></div></div>'
+ +msg("Name und Klasse stammen aus der offiziellen Bürgerliste und können von Schülern hier nicht geändert werden. Der Ausweis ist ein Projektausweis, kein amtlicher Identitätsnachweis.")
  +'<div class="sas-role-chips"><strong>Deine Berufe:</strong> '+((ctx.schoolRoles?.jobs||[]).length?
    (ctx.schoolRoles.jobs||[]).map(j=>badge(j.label)).join(""):'<span class="sas-note">Noch keine Berufe zugewiesen</span>')+'</div>'
  +form("card",input("Name auf der Karte","display_name","text",'minlength="2" maxlength="80" value="'+escapeAttr(name)+'" '+(identityLocked?"readonly":""))
@@ -187,7 +187,8 @@ const values=Object.fromEntries(new FormData(f).entries());
 const v=(k)=>trim(values[k]);
 switch(kind){
 case "card":{
-const a={user_id:u,display_name:v('display_name'),class_label:v('class_label'),design:(v('design')==='custom'?'custom:'+v('color'):v('design')),updated_at:new Date().toISOString()};
+const a={user_id:u,design:(v('design')==='custom'?'custom:'+v('color'):v('design')),updated_at:new Date().toISOString()};
+if(ctx.profile.role==="admin"){a.display_name=v('display_name');a.class_label=v('class_label');}
 await query(api.from('student_cards').upsert(a,{onConflict:'user_id'}));break;}
 case "visa":{
 if(!values.acknowledged_privacy)throw Error("Bitte die Datenschutzhinweise bestätigen.");
@@ -246,7 +247,7 @@ if(action==="job-open"){
  slot.scrollIntoView({behavior:"smooth",block:"start"});return;
 }
 if(action==="choose-design"){
- const existing=data[0];const a={user_id:u,display_name:existing?.display_name||ctx.profile.display_name,class_label:existing?.class_label||"",design:id,updated_at:new Date().toISOString()};
+ const existing=data[0];const a={user_id:u,design:id,updated_at:new Date().toISOString()};
  await query(api.from('student_cards').upsert(a,{onConflict:'user_id'}));return;}
 if(["visa-approve","visa-reject","booking-approve","booking-reject","lost-resolve","civic-delete","post-delete","place-delete","event-delete"].includes(action)&&!admin())throw Error("Administratorberechtigung erforderlich.");
 if(["place-delete","event-delete","civic-delete","lost-delete","post-delete","visa-delete"].includes(action)&&!confirm("Eintrag wirklich löschen?"))return;
