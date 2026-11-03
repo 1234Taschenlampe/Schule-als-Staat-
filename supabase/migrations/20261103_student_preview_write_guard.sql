@@ -63,7 +63,7 @@ begin
 end
 $migration$;
 
--- The school-wide polls teaser closes after 03 December 2026 in Berlin time.
+-- The school-wide polls teaser closes from 26 November 2026 in Berlin time.
 -- Only the initial-pupil preview is affected; privileged accounts retain their
 -- normal polling rights and the event's published poll data is not deleted.
 create or replace function sas_private.sas_student_preview_poll_cutoff_guard()
@@ -75,7 +75,7 @@ as $$
 declare
   v_uid uuid := (select auth.uid());
 begin
-  if (clock_timestamp() at time zone 'Europe/Berlin') >= timestamp '2026-12-04 00:00:00'
+  if (clock_timestamp() at time zone 'Europe/Berlin') >= timestamp '2026-11-26 00:00:00'
      and v_uid is not null
      and exists (select 1 from public.profiles p where p.id = v_uid and p.role = 'member')
      and not exists (
