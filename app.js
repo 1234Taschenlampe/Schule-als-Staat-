@@ -23,7 +23,7 @@
   var api=ready?window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey,{
     global:{fetch:sasGatewayFetch}
   }):null;
-  var state={user:null,profile:null,wallet:null,ledger:[],cash:[],requests:[],users:[],polls:[],pollResults:[],schoolRoles:{operator:false,jobs:[]},page:"home",active:null,invoice:null,scanner:null,scanning:false,busy:false,editing:false,legalStatus:null,deletionStatus:null,deletionRequests:[],showDeletionForm:false,recovering:/(?:^|[&#?])type=recovery(?:&|$)/.test(location.hash)};
+  var state={user:null,profile:null,wallet:null,ledger:[],cash:[],requests:[],users:[],polls:[],pollResults:[],schoolRoles:{operator:false,jobs:[]},page:"home",active:null,invoice:null,scanner:null,scanning:false,busy:false,editing:false,legalStatus:null,deletionStatus:null,deletionRequests:[],showDeletionForm:false,deletionStage:1,deletionReadToEnd:false,recovering:/(?:^|[&#?])type=recovery(?:&|$)/.test(location.hash)};
   var deepLink=new URLSearchParams(location.search).get("pay");
   var openPortalAfterLogin=false; // No old V3 demo portal; all live features are integrated.
   if(deepLink)state.page="pay";
@@ -221,20 +221,67 @@
       '<button type="button" class="btn full" data-action="open-deletion">Datenlöschung beantragen</button><button type="button" class="btn full" data-action="logout">Abmelden</button></div></section></div>';
   }
 
-  function dataDeletionForm(){
+  function deletionConsequences(){
+    return '<div class="sas-deletion-summary" aria-label="Die wichtigsten Folgen der Löschung">'+
+      '<h2>Das Wichtigste auf einen Blick</h2>'+
+      '<ul><li><strong>Dein Zugang:</strong> Das Bürgerkonto wird nach Prüfung gelöscht; du kannst dich anschließend nicht mehr damit anmelden.</li>'+
+      '<li><strong>Abstimmungen:</strong> Schon mit Eingang deines Antrags kannst du keine weitere Stimme abgeben.</li>'+
+      '<li><strong>Projektguthaben:</strong> Dein restliches virtuelles Guthaben und deine persönlichen Buchungsinformationen gehen im Löschverfahren verloren. Es handelt sich nicht um echtes Geld.</li>'+
+      '<li><strong>Weitere Funktionen:</strong> Schülerausweis, QR-Codes, Beruf, Räume, Shops und andere persönliche Projektfunktionen stehen nach der Kontolöschung nicht mehr zur Verfügung.</li>'+
+      '<li><strong>Nicht sofort:</strong> Der Klick stellt zuerst einen Antrag. Die Löschung erfolgt nach Prüfung; gesetzlich aufzubewahrende Informationen können ausgenommen sein.</li></ul></div>'+
+      '<h3 id="deletion-detail-title">Was genau bedeutet das?</h3>'+
+      '<p class="field-help">Die folgenden Erläuterungen kannst du durchscrollen. Danach kannst du den Antrag im zweiten Schritt abschicken.</p>'+
+      '<div class="sas-deletion-explanation" id="data-deletion-explanation" tabindex="0" role="region" aria-labelledby="deletion-detail-title">'+
+        '<h4>1. Bürgerkonto und Anmeldung</h4><p>Dein Bürgerkonto verknüpft deine persönliche Kennung mit den schulischen Berechtigungen. Sobald die zuständige Stelle deinen Antrag geprüft und die Löschung abgeschlossen hat, kannst du diese Kennung nicht mehr für die Anmeldung verwenden. Ein neues Konto wird nicht automatisch angelegt. Dein Passwort wird nicht an andere Nutzer übertragen. Die Schule muss prüfen, ob einzelne für die Projektorganisation notwendige Nachweise vorübergehend aufbewahrt werden müssen.</p>'+
+        '<h4>2. Schülerausweis und QR-Code</h4><p>Dein digitaler Schülerausweis zeigt deinen Namen, deine Klasse und gegebenenfalls ein von dir gewähltes Kartendesign. Der QR-Code ist an das Konto gebunden. Nach einer vollständigen Kontolöschung ist der Ausweis nicht mehr nutzbar. Vorher bereits ausgedruckte oder auf anderen Geräten gespeicherte Kopien werden nicht allein durch einen Datenbankvorgang physisch vernichtet.</p>'+
+        '<h4>3. Abstimmungen und Entscheidungen</h4><p>Schon wenn du den Antrag einreichst, wird deine weitere Teilnahme an Abstimmungen gesperrt. Bereits abgegebene Stimmen oder vorhandene Gesamtresultate werden nicht sofort gelöscht oder verändert, weil sonst die Integrität einer laufenden Abstimmung beeinträchtigt werden könnte. Wie persönliche Zuordnungen rechtmäßig gelöscht oder anonymisiert werden, muss bei der Bearbeitung geklärt werden. Derzeit sind abgegebene Stimmen technisch noch nicht vollständig anonym.</p>'+
+        '<h4>4. Guthaben und Buchungen</h4><p>Das Guthaben im Schulstaat ist ausschließlich eine virtuelle Projekteinheit und kein Bankguthaben. Nach der Kontolöschung können die damit verbundenen Funktionen, Bezahlungen und Guthaben nicht weiter verwendet werden. Eine Auszahlung in Euro findet nicht statt. Einzelne Transaktionsnachweise können vorübergehend erforderlich bleiben, etwa um strittige Buchungen aufzuklären oder einer Aufbewahrungspflicht nachzukommen. Solche Ausnahmen müssen im Einzelfall geprüft werden.</p>'+
+        '<h4>5. Rollen, Arbeitszeiten, Buchungen und weitere Daten</h4><p>Persönliche Projektrollen, Berufe, Arbeitszeiten, Raumreservierungen, Shopvorgänge und sonstige kontoabhängige Funktionen können bei der Löschung wegfallen. Bereits veröffentlichte Beiträge oder Dateien müssen einzeln geprüft werden. Für fremde Inhalte und gesetzlich erforderliche Schulnachweise gelten möglicherweise andere Regeln. Die Nutzung des Portals für dich wird bei abgeschlossenem Löschvorgang beendet.</p>'+
+        '<h4>6. Was passiert mit verschlüsselten Namen?</h4><p>Die offiziellen Schülernamen sind in einem geschützten Datenbankbereich verschlüsselt gespeichert. Auch dieser Eintrag gehört zu den personenbezogenen Projektdaten, die beim Abschluss des Löschverfahrens zu prüfen sind. Eine Verschlüsselung allein bedeutet nicht, dass die Daten bereits anonym sind. Veraltete Sicherungskopien können vorübergehend noch Daten enthalten; ihre gesonderten Speicherfristen werden im Löschkonzept behandelt.</p>'+
+        '<h4>7. Wie läuft die Anfrage ab?</h4><p>Im nächsten Schritt kannst du einen Grund auswählen oder ausdrücklich „Will ich nicht angeben“ anklicken. Du musst keinen sachlichen Grund für die Antragstellung nennen. Mit dem Absenden wird deine Anfrage in der geschützten Verwaltungsübersicht registriert und dein Stimmrecht unmittelbar gesperrt. Die zuständige Stelle prüft, welche Daten zu löschen sind und welche ausnahmsweise noch gespeichert bleiben müssen.</p>'+
+        '<h4>8. Deine Rechte bleiben bestehen</h4><p>Du darfst jederzeit Auskunft, Berichtigung oder Löschung nach Maßgabe der DSGVO verlangen. Durch einen Antrag verzichtest du nicht auf weitere Rechte. Diese Webseite darf dir die Löschung nicht ohne rechtlichen Grund verweigern. Weitere Informationen findest du in den Datenschutzhinweisen. Die datenschutzrechtlich verantwortliche Stelle für diese Projektwebseite wird derzeit noch verbindlich geklärt.</p>'+
+      '</div>'+
+      '<p class="field-help" id="data-deletion-progress" role="status" aria-live="polite">Bitte bis zum Ende der Erläuterungen scrollen. Anschließend wird der nächste Schritt freigeschaltet.</p>';
+  }
+  function dataDeletionReasonsForm(){
     return '<form id="data-deletion-request-form">'+
-    '<p class="field-help">Du kannst die Löschung ohne Begründung und ohne Zustimmung zu den Nutzungsregeln beantragen.</p>'+
-    '<div class="form-group"><label for="data-deletion-reason">Grund (freiwillig)</label>'+
-    '<select class="field" id="data-deletion-reason" name="reason"><option value="keine_angabe">Keine Angabe</option><option value="datenschutz">Datenschutzbedenken</option><option value="nicht_mehr_nutzen">Ich möchte die Webseite nicht mehr nutzen</option><option value="sonstiges">Sonstiges</option></select></div>'+
-    '<p class="field-help">Bei Antragseingang wird die Abstimmungsteilnahme sofort gesperrt. Das Guthaben und die Projektdaten werden nach Prüfung gelöscht, soweit keine Aufbewahrungspflichten entgegenstehen.</p>'+
-    '<button class="btn dark full" type="submit">Datenlöschung beantragen</button></form>';
+      '<h2>Warum möchtest du die Löschung beantragen?</h2>'+
+      '<p class="field-help">Wähle eine Antwort aus. Eine Begründung ist nicht erforderlich: Die letzte Auswahl ermöglicht einen Antrag ohne Angabe eines Grundes.</p>'+
+      '<fieldset class="sas-deletion-reasons"><legend>Deine Auswahl</legend>'+
+      '<label><input type="radio" name="reason" value="datenschutz" required> Ich mache mir Sorgen um den Datenschutz.</label>'+
+      '<label><input type="radio" name="reason" value="nicht_mehr_nutzen"> Ich möchte das Schulportal nicht mehr verwenden.</label>'+
+      '<label><input type="radio" name="reason" value="sonstiges"> Ich habe einen anderen Grund.</label>'+
+      '<label><input type="radio" name="reason" value="keine_angabe"> Will ich nicht angeben.</label>'+
+      '</fieldset>'+
+      '<p class="field-help">Nach dem Absenden wird dein Antrag zur Prüfung gespeichert und deine weitere Abstimmungsteilnahme gesperrt. Das Löschen des Kontos und des Guthabens erfolgt nicht sofort.</p>'+
+      '<button class="btn dark full" type="submit">Löschantrag verbindlich absenden</button></form>';
   }
   function dataDeletionRequestView(){
-    root.innerHTML='<div class="welcome"><section class="welcome-side" style="margin:auto;max-width:630px"><div class="login-box">'+
-      header("DATENSCHUTZ","Datenlöschung beantragen.","Du kannst den Antrag auch ohne Zustimmung zu den Nutzungsregeln stellen.")+
-      dataDeletionForm()+
-      '<p><a href="/datenschutz.html" target="_blank" rel="noopener noreferrer">Datenschutz und Kontakt</a></p>'+
-      '<button class="btn full" type="button" data-action="close-deletion">Zurück</button></div></section></div>';
+    var secondStep=state.deletionStage===2;
+    root.innerHTML='<div class="welcome"><section class="welcome-side" style="margin:auto;max-width:680px"><div class="login-box">'+
+      header("DATENSCHUTZ",secondStep?"Schritt 2: Löschantrag.":"Schritt 1: Folgen verstehen.",secondStep?
+        "Du kannst deinen Antrag ohne Begründung stellen.":"Hier erfährst du, welche Funktionen nach einer Löschung entfallen und was bereits bei Antragstellung passiert.")+
+      (secondStep?
+         dataDeletionReasonsForm()+'<button class="btn full" type="button" data-action="deletion-back">Zurück zu den Folgen</button>':
+         deletionConsequences()+
+         '<button class="btn primary full" type="button" data-action="deletion-proceed" disabled>Ich bin mir zu 100 % sicher und möchte die Löschung beantragen</button>')+
+      '<p class="field-help">Fragen zu deinen Rechten: <a href="/datenschutz.html#rechte" target="_blank" rel="noopener noreferrer">Datenschutzhinweise</a>. Die Verantwortlichkeit wird derzeit geprüft.</p>'+
+      '<button class="btn full" type="button" data-action="close-deletion">Abbrechen und zurück</button></div></section></div>';
+    if(!secondStep){
+      var area=root.querySelector("#data-deletion-explanation");
+      var proceed=root.querySelector('[data-action="deletion-proceed"]');
+      var status=root.querySelector("#data-deletion-progress");
+      if(area&&proceed){
+        function updateProgress(){
+          var reachedEnd=area.scrollTop+area.clientHeight>=area.scrollHeight-12;
+          if(reachedEnd)state.deletionReadToEnd=true;
+          proceed.disabled=!state.deletionReadToEnd;
+          if(status&&state.deletionReadToEnd)status.textContent="Ende der Erläuterungen erreicht. Du kannst jetzt zum Antrag weitergehen.";
+        }
+        area.addEventListener("scroll",updateProgress,{passive:true});
+        updateProgress();
+      }
+    }
   }
   function dataDeletionPendingView(){
     root.innerHTML='<div class="welcome"><section class="welcome-side" style="margin:auto;max-width:630px"><div class="login-box">'+
@@ -575,8 +622,10 @@
       if(id==="scan-start")return await scanStart();
       if(id==="scan-stop"){await stopScanner();render();return;}
       if(id==="cancel"){state.invoice=null;render();return;}
-      if(id==="open-deletion"){state.showDeletionForm=true;render();return;}
-      if(id==="close-deletion"){state.showDeletionForm=false;render();return;}
+      if(id==="open-deletion"){state.showDeletionForm=true;state.deletionStage=1;state.deletionReadToEnd=false;render();return;}
+      if(id==="deletion-proceed"){if(!state.showDeletionForm||!state.deletionReadToEnd)return;state.deletionStage=2;render();return;}
+      if(id==="deletion-back"){state.deletionStage=1;render();return;}
+      if(id==="close-deletion"){state.showDeletionForm=false;state.deletionStage=1;state.deletionReadToEnd=false;render();return;}
       if(id==="logout"){if(window.SAS_TUTORIAL)window.SAS_TUTORIAL.logout();await stopScanner();if(window.SAS_ATTENDANCE)await window.SAS_ATTENDANCE.stop();var o=await api.auth.signOut();if(o.error)throw o.error;return;}
       if(id==="copy"&&state.active){await navigator.clipboard.writeText(paymentURL(state.active.id));showToast("Zahlungslink kopiert.");return;}
       if(id==="confirm"&&state.invoice){
@@ -600,8 +649,12 @@
         await fetchData();render();showToast("Löschantrag in Prüfung.");return;
       }
       if(form.id==="data-deletion-request-form"){
-        if(!window.confirm("Willst du die Löschung wirklich beantragen? Die Teilnahme an Abstimmungen wird sofort gesperrt und Guthaben und Projektdaten werden nach Prüfung gelöscht."))return;
-        state.deletionStatus=await rpc("request_my_school_data_deletion",{p_reason:String(data.get("reason")||"keine_angabe")});
+        if(!state.showDeletionForm||state.deletionStage!==2||!state.deletionReadToEnd)
+          throw Error("Bitte zuerst die Folgen der Datenlöschung ansehen.");
+        var requestedReason=String(data.get("reason")||"");
+        if(!["datenschutz","nicht_mehr_nutzen","sonstiges","keine_angabe"].includes(requestedReason))
+          throw Error("Bitte eine Antwort auswählen. Du kannst „Will ich nicht angeben“ wählen.");
+        state.deletionStatus=await rpc("request_my_school_data_deletion",{p_reason:requestedReason});
         state.showDeletionForm=false;render();showToast("Löschantrag eingereicht.");return;
       }
       if(form.id==="school-legal-form"){
@@ -790,7 +843,7 @@
         return;
       }
       if(next&&state.user&&next.id===state.user.id)return;
-      state.user=next;state.profile=null;state.legalStatus=null;state.deletionStatus=null;state.deletionRequests=[];state.showDeletionForm=false;state.wallet=null;state.ledger=[];state.cash=[];state.requests=[];state.users=[];state.polls=[];state.pollResults=[];state.schoolRoles={operator:false,jobs:[]};state.active=null;state.invoice=null;
+      state.user=next;state.profile=null;state.legalStatus=null;state.deletionStatus=null;state.deletionRequests=[];state.showDeletionForm=false;state.deletionStage=1;state.deletionReadToEnd=false;state.wallet=null;state.ledger=[];state.cash=[];state.requests=[];state.users=[];state.polls=[];state.pollResults=[];state.schoolRoles={operator:false,jobs:[]};state.active=null;state.invoice=null;
       if(window.SAS_TUTORIAL)window.SAS_TUTORIAL.logout();
       void stopScanner().then(async function(){
         try{if(state.user){await claimDesignatedAdmin();await fetchData();}render();if(state.user&&!state.legalStatus?.needs_acknowledgement&&!state.deletionStatus?.requested&&window.SAS_TUTORIAL)void window.SAS_TUTORIAL.start(api,state.user.id,{previewOnly:isPreviewMember(),pollsOpen:!previewVotingClosed()});if(deepLink&&state.user&&!isPreviewMember())await openInvoice(deepLink);}
