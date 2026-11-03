@@ -58,8 +58,8 @@ test('prelaunch preview locks student modules but keeps polls, ID and account se
  await x.click('settings');
  assert.match(x.root.innerHTML,/Passwort ändern/);
 });
-test('polls close for normal pupils after 3 December but ID remains available',async()=>{
- class AfterNikolausmarkt extends Date { static now(){return Date.parse('2026-12-04T00:00:00Z');} }
+test('polls close for normal pupils after 26 November but ID remains available',async()=>{
+ class AfterNikolausmarkt extends Date { static now(){return Date.parse('2026-11-26T00:00:00Z');} }
  const x=await launch('member','ui@example.test',false,{operator:false,jobs:[]},AfterNikolausmarkt);
  assert.match(x.root.innerHTML,/Abstimmungsphase .* beendet/);
  assert.match(x.root.innerHTML,/data-nav="votes"[^>]*disabled aria-disabled="true"/);
