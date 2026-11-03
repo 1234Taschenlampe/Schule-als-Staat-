@@ -9,9 +9,9 @@ const css=load("shop-plan.css");
 const probeCode=source.replace("window.SAS_SHOP_PLAN={show:show};",
   "window.SAS_SHOP_PLAN={show:show};globalThis.__probe={"+
   "points:OFFICIAL_ROOM_POINTS,extra:EXTRA_ROOMS,allRooms,roomDetails,floorNavigation,"+
-  "page:(n,bookable)=>{currentPage=n;currentBuilding='';rooms=bookable||[];return mapPins();},
-  adminDetails:(id,enabled)=>{admin=enabled;rooms=[];selected=id;return roomDetails();},
-  enable:(id,ctx)=>{admin=ctx.admin;rooms=ctx.rooms||[];api=ctx.api;root=ctx.root;return enableKnownRoom(id);},"+
+  "page:(n,bookable)=>{currentPage=n;currentBuilding='';rooms=bookable||[];return mapPins();},"+
+  "adminDetails:(id,enabled)=>{admin=enabled;rooms=[];selected=id;return roomDetails();},"+
+  "enable:(id,ctx)=>{admin=ctx.admin;rooms=ctx.rooms||[];api=ctx.api;root=ctx.root;return enableKnownRoom(id);},"+
   "details:(id,bookable)=>{rooms=bookable||[];selected=id;return roomDetails();}"+
   "};");
 assert.notEqual(probeCode,source,"VM probe must reach scoped renderer");
