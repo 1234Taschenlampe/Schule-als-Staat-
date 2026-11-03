@@ -1,0 +1,26 @@
+/* Role-based action hub, application statuses and search results. */
+.sas-hub-header{margin:0 0 22px}.sas-hub-header h1{margin:8px 0;font-size:clamp(26px,4vw,36px);letter-spacing:-.035em}.sas-hub-header p{color:#617080;line-height:1.6}
+.sas-hub-list{display:grid;gap:10px;margin:14px 0 25px}.sas-hub-list h2{margin:10px 0 4px;font-size:19px}
+.sas-hub-item{padding:16px;display:flex;gap:16px;align-items:center;justify-content:space-between;border-radius:15px;border:1px solid #dce5eb;background:#fff;color:#263648}
+.sas-hub-item strong{display:block;font-size:15px}.sas-hub-item p{margin:6px 0 0;color:#617080;font-size:13px;line-height:1.4}
+.sas-hub-item-side{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.sas-hub-status{font-size:12px;font-weight:700;padding:5px 10px;border-radius:999px;background:#edf1f6;color:#40516a;white-space:nowrap}
+.sas-hub-status[data-status="approved"]{background:#e1f1e9;color:#24543a}
+.sas-hub-status[data-status="rejected"]{background:#ffebe8;color:#81332b}
+.sas-hub-status[data-status="pending"]{background:#fff1d6;color:#80571b}
+.sas-hub-link{min-height:44px;padding:9px 13px;border:1px solid #cad8e4;border-radius:11px;background:#f6f9fb;color:#244d71;font:inherit;font-size:13px;font-weight:650;cursor:pointer}
+.sas-hub-link:hover,.sas-hub-link:focus-visible{border-color:#27659c;background:#eaf4fc}
+.sas-hub-shortcuts{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0 22px}
+.sas-hub-filters{display:flex;gap:8px;overflow-x:auto;padding:0 0 8px}
+.sas-hub-filters button{padding:9px 12px;min-height:42px;white-space:nowrap;border-radius:999px;border:1px solid #d0dae3;background:#fff;font:inherit;cursor:pointer}
+.sas-hub-filters button[aria-pressed="true"]{border-color:#256896;background:#e4f2ff;color:#174c73;font-weight:700}
+.sas-hub-warning{padding:12px 14px;border-radius:11px;background:#fff5dd;color:#704b1b}
+.sas-hub-empty{color:#687888;margin:10px 0 20px}.sas-hub-home-title{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+.sas-hub-home-title h2{margin:0}.sas-hub-home-title span{font-size:12px;color:#657586}.sas-hub-note{font-size:13px;color:#637589}
+#sas-personal-hub{margin:12px 0 23px;padding:17px;border:1px solid #dce5eb;border-radius:16px;background:#fff}
+.sas-global-results{border-top:1px solid #e4e9ed;padding:12px 0;margin-top:12px}
+.sas-global-results>h3{font-size:14px;margin:0 0 8px}
+.sas-global-result{width:100%;padding:11px 12px;margin:4px 0;text-align:left;display:grid;gap:4px;border-radius:11px;background:#f6f9fc;border:1px solid #e1e8ee;color:#1c405a;font:inherit;cursor:pointer}
+.sas-global-result:hover,.sas-global-result:focus-visible{background:#e6f2fc;border-color:#7faed0}
+.sas-global-result strong{font-size:14px}.sas-global-result small{color:#596c7c}
+@media(max-width:650px){.sas-hub-item{flex-direction:column;align-items:stretch}.sas-hub-item-side{justify-content:space-between}.sas-hub-link{min-height:44px}.sas-hub-filters{margin-inline:-8px;padding-inline:8px}}
