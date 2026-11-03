@@ -306,7 +306,7 @@
         '<h2 class="section-title">Neue Abstimmung erstellen</h2><section class="card"><form id="poll-create"><div class="form-group"><label for="poll-title">Frage oder Abstimmungstitel</label><input class="field" id="poll-title" name="title" maxlength="160" required placeholder="Wie soll unser Schulstaat heißen?"></div><div class="form-group"><label for="poll-description">Beschreibung (optional)</label><input class="field" id="poll-description" name="description" maxlength="500" placeholder="Wähle deinen Favoriten."></div><div class="form-group"><label for="poll-options">Antwortmöglichkeiten · eine pro Zeile (2–10)</label><textarea class="field poll-textarea" id="poll-options" name="options" rows="5" required placeholder="Vorschlag A&#10;Vorschlag B&#10;Vorschlag C"></textarea><p class="field-help">Die Antwortmöglichkeiten stehen nach Veröffentlichung fest. Bitte vorab prüfen.</p></div><button type="submit" class="btn primary">Abstimmung veröffentlichen</button></form></section>';
     }
     return header("MITBESTIMMUNG","Abstimmungen.","Der Name unseres Schulstaats steht noch nicht fest. Darüber und über weitere Entscheidungen stimmen wir gemeinsam ab.")+
-      notice+'<h2 class="section-title">Unsere zwei Wettbewerbe</h2><div class="grid two"><section class="card poll-card"><div class="card-header"><h2>Staatsname</h2><span class="pill">Vorbereitung</span></div><p class="details">Hier stimmen wir über die eingereichten Namensvorschläge ab. Die Kandidaten werden noch ergänzt.</p><p class="field-help">Noch keine Abstimmung möglich.</p></section><section class="card poll-card"><div class="card-header"><h2>Staatsflagge</h2><span class="pill">Vorbereitung</span></div><p class="details">Hier erscheinen die Flaggenentwürfe mit ihren Bildern. Die Bilder und Kandidaten werden später ergänzt.</p><p class="field-help">Noch keine Abstimmung möglich.</p></section></div><h2 class="section-title">Weitere Abstimmungen</h2><div class="grid two">'+(blocks||'<section class="card">'+empty("Noch keine weiteren Abstimmungen veröffentlicht.")+'</section>')+'</div>'+adminResults;
+      notice+'<h2 class="section-title">Unsere zwei Wettbewerbe</h2><div class="grid two"><section class="card poll-card"><div class="card-header"><h2>Staatsname</h2><span class="pill">Vorbereitung</span></div><p class="details">Hier stimmen wir über die eingereichten Namensvorschläge ab. Die Kandidaten werden noch ergänzt.</p><p class="field-help">Noch keine Abstimmung möglich.</p></section><section class="card poll-card"><div class="card-header"><h2>Staatsflagge</h2><span class="pill">Vorbereitung</span></div><p class="details">Hier siehst du alle anonymen Flaggenentwürfe.</p><div id="sas-flag-voting-slot"><p class="details">Die Flaggenentwürfe werden geladen …</p></div></section></div><h2 class="section-title">Weitere Abstimmungen</h2><div class="grid two">'+(blocks||'<section class="card">'+empty("Noch keine weiteren Abstimmungen veröffentlicht.")+'</section>')+'</div>'+adminResults;
   }
   function overlordPage(){
     return header("SYSTEM","Overlord.","Geschützter Systemstatus und API-Gateway. Keine personenbezogenen Daten.")+
@@ -381,6 +381,15 @@
        return;
      }
      if(state.page==="overlord"){mount(overlordPage());void overlordRefresh();return;}
+    if(state.page==="votes"&&window.SAS_FLAG_VOTING){
+      mount(votesPage());
+      var flagSlot=document.getElementById("sas-flag-voting-slot");
+      if(flagSlot){
+        flagSlot.dataset.voteEligible=String(Boolean(state.profile.vote_eligible));
+        void window.SAS_FLAG_VOTING.enhance({api:api,polls:state.polls,target:flagSlot}).catch(fail);
+      }
+      return;
+    }
     if(state.page==="map"&&window.SAS_SHOP_PLAN){mount('<div id="sas-school-shop-plan"></div>');window.SAS_SHOP_PLAN.show({api:api,user:state.user,profile:state.profile,focusRoom:window.SAS_MAP_FOCUS_CODE||"",target:document.getElementById("sas-school-shop-plan")}).catch(fail);window.SAS_MAP_FOCUS_CODE="";return;}
     if(state.page==="guestvisa"&&window.SAS_PUBLIC_VISA){mount('<div id="sas-guest-visa-admin"></div>');window.SAS_PUBLIC_VISA.showAdmin(api,document.getElementById("sas-guest-visa-admin")).catch(fail);return;}
     if(state.page==="roles"&&window.SAS_SCHOOL_ROLES){
@@ -599,7 +608,7 @@
         showToast("Bitte E-Mail prüfen und den Anmeldelink öffnen.");
       }
       if(form.id==="manual-form")await openInvoice(data.get("code"));
-      if(form.id==="vote-form"){
+      if(form.id==="vote-form"||form.id==="flag-vote-form"){
         if(!state.profile.vote_eligible)throw Error("Zur Abstimmung muss dein Konto von der Schule freigeschaltet sein.");
         var pollId=form.dataset.pollId;
         var selected=data.get("choice");
