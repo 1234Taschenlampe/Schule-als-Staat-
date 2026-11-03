@@ -72,6 +72,41 @@ def cells_from_xlsx(source):
             if cells:
                 yield int(row.get("r", "0")), cells
 
+
+def read_rng_school_export(rows):
+    """Parse official RNG export: Klasse | Name, Vorname | Bemerkg.
+
+    Group labels are inherited for subsequent rows. Numeric subtotal lines and
+    the final total are not students and must never receive credentials.
+    """
+    result, used, current_class = [], set(), None
+    for rownum, row in rows[1:]:
+        label = normalized(row.get(0, ""))
+        full_name = normalized(row.get(1, ""))
+        if label:
+            current_class = label
+        if not full_name:
+            continue
+        if full_name.isdecimal() or key(full_name) == "gesamtschülerzahl":
+            continue
+        if "," not in full_name:
+            raise ValueError(f"Unbekannter Schülerlisten-Eintrag in Zeile {rownum}")
+        family, given = (normalized(value) for value in full_name.split(",", 1))
+        if not family or not given or not current_class:
+            raise ValueError(f"Unvollständiger Eintrag in Zeile {rownum}")
+        person = {"vorname": given, "nachname": family, "klasse": current_class}
+        if any(len(value) > maximum for value, maximum in
+               [(given, 80), (family, 80), (current_class, 24)]):
+            raise ValueError(f"Stammdaten zu lang in Zeile {rownum}")
+        dedup = (key(given), key(family), key(current_class))
+        if dedup in used:
+            raise ValueError(f"Doppelte Identität in Zeile {rownum}")
+        used.add(dedup)
+        result.append(person)
+    if not result or len(result) > MAX_ROWS:
+        raise ValueError("Ungültige Schülerzahl")
+    return result
+
 def read_roster(path):
     rows = list(cells_from_xlsx(path))
     if not rows:
@@ -111,7 +146,7 @@ def create_credentials(roster):
     results = []
     for person in roster:
         while True:
-            pin = f"{secrets.randbelow(10_000_000):07d}"
+            pin = f"{secrets.randbelow(100_000_000):08d}"
             if pin not in allocated_pin:
                 allocated_pin.add(pin)
                 break
@@ -170,7 +205,7 @@ def write_slips(path, citizens):
         item("Nachname", p["last_name"])
         item("Klasse", p["class_label"])
         item("Buergerkennung", p["login_id"])
-        item("Einmaliges 7-stelliges Startpasswort", p["temporary_password"])
+        item("Einmaliges 8-stelliges Startpasswort", p["temporary_password"])
         c.setFont("Helvetica", 11)
         c.setFillColor(HexColor("#32455D"))
         c.drawString(46, 204, "Anmeldung: Schule-als-Staat-Webseite aufrufen.")
