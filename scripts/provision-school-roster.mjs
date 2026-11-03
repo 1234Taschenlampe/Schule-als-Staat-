@@ -64,7 +64,7 @@ for(const c of raw.citizens){
      email:c.email,
      password:c.temporary_password,
      email_confirm:true,
-     user_metadata:{full_name:c.first_name+" "+c.last_name,class_label:c.class_label},
+     user_metadata:{class_label:c.class_label},
      app_metadata:{sas_roster_provisioned:true,sas_initial_password:true}
    });
    assert.match(user.id,/^[a-f0-9-]{36}$/i);
