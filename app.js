@@ -23,7 +23,7 @@
   var api=ready?window.supabase.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey,{
     global:{fetch:sasGatewayFetch}
   }):null;
-  var state={user:null,profile:null,wallet:null,ledger:[],cash:[],requests:[],users:[],polls:[],pollResults:[],schoolRoles:{operator:false,jobs:[]},page:"home",active:null,invoice:null,scanner:null,scanning:false,busy:false,editing:false,legalStatus:null,recovering:/(?:^|[&#?])type=recovery(?:&|$)/.test(location.hash)};
+  var state={user:null,profile:null,wallet:null,ledger:[],cash:[],requests:[],users:[],polls:[],pollResults:[],schoolRoles:{operator:false,jobs:[]},page:"home",active:null,invoice:null,scanner:null,scanning:false,busy:false,editing:false,legalStatus:null,deletionStatus:null,showDeletionForm:false,recovering:/(?:^|[&#?])type=recovery(?:&|$)/.test(location.hash)};
   var deepLink=new URLSearchParams(location.search).get("pay");
   var openPortalAfterLogin=false; // No old V3 demo portal; all live features are integrated.
   if(deepLink)state.page="pay";
@@ -104,7 +104,7 @@
       api.from("payment_requests").select("*").order("created_at",{ascending:false}).limit(50)
     ]);
     rows.forEach(function(row){if(row.error)throw row.error;});
-    state.profile=rows[0].data;state.legalStatus=await rpc('school_legal_status',{}); if(state.profile){var secureName=await rpc('my_secure_school_name',{});if(secureName)state.profile.display_name=secureName;} state.wallet=rows[1].data;state.ledger=rows[2].data||[];state.cash=rows[3].data||[];state.requests=rows[4].data||[];
+    state.profile=rows[0].data;state.legalStatus=await rpc('school_legal_status',{});state.deletionStatus=await rpc('my_school_deletion_status',{}); if(state.profile){var secureName=await rpc('my_secure_school_name',{});if(secureName)state.profile.display_name=secureName;} state.wallet=rows[1].data;state.ledger=rows[2].data||[];state.cash=rows[3].data||[];state.requests=rows[4].data||[];
     if(state.active)state.active=state.requests.find(function(x){return x.id===state.active.id;})||state.active;
     state.schoolRoles=await rpc("my_school_roles",{})||{operator:false,jobs:[]};
     state.users=state.profile.role==="admin"?await rpc("admin_list_users",{}):[];
@@ -217,14 +217,38 @@
       '<form id="school-legal-form">'+legalReceiptFields()+
       '<button class="btn primary full" type="submit">Bestätigen und fortfahren</button></form>'+
       '<p class="field-help">Du kannst die Dokumente öffnen, ohne die Anmeldung zu verlassen.</p>'+
-      '<button type="button" class="btn full" data-action="logout">Abmelden</button></div></section></div>';
+      '<button type="button" class="btn full" data-action="open-deletion">Datenlöschung beantragen</button><button type="button" class="btn full" data-action="logout">Abmelden</button></div></section></div>';
   }
+
+  function dataDeletionForm(){
+    return '<form id="data-deletion-request-form">'+
+    '<p class="field-help">Du kannst die Löschung ohne Begründung und ohne Zustimmung zu den Nutzungsregeln beantragen.</p>'+
+    '<div class="form-group"><label for="data-deletion-reason">Grund (freiwillig)</label>'+
+    '<select class="field" id="data-deletion-reason" name="reason"><option value="keine_angabe">Keine Angabe</option><option value="datenschutz">Datenschutzbedenken</option><option value="nicht_mehr_nutzen">Ich möchte die Webseite nicht mehr nutzen</option><option value="sonstiges">Sonstiges</option></select></div>'+
+    '<p class="field-help">Bei Antragseingang wird die Abstimmungsteilnahme sofort gesperrt. Das Guthaben und die Projektdaten werden nach Prüfung gelöscht, soweit keine Aufbewahrungspflichten entgegenstehen.</p>'+
+    '<button class="btn dark full" type="submit">Datenlöschung beantragen</button></form>';
+  }
+  function dataDeletionRequestView(){
+    root.innerHTML='<div class="welcome"><section class="welcome-side" style="margin:auto;max-width:630px"><div class="login-box">'+
+      header("DATENSCHUTZ","Datenlöschung beantragen.","Du kannst den Antrag auch ohne Zustimmung zu den Nutzungsregeln stellen.")+
+      dataDeletionForm()+
+      '<p><a href="/datenschutz.html" target="_blank" rel="noopener noreferrer">Datenschutz und Kontakt</a></p>'+
+      '<button class="btn full" type="button" data-action="close-deletion">Zurück</button></div></section></div>';
+  }
+  function dataDeletionPendingView(){
+    root.innerHTML='<div class="welcome"><section class="welcome-side" style="margin:auto;max-width:630px"><div class="login-box">'+
+      header("DATENSCHUTZ","Dein Löschantrag ist eingegangen.","Die zuständige Stelle prüft und bearbeitet ihn.")+
+      '<p>Deine Abstimmungsteilnahme ist ab sofort gesperrt. Guthaben und personenbezogene Daten werden nach Prüfung und entsprechend den geltenden Fristen behandelt, nicht sofort bei Antragstellung gelöscht.</p>'+
+      '<p><a href="/datenschutz.html" target="_blank" rel="noopener noreferrer">Deine Rechte und Kontakt</a></p>'+
+      '<button class="btn full" data-action="logout">Abmelden</button></div></section></div>';
+  }
+
   function rosterFirstLoginView(){
     root.innerHTML='<div class="welcome"><section class="welcome-side" style="margin:auto"><div class="login-box">'+
       header("ERSTE ANMELDUNG","Startpasswort ändern.","Dein einmaliger siebenstelliger Zugangscode muss durch ein persönliches Passwort ersetzt werden.")+
       '<form id="roster-first-password-form"><div class="form-group"><label for="roster-password">Neues Passwort (mindestens 12 Zeichen)</label><input class="field" type="password" autocomplete="new-password" id="roster-password" name="password" minlength="12" required></div>'+
       '<div class="form-group"><label for="roster-password-repeat">Passwort wiederholen</label><input class="field" type="password" autocomplete="new-password" id="roster-password-repeat" name="repeat" minlength="12" required></div>'+
-      legalReceiptFields()+'<button class="btn primary full" type="submit">Neues Passwort festlegen</button></form><p class="field-help">Verwende ein einzigartiges Passwort, das du nicht für andere Dienste nutzt.</p></div></section></div>';
+      legalReceiptFields()+'<button class="btn primary full" type="submit">Neues Passwort festlegen</button></form><p class="field-help">Verwende ein einzigartiges Passwort, das du nicht für andere Dienste nutzt.</p><button class="btn full" type="button" data-action="open-deletion">Datenlöschung beantragen</button></div></section></div>';
   }
   function empty(label){return '<div class="empty">'+label+'</div>';}
   function ledgerRow(x){
@@ -355,7 +379,7 @@
     if(state.page==="admin")return header("VERWALTUNG","Administration.","Guthaben, Rollen und Stimmrecht für unseren Schulstaat verwalten.")+adminPanel+approvePanel;
     return header(state.page==="admin"?"VERWALTUNG":"MEIN BEREICH",state.page==="admin"?"Administration.":"Einstellungen.",state.page==="admin"?"Berechtigungen und Guthaben für unseren Schulstaat verwalten.":"Dein Profil, dein Passwort und deine Geräte.")+
       '<section class="card"><div class="card-header"><h2>Die Webseite kennenlernen</h2><span class="pill blue">Interaktiv</span></div><p class="details">Für neue Schüler: Ein interaktiver Rundgang führt dich direkt durch die wichtigsten Bereiche der App – ohne Eingaben.</p><button class="btn" type="button" data-action="restart-tutorial">Einführung starten oder wiederholen</button></section>'+ 
-      '<div class="grid two"><section class="card"><h2>Benutzerkonto</h2><div class="divider"></div><div class="settings-row"><div><strong>Name</strong><p>'+esc(state.profile.display_name)+'</p></div></div><div class="settings-row"><div><strong>'+account.label+'</strong><p>'+esc(account.value)+'</p></div></div><div class="settings-row"><div><strong>Rolle</strong><p>'+roleLabel()+'</p></div></div><div class="divider"></div>'+btn("Abmelden","logout","")+'</section><section class="card"><h2>Kameraberechtigung</h2><div class="divider"></div><p class="details">HTTPS-Status: '+(window.isSecureContext?"Sicherer Kontext":"Unsicherer Kontext")+'. Kamera wird nur auf deinen Wunsch aktiviert und niemals aufgezeichnet.</p>'+btn("Kamerazugriff testen","camera-test")+'<div class="divider"></div><p class="details">Kontoeinheit: '+esc(units)+'. Kein Bank- oder Echtgeldsystem.</p></section></div>'+'<section class="card" style="margin-top:20px"><h2>Passwort ändern</h2><p class="field-help">Wähle ein individuelles, mindestens 12 Zeichen langes Passwort. Deine aktuelle Anmeldung muss gültig sein.</p><form id="password-change-form"><div class="form-group"><label for="change-pw">Neues Passwort</label><input class="field" type="password" autocomplete="new-password" id="change-pw" name="password" minlength="12" required></div><div class="form-group"><label for="change-pw-repeat">Passwort wiederholen</label><input class="field" type="password" autocomplete="new-password" id="change-pw-repeat" name="repeat" minlength="12" required></div><button type="submit" class="btn dark">Passwort aktualisieren</button></form></section>'+(state.page==="admin"?adminPanel+approvePanel:"");
+      '<div class="grid two"><section class="card"><h2>Benutzerkonto</h2><div class="divider"></div><div class="settings-row"><div><strong>Name</strong><p>'+esc(state.profile.display_name)+'</p></div></div><div class="settings-row"><div><strong>'+account.label+'</strong><p>'+esc(account.value)+'</p></div></div><div class="settings-row"><div><strong>Rolle</strong><p>'+roleLabel()+'</p></div></div><div class="divider"></div>'+btn("Abmelden","logout","")+'</section><section class="card"><h2>Kameraberechtigung</h2><div class="divider"></div><p class="details">HTTPS-Status: '+(window.isSecureContext?"Sicherer Kontext":"Unsicherer Kontext")+'. Kamera wird nur auf deinen Wunsch aktiviert und niemals aufgezeichnet.</p>'+btn("Kamerazugriff testen","camera-test")+'<div class="divider"></div><p class="details">Kontoeinheit: '+esc(units)+'. Kein Bank- oder Echtgeldsystem.</p></section></div>'+'<section class="card" style="margin-top:20px"><h2>Passwort ändern</h2><p class="field-help">Wähle ein individuelles, mindestens 12 Zeichen langes Passwort. Deine aktuelle Anmeldung muss gültig sein.</p><form id="password-change-form"><div class="form-group"><label for="change-pw">Neues Passwort</label><input class="field" type="password" autocomplete="new-password" id="change-pw" name="password" minlength="12" required></div><div class="form-group"><label for="change-pw-repeat">Passwort wiederholen</label><input class="field" type="password" autocomplete="new-password" id="change-pw-repeat" name="repeat" minlength="12" required></div><button type="submit" class="btn dark">Passwort aktualisieren</button></form></section>'+'<section class="card" style="margin-top:20px"><h2>Datenschutz und Datenlöschung</h2><p class="field-help">Du kannst kostenlos und ohne Begründung die Löschung deiner Projektdaten beantragen.</p><p><a href="/datenschutz.html" target="_blank" rel="noopener noreferrer">Datenschutz</a> · <a href="/nutzungsregeln.html" target="_blank" rel="noopener noreferrer">Nutzungsregeln</a></p><button class="btn dark" type="button" data-action="open-deletion">Datenlöschung beantragen</button></section>'+(state.page==="admin"?adminPanel+approvePanel:"");
   }
   function passwordRecoveryView(){
     return '<section class="welcome-side" style="max-width:560px;margin:48px auto"><div class="login-box">'+header("KONTO SICHERN","Neues Passwort festlegen.","Du hast einen Wiederherstellungslink geöffnet. Wähle jetzt ein eigenes Passwort.")+'<form id="password-recovery-form"><div class="form-group"><label for="recovery-pw">Neues Passwort (mindestens 12 Zeichen)</label><input class="field" type="password" autocomplete="new-password" id="recovery-pw" name="password" minlength="12" required></div><div class="form-group"><label for="recovery-pw-repeat">Passwort wiederholen</label><input class="field" type="password" autocomplete="new-password" id="recovery-pw-repeat" name="repeat" minlength="12" required></div><button type="submit" class="btn primary full">Neues Passwort speichern</button></form></div></section>';
@@ -363,6 +387,8 @@
   function render(){
     state.editing=false;
     if(!api)return setup();
+    if(state.user&&state.deletionStatus?.requested){dataDeletionPendingView();return;}
+    if(state.user&&state.showDeletionForm){dataDeletionRequestView();return;}
     if(state.user?.app_metadata?.sas_initial_password===true){rosterFirstLoginView();return;}
     if(state.recovering&&state.user){root.innerHTML=passwordRecoveryView();return;}
     if(state.user&&state.legalStatus?.needs_acknowledgement){schoolLegalView();return;}
@@ -546,6 +572,8 @@
       if(id==="scan-start")return await scanStart();
       if(id==="scan-stop"){await stopScanner();render();return;}
       if(id==="cancel"){state.invoice=null;render();return;}
+      if(id==="open-deletion"){state.showDeletionForm=true;render();return;}
+      if(id==="close-deletion"){state.showDeletionForm=false;render();return;}
       if(id==="logout"){if(window.SAS_TUTORIAL)window.SAS_TUTORIAL.logout();await stopScanner();if(window.SAS_ATTENDANCE)await window.SAS_ATTENDANCE.stop();var o=await api.auth.signOut();if(o.error)throw o.error;return;}
       if(id==="copy"&&state.active){await navigator.clipboard.writeText(paymentURL(state.active.id));showToast("Zahlungslink kopiert.");return;}
       if(id==="confirm"&&state.invoice){
@@ -564,6 +592,11 @@
     var data=new FormData(form), submit=form.querySelector('[type="submit"]');
     if(submit)submit.disabled=true;
     try{
+      if(form.id==="data-deletion-request-form"){
+        if(!window.confirm("Willst du die Löschung wirklich beantragen? Die Teilnahme an Abstimmungen wird sofort gesperrt und Guthaben und Projektdaten werden nach Prüfung gelöscht."))return;
+        state.deletionStatus=await rpc("request_my_school_data_deletion",{p_reason:String(data.get("reason")||"keine_angabe")});
+        state.showDeletionForm=false;render();showToast("Löschantrag eingereicht.");return;
+      }
       if(form.id==="school-legal-form"){
         if(data.get("notice_read")!=="on"||data.get("rules_accepted")!=="on")throw Error("Bitte beide Pflichtbestätigungen auswählen.");
         await rpc("acknowledge_school_legal",{p_notice_read:true,p_rules_accepted:true});
@@ -739,8 +772,8 @@
     if(state.user){await claimDesignatedAdmin();await fetchData();restorePage();}
 
     render();
-    if(state.user&&!state.legalStatus?.needs_acknowledgement&&window.SAS_TUTORIAL)void window.SAS_TUTORIAL.start(api,state.user.id,{previewOnly:isPreviewMember(),pollsOpen:!previewVotingClosed()});
-    if(deepLink&&state.user&&!state.legalStatus?.needs_acknowledgement&&!isPreviewMember()){try{await openInvoice(deepLink);}catch(e){fail(e);}}
+    if(state.user&&!state.legalStatus?.needs_acknowledgement&&!state.deletionStatus?.requested&&window.SAS_TUTORIAL)void window.SAS_TUTORIAL.start(api,state.user.id,{previewOnly:isPreviewMember(),pollsOpen:!previewVotingClosed()});
+    if(deepLink&&state.user&&!state.legalStatus?.needs_acknowledgement&&!state.deletionStatus?.requested&&!isPreviewMember()){try{await openInvoice(deepLink);}catch(e){fail(e);}}
     api.auth.onAuthStateChange(function(event,session){
       var next=session&&session.user||null;
       if(event==="PASSWORD_RECOVERY"){
@@ -750,10 +783,10 @@
         return;
       }
       if(next&&state.user&&next.id===state.user.id)return;
-      state.user=next;state.profile=null;state.legalStatus=null;state.wallet=null;state.ledger=[];state.cash=[];state.requests=[];state.users=[];state.polls=[];state.pollResults=[];state.schoolRoles={operator:false,jobs:[]};state.active=null;state.invoice=null;
+      state.user=next;state.profile=null;state.legalStatus=null;state.deletionStatus=null;state.showDeletionForm=false;state.wallet=null;state.ledger=[];state.cash=[];state.requests=[];state.users=[];state.polls=[];state.pollResults=[];state.schoolRoles={operator:false,jobs:[]};state.active=null;state.invoice=null;
       if(window.SAS_TUTORIAL)window.SAS_TUTORIAL.logout();
       void stopScanner().then(async function(){
-        try{if(state.user){await claimDesignatedAdmin();await fetchData();}render();if(state.user&&!state.legalStatus?.needs_acknowledgement&&window.SAS_TUTORIAL)void window.SAS_TUTORIAL.start(api,state.user.id,{previewOnly:isPreviewMember(),pollsOpen:!previewVotingClosed()});if(deepLink&&state.user&&!isPreviewMember())await openInvoice(deepLink);}
+        try{if(state.user){await claimDesignatedAdmin();await fetchData();}render();if(state.user&&!state.legalStatus?.needs_acknowledgement&&!state.deletionStatus?.requested&&window.SAS_TUTORIAL)void window.SAS_TUTORIAL.start(api,state.user.id,{previewOnly:isPreviewMember(),pollsOpen:!previewVotingClosed()});if(deepLink&&state.user&&!isPreviewMember())await openInvoice(deepLink);}
         catch(e){fail(e);render();}
       });
     });
