@@ -2,10 +2,10 @@ name: School directory privacy checks
 on:
   push:
     branches: [main]
-    paths: [roles.js, config.js, index.html, datenschutz.html, public-visa.js, app.js, features.js, scripts/build-worker.mjs, tests/privacy-notice.mjs, tests/school-legal-deletion.mjs, nutzungsregeln.html, supabase/migrations/20261103_school_legal_and_deletion.sql, docs/DATENSCHUTZ_FREIGABE_2026-11-03.md, supabase/migrations/20261027_directory_privacy.sql, tests/directory-privacy.mjs, .github/workflows/privacy-audit.yml]
+    paths: [roles.js, config.js, index.html, datenschutz.html, public-visa.js, app.js, features.js, scripts/build-worker.mjs, tests/privacy-notice.mjs, tests/school-legal-deletion.mjs, tests/frontend-exposure-audit.mjs, nutzungsregeln.html, supabase/migrations/20261103_school_legal_and_deletion.sql, docs/DATENSCHUTZ_FREIGABE_2026-11-03.md, supabase/migrations/20261027_directory_privacy.sql, tests/directory-privacy.mjs, .github/workflows/privacy-audit.yml]
   pull_request:
     branches: [main]
-    paths: [roles.js, config.js, index.html, datenschutz.html, public-visa.js, app.js, features.js, scripts/build-worker.mjs, tests/privacy-notice.mjs, tests/school-legal-deletion.mjs, nutzungsregeln.html, supabase/migrations/20261103_school_legal_and_deletion.sql, docs/DATENSCHUTZ_FREIGABE_2026-11-03.md, supabase/migrations/20261027_directory_privacy.sql, tests/directory-privacy.mjs, .github/workflows/privacy-audit.yml]
+    paths: [roles.js, config.js, index.html, datenschutz.html, public-visa.js, app.js, features.js, scripts/build-worker.mjs, tests/privacy-notice.mjs, tests/school-legal-deletion.mjs, tests/frontend-exposure-audit.mjs, nutzungsregeln.html, supabase/migrations/20261103_school_legal_and_deletion.sql, docs/DATENSCHUTZ_FREIGABE_2026-11-03.md, supabase/migrations/20261027_directory_privacy.sql, tests/directory-privacy.mjs, .github/workflows/privacy-audit.yml]
 permissions:
   contents: read
 jobs:
@@ -16,4 +16,4 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: {node-version: '22'}
-      - run: node --check roles.js && node --check public-visa.js && node --check app.js && node --test tests/directory-privacy.mjs tests/privacy-notice.mjs tests/school-legal-deletion.mjs tests/student-preview.mjs
+      - run: node --check roles.js && node --check public-visa.js && node --check app.js && node --test tests/directory-privacy.mjs tests/privacy-notice.mjs tests/school-legal-deletion.mjs tests/student-preview.mjs tests/frontend-exposure-audit.mjs
