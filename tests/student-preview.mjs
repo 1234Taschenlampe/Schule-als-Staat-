@@ -38,9 +38,9 @@ test("database disallows direct standard-student writes in locked modules",()=>{
 });
 
 test("Nikolausmarkt voting cutoff is aligned between browser and database",()=>{
- assert.match(app,/2026-12-03T23:00:00Z/);
+ assert.match(app,/2026-11-25T23:00:00Z/);
  assert.match(sql,/Europe\/Berlin/);
- assert.match(sql,/2026-12-04 00:00:00/);
+ assert.match(sql,/2026-11-26 00:00:00/);
  assert.match(sql,/before insert or update on public\.poll_ballots/);
  assert.doesNotMatch(sql,/delete\s+from\s+public\.poll_ballots/i);
 });
