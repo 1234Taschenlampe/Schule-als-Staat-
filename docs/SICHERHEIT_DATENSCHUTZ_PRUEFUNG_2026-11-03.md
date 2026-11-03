@@ -11,6 +11,17 @@
 - Die Verknüpfung von Klarnamen zu 991 Schülerkonten liegt verschlüsselt in einer privaten Datentabelle; das macht die Projektdaten nicht anonym.
 - Die Datenschutz-/Nutzungslinks sind im dunklen HTML-Footer am Ende der Seite eingebunden; keine schwebenden Links mehr.
 
+## Zusätzliche Prüfungen und Korrekturen (03.11.2026)
+
+- **991 von 991** aktiven Bürgerkonten haben einen geschützten verschlüsselten Namenseintrag; die serverseitige Entschlüsselung lieferte in allen Fällen einen nichtleeren Namen, der sich von der technischen Login-Kennung unterscheidet. Alle 991 Klassenbezeichnungen sind vorhanden. Die Prüfung gab **keinen einzigen Namen** aus.
+- Beim tatsächlichen Schülerausweis wird die Namensanzeige aus `my_secure_school_name()` über das persönliche Profil priorisiert. Eine zuvor abweichende Anzeige der pseudonymisierten Kennung in der Design-Galerie wurde korrigiert und im Cloudflare Worker veröffentlicht.
+- `student_cards` verwendet die offizielle Klassenzuordnung aus `school_roster_members` über einen Datenbanktrigger; ein Schüler kann sie nicht durch bloße Formulareingaben verändern.
+- **Flaggenentwürfe:** Die Tabelle `school_competition_entries` lässt angemeldete Nutzer freigegebene Entwurfsdaten weiterhin lesen. Der direkte Zugriff auf das Feld `submitted_by` wurde jedoch per Spaltenberechtigung gesperrt. Der Flaggenwahl-Client ruft es nicht ab.
+- **Weitere Datenbankrechte:** Für 48 öffentliche Tabellen wurden insgesamt 0 anonyme `SELECT`-, `DELETE`-, `TRUNCATE`- und `TRIGGER`-Berechtigungen festgestellt. Keine Tabelle im privaten Schema gestattet `SELECT` an `authenticated`. Reguläre eingeloggte Nutzer können nur an 19 Tabellen überhaupt `SELECT` ausführen; dort bestimmen RLS-Regeln den Zeilenumfang.
+- Der Cloudflare Worker wurde nach den Korrekturen erneut ausgelesen: 23 Assets, keine erkannte `sb_secret_`-Signatur, öffentlicher `sb_publishable_`-Schlüssel, aktueller Stand der Namens-/Galerieanzeige und der Datenschutzbestätigungsfunktion.
+- Die drei GitHub-Prüfungen **V4 source checks**, **School directory privacy checks** und **Prevent confidential school data in repository** sind nach der Fehlerkorrektur erfolgreich abgeschlossen.
+- Die Admin-RPC `admin_list_users()` kann als vorgesehenen Admin-Workflow weiterhin Namen und Konten in größerem Umfang abrufen. Ein gestohlenes Administratorkonto bleibt deshalb ein relevantes Risiko. Vor dem regulären Start sind die Absicherung der Administration (insbesondere mehrstufige Anmeldung, Geräte- und Sitzungsverwaltung), beschränkte Zuständigkeiten sowie Wiederherstellungsprozesse gesondert zu prüfen. Ohne diesen Schritt ist eine Garantie gegen einen Datenabfluss nicht möglich.
+
 ## Offene Sicherheitsprüfungen und aktuelle Hinweise
 - Der Supabase-Security-Advisor zeigt zwei von anonymen Benutzern aufrufbare `SECURITY DEFINER`-Funktionen: `verify_guest_visa_email` und `visa_public_settings`. Sie scheinen dem vorgesehenen öffentlichen ViSA-Verfahren zu dienen; aus dem bloßen Advisor-Hinweis folgt keine nachgewiesene Schwachstelle. Vor Freigabe sind die zurückgegebenen Daten, Tokenvalidierung und Missbrauchsbegrenzung unter realen Bedingungen zu prüfen.
 - Der Advisor zeigt **56** von angemeldeten Nutzern ausführbare `SECURITY DEFINER`-Funktionen. Viele enthalten Berechtigungsprüfungen, aber ein vollständiger, funktionsbezogener Missbrauchstest fehlt. Das bloße Vorhandensein und Ausführungsrecht stellt keinen Nachweis eines Datenlecks dar.
