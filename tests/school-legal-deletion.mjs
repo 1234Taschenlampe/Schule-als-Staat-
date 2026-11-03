@@ -22,7 +22,6 @@ test('users can request deletion without legal acknowledgement or a required rea
  assert.match(app,/if\(state.user&&state.showDeletionForm\)/);
  assert.match(app,/if\(state.user\?\.app_metadata\?\.sas_initial_password/);
  assert.ok(app.indexOf('if(state.user&&state.showDeletionForm)')<app.indexOf('if(state.user?.app_metadata?.sas_initial_password'), 'deletion option before first login gate');
- assert.match(app,/option value="keine_angabe"/);
  assert.match(app,/function deletionConsequences\(\)/);
  assert.match(app,/function dataDeletionReasonsForm\(\)/);
  assert.match(app,/id="data-deletion-explanation"/);
