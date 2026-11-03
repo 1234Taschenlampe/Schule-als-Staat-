@@ -31,7 +31,7 @@
   var navs=[["home","Übersicht"],["wallet","Mein Konto"],["pay","Bezahlen"],["register","Kasse"],["history","Verlauf"],["votes","Abstimmungen"],["settings","Einstellungen"]];
   if(window.SAS_FEATURES)navs.splice(navs.length-1,0,...window.SAS_FEATURES.navigation.map(function(n){return [n[0],n[1]];}));
   if(window.SAS_SCHOOL_ROLES)navs.splice(navs.length-1,0,["roles","Berufe & Rollen"]);
-  navs.splice(navs.length-1,0,["myjob","Mein Beruf"]);
+  navs.splice(navs.length-1,0,["myjob","Mein Beruf"],["applications","Meine Anträge"],["updates","Mitteilungen"]);
   if(window.SAS_PUBLIC_VISA)navs.splice(navs.length-1,0,["guestvisa","Gast-ViSA-Anträge"]);
   if(window.SAS_ADMIN_CREDIT)navs.splice(navs.length-1,0,["admincredit","Geld ausgeben"]);
   if(window.SAS_SHOPS)navs.splice(navs.length-1,0,["shopmanage","Shopverwaltung"]);
@@ -127,14 +127,14 @@
     finally{refreshPending=false;}
   }
   var groups=[
-    ["Mein Bereich",["idcard","gallery","workhours","myjob","wallet","pay","history"]],
+    ["Mein Bereich",["idcard","gallery","applications","updates","workhours","myjob","wallet","pay","history"]],
     ["Schulleben",["bulletin","blog","events","lost"]],
     ["Organisation",["map","rooms","shops","shopmanage","jobs"]],
     ["Staat & Mitbestimmung",["votes","laws","parties","courts"]],
     ["Verwaltung",["overlord","guestvisa","visa","register","admincredit","attendance","roles","admin","settings"]]
   ];
-  var descriptions={overlord:"API-Schutz und Serverstatus (Admin)",guestvisa:"Gast-ViSA-Anträge einsehen",admincredit:"Schulwährung per Ausweis-QR gutschreiben",workhours:"Arbeitszeit 12.–16. Juli 2027 per QR-Code erfassen",roles:"Schulberufe und Operatorrechte vergeben",attendance:"Anwesenheit per Schülerausweis scannen",home:"Dein persönlicher Überblick",idcard:"Deine persönliche Projektkarte",gallery:"Das passende Ausweisdesign wählen",visa:"Einreise beantragen und Status verfolgen",wallet:"Guthaben und Kontobewegungen",pay:"QR-Code scannen und Betrag prüfen",history:"Digitale Buchungen und Bargeld",bulletin:"Neuigkeiten aus unserem Schulstaat",blog:"Geschichten und Einblicke ins Projekt",events:"Termine entdecken und teilnehmen",lost:"Verlorenes suchen, Gefundenes melden",map:"Schulplan: vier Shops pro Klassenzimmer",rooms:"Räume für dein Vorhaben reservieren",shops:"Geschäfte und Kassen entdecken",jobs:"Aufgaben finden und sich bewerben",votes:"Gemeinsame Entscheidungen treffen",laws:"Regeln und Verordnungen nachlesen",parties:"Mitteilungen der Parteien",courts:"Öffentliche Gerichtsbekanntmachungen",register:"Verkäufe und QR-Zahlungen erfassen",admin:"Guthaben, Rollen und Stimmrecht verwalten",settings:"Profil, Passwort und Geräte"};
-  var iconPaths={overlord:'M4 4h16v16H4z M8 16l3-4 3 2 3-5',guestvisa:"M4 4h16v16H4z M8 8h8 M8 12h8 M8 16h5",admincredit:"M12 2v20 M17 6H9a4 4 0 0 0 0 8h6a4 4 0 0 1 0 8H6",myjob:'M3 7h18v14H3z M8 7V3h8v4 M3 12h18',shopmanage:'M3 7h18 M5 7V4h14v3 M5 7v14h14V7 M9 12h6 M9 16h6',workhours:'M12 3v9l4 2 M21 12a9 9 0 1 1-9-9',roles:'M4 6h16 M4 12h16 M4 18h16 M6 8h3 M6 14h3',attendance:'M3 8V4h5 M16 4h5v4 M21 16v5h-5 M8 21H3v-5 M9 12l2 2 4-4',home:'M3 10l9-7 9 7v11H3z M9 21v-8h6v8',idcard:'M3 5h18v14H3z M7 9h3v4H7z M14 9h4 M14 13h4 M7 16h11',gallery:'M4 4h16v16H4z M8 8h3v3H8z M4 16l5-4 4 3 3-2 4 3',visa:'M6 3h12v18H6z M9 7h6 M9 11h6 M9 15h3',wallet:'M3 6h17v14H3z M3 6V4h14 M15 11h6v5h-6z',pay:'M4 8V4h4 M16 4h4v4 M20 16v4h-4 M8 20H4v-4 M8 10h3v3H8z M14 10h2 M14 14h3 M8 16h3',history:'M3 11a9 9 0 1 1 2 7 M3 4v7h7 M12 7v5l3 2',bulletin:'M4 5h16v14H4z M8 9h8 M8 13h5 M8 19v3 M16 19v3',blog:'M5 3h14v18H5z M8 7h8 M8 11h8 M8 15h5',events:'M4 5h16v16H4z M8 3v4 M16 3v4 M4 10h16 M8 14h2 M14 14h2',lost:'M10 17a7 7 0 1 0 0-14 7 7 0 0 0 0 14 M15 15l6 6 M7 10h6 M10 7v6',map:'M3 5l6-2 6 2 6-2v16l-6 2-6-2-6 2z M9 3v16 M15 5v16',rooms:'M5 3h14v18H5z M9 3v18 M14 12h1',shops:'M3 9l2-6h14l2 6 M3 9v3h18V9 M5 12v9h14v-9 M9 21v-6h6v6',jobs:'M3 7h18v14H3z M8 7V3h8v4 M3 12h18 M10 12v3h4v-3',votes:'M5 4h14v17H5z M8 8l2 2 5-5 M8 14h8 M8 17h5',laws:'M4 4h7v16H4z M13 4h7v16h-7z M7 8h1 M16 8h1',parties:'M8 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8 M2 21v-3a6 6 0 0 1 12 0v3 M16 4a4 4 0 0 1 0 8 M17 15a5 5 0 0 1 5 5',courts:'M12 3v18 M5 21h14 M4 6h16 M5 6l-3 8h6z M19 6l-3 8h6z',register:'M5 3h14v18H5z M8 6h8v4H8z M8 14h2 M14 14h2 M8 17h2 M14 17h2',settings:'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8 M12 2v3 M12 19v3 M2 12h3 M19 12h3 M5 5l2 2 M17 17l2 2 M5 19l2-2 M17 7l2-2',admin:'M12 3l8 3v6c0 5-8 9-8 9S4 17 4 12V6z M9 12l2 2 4-4',apps:'M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z',search:'M10 17a7 7 0 1 0 0-14 7 7 0 0 0 0 14 M15 15l6 6'};
+  var descriptions={applications:"Status deiner Shop-, Raum-, Berufs- und ViSA-Anträge",updates:"Aktuelle Antragsstände und Veranstaltungen",overlord:"API-Schutz und Serverstatus (Admin)",guestvisa:"Gast-ViSA-Anträge einsehen",admincredit:"Schulwährung per Ausweis-QR gutschreiben",workhours:"Arbeitszeit 12.–16. Juli 2027 per QR-Code erfassen",roles:"Schulberufe und Operatorrechte vergeben",attendance:"Anwesenheit per Schülerausweis scannen",home:"Dein persönlicher Überblick",idcard:"Deine persönliche Projektkarte",gallery:"Das passende Ausweisdesign wählen",visa:"Einreise beantragen und Status verfolgen",wallet:"Guthaben und Kontobewegungen",pay:"QR-Code scannen und Betrag prüfen",history:"Digitale Buchungen und Bargeld",bulletin:"Neuigkeiten aus unserem Schulstaat",blog:"Geschichten und Einblicke ins Projekt",events:"Termine entdecken und teilnehmen",lost:"Verlorenes suchen, Gefundenes melden",map:"Schulplan: vier Shops pro Klassenzimmer",rooms:"Räume für dein Vorhaben reservieren",shops:"Geschäfte und Kassen entdecken",jobs:"Aufgaben finden und sich bewerben",votes:"Gemeinsame Entscheidungen treffen",laws:"Regeln und Verordnungen nachlesen",parties:"Mitteilungen der Parteien",courts:"Öffentliche Gerichtsbekanntmachungen",register:"Verkäufe und QR-Zahlungen erfassen",admin:"Guthaben, Rollen und Stimmrecht verwalten",settings:"Profil, Passwort und Geräte"};
+  var iconPaths={applications:'M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5',updates:'M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9 M10 20h4',overlord:'M4 4h16v16H4z M8 16l3-4 3 2 3-5',guestvisa:"M4 4h16v16H4z M8 8h8 M8 12h8 M8 16h5",admincredit:"M12 2v20 M17 6H9a4 4 0 0 0 0 8h6a4 4 0 0 1 0 8H6",myjob:'M3 7h18v14H3z M8 7V3h8v4 M3 12h18',shopmanage:'M3 7h18 M5 7V4h14v3 M5 7v14h14V7 M9 12h6 M9 16h6',workhours:'M12 3v9l4 2 M21 12a9 9 0 1 1-9-9',roles:'M4 6h16 M4 12h16 M4 18h16 M6 8h3 M6 14h3',attendance:'M3 8V4h5 M16 4h5v4 M21 16v5h-5 M8 21H3v-5 M9 12l2 2 4-4',home:'M3 10l9-7 9 7v11H3z M9 21v-8h6v8',idcard:'M3 5h18v14H3z M7 9h3v4H7z M14 9h4 M14 13h4 M7 16h11',gallery:'M4 4h16v16H4z M8 8h3v3H8z M4 16l5-4 4 3 3-2 4 3',visa:'M6 3h12v18H6z M9 7h6 M9 11h6 M9 15h3',wallet:'M3 6h17v14H3z M3 6V4h14 M15 11h6v5h-6z',pay:'M4 8V4h4 M16 4h4v4 M20 16v4h-4 M8 20H4v-4 M8 10h3v3H8z M14 10h2 M14 14h3 M8 16h3',history:'M3 11a9 9 0 1 1 2 7 M3 4v7h7 M12 7v5l3 2',bulletin:'M4 5h16v14H4z M8 9h8 M8 13h5 M8 19v3 M16 19v3',blog:'M5 3h14v18H5z M8 7h8 M8 11h8 M8 15h5',events:'M4 5h16v16H4z M8 3v4 M16 3v4 M4 10h16 M8 14h2 M14 14h2',lost:'M10 17a7 7 0 1 0 0-14 7 7 0 0 0 0 14 M15 15l6 6 M7 10h6 M10 7v6',map:'M3 5l6-2 6 2 6-2v16l-6 2-6-2-6 2z M9 3v16 M15 5v16',rooms:'M5 3h14v18H5z M9 3v18 M14 12h1',shops:'M3 9l2-6h14l2 6 M3 9v3h18V9 M5 12v9h14v-9 M9 21v-6h6v6',jobs:'M3 7h18v14H3z M8 7V3h8v4 M3 12h18 M10 12v3h4v-3',votes:'M5 4h14v17H5z M8 8l2 2 5-5 M8 14h8 M8 17h5',laws:'M4 4h7v16H4z M13 4h7v16h-7z M7 8h1 M16 8h1',parties:'M8 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8 M2 21v-3a6 6 0 0 1 12 0v3 M16 4a4 4 0 0 1 0 8 M17 15a5 5 0 0 1 5 5',courts:'M12 3v18 M5 21h14 M4 6h16 M5 6l-3 8h6z M19 6l-3 8h6z',register:'M5 3h14v18H5z M8 6h8v4H8z M8 14h2 M14 14h2 M8 17h2 M14 17h2',settings:'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8 M12 2v3 M12 19v3 M2 12h3 M19 12h3 M5 5l2 2 M17 17l2 2 M5 19l2-2 M17 7l2-2',admin:'M12 3l8 3v6c0 5-8 9-8 9S4 17 4 12V6z M9 12l2 2 4-4',apps:'M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z',search:'M10 17a7 7 0 1 0 0-14 7 7 0 0 0 0 14 M15 15l6 6'};
   navs.push(["apps","Bereiche"],["admin","Administration"]);
   function icon(id){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+(iconPaths[id]||iconPaths.apps)+'"/></svg>';}
   function allowed(id){
@@ -142,7 +142,7 @@
     var operator=Boolean(state.schoolRoles?.operator);
     // Navigation is a convenience boundary; all privileged writes are checked by Supabase RPC/RLS.
     // Regular pupils see the everyday school-state features, not administration modules.
-    var pupilPages=["home","apps","idcard","gallery","wallet","pay","history","map","rooms","shops","votes","lost","settings","workhours","myjob"];
+    var pupilPages=["home","apps","idcard","gallery","wallet","pay","history","map","rooms","shops","votes","lost","settings","workhours","myjob","applications","updates"];
     if(id==="overlord"||id==="admincredit"||id==="admin"||id==="visa"||id==="guestvisa")return administrator;
     if(id==="register")return adminOrCashier();
     if(id==="roles")return administrator||operator;
@@ -159,10 +159,10 @@
   }
   function moduleGrid(){return groups.map(function(g){return '<section class="module-group" data-module-group><div class="section-heading"><h2>'+g[0]+'</h2></div><div class="module-grid">'+g[1].filter(allowed).map(function(id){return '<button type="button" class="module-tile" data-nav="'+id+'" data-module-search="'+esc((label(id)+' '+descriptions[id]).toLowerCase())+'"><span class="module-icon">'+icon(id)+'</span><span class="module-copy"><strong>'+esc(label(id))+'</strong><span>'+esc(descriptions[id])+'</span></span><span class="module-arrow" aria-hidden="true">→</span></button>';}).join("")+'</div></section>';}).join("");}
   function appDirectory(){return header("DEIN SCHULSTAAT","Alles an einem Ort.","Alle Funktionen im Überblick.")+moduleGrid();}
-  function searchDialog(){return '<dialog id="portal-search" aria-labelledby="portal-search-title"><div class="dialog-head"><h2 id="portal-search-title">Bereich öffnen</h2><button type="button" class="icon-btn" data-action="close-search" aria-label="Suche schließen">×</button></div><label class="search-field">'+icon("search")+'<input id="module-query" type="search" placeholder="Ausweis, Raum, Veranstaltung …" autocomplete="off" aria-label="Bereiche durchsuchen"></label><div class="dialog-results">'+moduleGrid()+'<p class="empty search-empty" hidden>Kein passender Bereich. Versuche einen anderen Suchbegriff.</p></div></dialog>';}
+  function searchDialog(){return '<dialog id="portal-search" aria-labelledby="portal-search-title"><div class="dialog-head"><h2 id="portal-search-title">Bereich öffnen</h2><button type="button" class="icon-btn" data-action="close-search" aria-label="Suche schließen">×</button></div><label class="search-field">'+icon("search")+'<input id="module-query" type="search" placeholder="Ausweis, Raum, Veranstaltung …" autocomplete="off" aria-label="Bereiche durchsuchen"></label><div class="dialog-results"><div class="sas-global-results" id="sas-global-results" role="status" hidden></div>'+moduleGrid()+'<p class="empty search-empty" hidden>Kein passender Bereich. Versuche einen anderen Suchbegriff.</p></div></dialog>';}
   function mount(content){
     var first=(state.profile&&state.profile.display_name||"S").slice(0,2).toUpperCase();
-    root.innerHTML='<a class="skip-link" href="#main-content">Zum Inhalt</a><div class="app-shell"><aside class="sidebar"><a class="brand" href="#home" data-nav="home" aria-label="Schule als Staat – Übersicht"><div class="brand-mark">S/S</div><div><div class="brand-name">Schule als Staat</div><div class="brand-sub">Dein digitaler Schulstaat</div></div></a><nav class="nav-links" aria-label="Hauptnavigation">'+nav(false)+'</nav><div class="sidebar-foot"><button class="sidebar-profile" data-nav="settings"><span class="avatar">'+esc(first)+'</span><span><strong>'+esc(state.profile.display_name)+'</strong><small>'+roleLabel()+'</small></span></button><a class="project-social" href="https://www.instagram.com/schule.als.staat_rng/" target="_blank" rel="noopener noreferrer">Projekt auf Instagram ↗</a></div></aside><div class="main-area"><header class="topbar"><div class="topbar-left">Schule als Staat <span aria-hidden="true">/</span> <b>'+esc(label(state.page))+'</b></div><div class="topbar-right"><button class="search-trigger" data-action="open-search" aria-label="Alle Bereiche durchsuchen">'+icon("search")+'<span>Bereich suchen</span><kbd>⌘ K</kbd></button><button class="profile-trigger" data-nav="settings" aria-label="Profil öffnen"><span class="avatar">'+esc(first)+'</span></button></div></header><main class="content" id="main-content" tabindex="-1">'+content+'</main><footer class="page-footer">Schule als Staat <span>Gemeinsam gestalten.</span></footer></div><nav class="bottom-nav" aria-label="Mobile Hauptnavigation">'+nav(true)+'</nav></div>'+searchDialog();
+    root.innerHTML='<a class="skip-link" href="#main-content">Zum Inhalt</a><div class="app-shell"><aside class="sidebar"><a class="brand" href="#home" data-nav="home" aria-label="Schule als Staat – Übersicht"><div class="brand-mark">S/S</div><div><div class="brand-name">Schule als Staat</div><div class="brand-sub">Dein digitaler Schulstaat</div></div></a><nav class="nav-links" aria-label="Hauptnavigation">'+nav(false)+'</nav><div class="sidebar-foot"><button class="sidebar-profile" data-nav="settings"><span class="avatar">'+esc(first)+'</span><span><strong>'+esc(state.profile.display_name)+'</strong><small>'+roleLabel()+'</small></span></button><a class="project-social" href="https://www.instagram.com/schule.als.staat_rng/" target="_blank" rel="noopener noreferrer">Projekt auf Instagram ↗</a></div></aside><div class="main-area"><header class="topbar"><div class="topbar-left">Schule als Staat <span aria-hidden="true">/</span> <b>'+esc(label(state.page))+'</b></div><div class="topbar-right"><button class="search-trigger" data-action="open-search" aria-label="Räume, Shops, Termine und Bereiche durchsuchen">'+icon("search")+'<span>Alles suchen</span><kbd>⌘ K</kbd></button><button class="profile-trigger" data-nav="settings" aria-label="Profil öffnen"><span class="avatar">'+esc(first)+'</span></button></div></header><main class="content" id="main-content" tabindex="-1">'+content+'</main><footer class="page-footer">Schule als Staat <span>Gemeinsam gestalten.</span></footer></div><nav class="bottom-nav" aria-label="Mobile Hauptnavigation">'+nav(true)+'</nav></div>'+searchDialog();
     if(state.page==="register")renderQRCode();
   }
   function setup(){
@@ -193,7 +193,7 @@
     var dateLabel=new Intl.DateTimeFormat("de-DE",{weekday:"long",day:"numeric",month:"long"}).format(new Date());
     return '<div class="dashboard-intro"><div>'+header(dateLabel,"Guten Tag, "+esc(state.profile.display_name)+".","Alles Wichtige auf einen Blick.")+'</div></div>'+
       '<div class="overview-grid"><section class="card overview-card"><div class="card-header"><span class="module-icon">'+icon("idcard")+'</span><span class="pill">Persönlich</span></div><h2>Dein Schülerausweis</h2><p class="details">Deine Projektkarte und dein Lieblingsdesign.</p><button class="btn" data-nav="idcard">Ausweis öffnen <span aria-hidden="true">→</span></button></section><section class="card overview-card balance-card"><div class="card-header"><span class="module-icon">'+icon("wallet")+'</span><span class="pill">Schulwährung</span></div><div class="stat-label">Dein Guthaben</div><div class="stat-value">'+cashFmt(state.wallet.balance_cents)+'</div><p class="stat-caption">Interne Einheiten · kein Echtgeld</p><button class="btn primary" data-nav="pay">'+icon("pay")+' Bezahlen</button></section><section class="card overview-card"><div class="card-header"><span class="module-icon">'+icon("votes")+'</span><span class="pill">Mitgestalten</span></div><h2>'+open+' offene Abstimmung'+(open===1?'':'en')+'</h2><p class="details">'+(open?'Deine Stimme macht einen Unterschied.':'Hier findest du gemeinsame Entscheidungen.')+'</p><button class="btn" data-nav="votes">Zu den Abstimmungen <span aria-hidden="true">→</span></button></section></div>'+
-      '<div class="section-heading"><div><h2>Entdecke dein Portal</h2><p>Alles, was unseren Schulstaat verbindet.</p></div><button class="btn subtle" data-nav="apps">Alle Bereiche →</button></div><div class="home-modules">'+["bulletin","events","map","rooms","lost","blog"].map(function(id){return '<button class="module-tile" data-nav="'+id+'"><span class="module-icon">'+icon(id)+'</span><span class="module-copy"><strong>'+esc(label(id))+'</strong><span>'+esc(descriptions[id])+'</span></span><span class="module-arrow" aria-hidden="true">→</span></button>';}).join("")+'</div><div class="section-heading"><h2>Letzte Kontobewegungen</h2><button class="btn subtle" data-nav="wallet">Zum Konto →</button></div><section class="card">'+latest(4)+'</section>';
+      '<section id="sas-personal-hub" aria-label="Persönliche Schnellzugriffe"><p class="sas-hub-note">Schnellzugriffe laden …</p></section><div class="section-heading"><div><h2>Entdecke dein Portal</h2><p>Alles, was unseren Schulstaat verbindet.</p></div><button class="btn subtle" data-nav="apps">Alle Bereiche →</button></div><div class="home-modules">'+["bulletin","events","map","rooms","lost","blog"].map(function(id){return '<button class="module-tile" data-nav="'+id+'"><span class="module-icon">'+icon(id)+'</span><span class="module-copy"><strong>'+esc(label(id))+'</strong><span>'+esc(descriptions[id])+'</span></span><span class="module-arrow" aria-hidden="true">→</span></button>';}).join("")+'</div><div class="section-heading"><h2>Letzte Kontobewegungen</h2><button class="btn subtle" data-nav="wallet">Zum Konto →</button></div><section class="card">'+latest(4)+'</section>';
   }
   function wallet(){
     return header("DEIN KONTO","Mein Guthaben.","Alle deine digitalen Zahlungen auf einen Blick.")+'<div class="grid two"><section class="card ink"><div class="stat-label">Verfügbares Guthaben</div><div class="stat-value">'+cashFmt(state.wallet.balance_cents)+'</div><div class="stat-caption">Interne Schulwährung, kein Echtgeld</div></section><section class="card"><h2>Digital bezahlen</h2><p class="details" style="margin:17px 0">Du scannst den QR-Code einer Kasse, kontrollierst den Betrag und bestätigst selbst. Bargeld wird getrennt verbucht.</p>'+btn("Zum QR-Scanner","to-pay")+'</section></div><h2 class="section-title">Kontobewegungen</h2><section class="card">'+latest()+'</section>';
@@ -326,8 +326,19 @@
     var views={home:dashboard,wallet:wallet,pay:pay,register:register,history:history,votes:votesPage,settings:settingsPage,apps:appDirectory,admin:settingsPage,overlord:overlordPage};
     if(!allowed(state.page)){state.page="home";}
     document.title=label(state.page)+" · Schule als Staat";
-    if(state.page==="overlord"){mount(overlordPage());void overlordRefresh();return;}
-    if(state.page==="map"&&window.SAS_SHOP_PLAN){mount('<div id="sas-school-shop-plan"></div>');window.SAS_SHOP_PLAN.show({api:api,user:state.user,profile:state.profile,target:document.getElementById("sas-school-shop-plan")}).catch(fail);return;}
+    if(state.page==="home"&&window.SAS_PORTAL_EXTRAS){
+       mount(dashboard());
+       void window.SAS_PORTAL_EXTRAS.enrichHome({api:api,user:state.user,profile:state.profile,schoolRoles:state.schoolRoles,polls:state.polls,target:document.getElementById("sas-personal-hub")}).catch(function(){});
+       return;
+     }
+     if((state.page==="applications"||state.page==="updates")&&window.SAS_PORTAL_EXTRAS){
+       mount('<div id="sas-portal-hub"></div>');
+       var task=state.page==="applications"?window.SAS_PORTAL_EXTRAS.showApplications:window.SAS_PORTAL_EXTRAS.showUpdates;
+       void task({api:api,user:state.user,profile:state.profile,polls:state.polls,target:document.getElementById("sas-portal-hub")}).catch(fail);
+       return;
+     }
+     if(state.page==="overlord"){mount(overlordPage());void overlordRefresh();return;}
+    if(state.page==="map"&&window.SAS_SHOP_PLAN){mount('<div id="sas-school-shop-plan"></div>');window.SAS_SHOP_PLAN.show({api:api,user:state.user,profile:state.profile,focusRoom:window.SAS_MAP_FOCUS_CODE||"",target:document.getElementById("sas-school-shop-plan")}).catch(fail);window.SAS_MAP_FOCUS_CODE="";return;}
     if(state.page==="guestvisa"&&window.SAS_PUBLIC_VISA){mount('<div id="sas-guest-visa-admin"></div>');window.SAS_PUBLIC_VISA.showAdmin(api,document.getElementById("sas-guest-visa-admin")).catch(fail);return;}
     if(state.page==="roles"&&window.SAS_SCHOOL_ROLES){
       if(!allowed("roles")){state.page="home";mount(dashboard());return;}
@@ -364,7 +375,7 @@
     }
     if(window.SAS_FEATURES&&window.SAS_FEATURES.pages[state.page]){
       mount('<div id="sas-live-module" role="region" aria-label="'+esc(window.SAS_FEATURES.pages[state.page])+'"></div>');
-      window.SAS_FEATURES.show({api:api,user:state.user,profile:state.profile,schoolRoles:state.schoolRoles,page:state.page,target:document.getElementById("sas-live-module"),navigate:navigate}).catch(fail);
+      window.SAS_FEATURES.show({api:api,user:state.user,profile:state.profile,schoolRoles:state.schoolRoles,page:state.page,prefillRoomId:state.page==="rooms"?window.SAS_PREFILL_ROOM||null:null,target:document.getElementById("sas-live-module"),navigate:navigate}).catch(fail);if(state.page==="rooms")window.SAS_PREFILL_ROOM=null;
       return;
     }
     if(!allowed(state.page))state.page="home";
@@ -591,7 +602,7 @@
     var target=e.target.closest("[data-nav],[data-action]");
     if(!target)return;
     e.preventDefault();
-    if(target.dataset.nav)void navigate(target.dataset.nav);
+    if(target.dataset.nav){if(target.dataset.roomSearch)window.SAS_MAP_FOCUS_CODE=target.dataset.roomSearch;void navigate(target.dataset.nav);}
     else void action(target.dataset.action,target.dataset.pollId);
   });
   root.addEventListener("submit",function(e){e.preventDefault();if(e.target.id==="guest-visa-form"&&window.SAS_PUBLIC_VISA){void window.SAS_PUBLIC_VISA.submit(api,e.target);return;}void handleForm(e.target);});
@@ -599,13 +610,29 @@
     state.editing=true;
     if(e.target.id==="scan-file"&&e.target.files&&e.target.files[0])void scanFile(e.target.files[0]).catch(fail);
   });
-  root.addEventListener("input",function(e){
+  var portalSearchSeq=0,portalSearchTimer=null;
+   root.addEventListener("input",function(e){
     if(e.target.id!=="module-query"){state.editing=true;return;}
     var q=e.target.value.trim().toLocaleLowerCase("de");
     var dialog=document.getElementById("portal-search"),count=0;
     dialog.querySelectorAll("[data-module-search]").forEach(function(el){el.hidden=!el.dataset.moduleSearch.includes(q);if(!el.hidden)count++;});
     dialog.querySelectorAll("[data-module-group]").forEach(function(el){el.hidden=!Array.from(el.querySelectorAll("[data-module-search]")).some(function(t){return !t.hidden;});});
     dialog.querySelector(".search-empty").hidden=count>0;
+     var results=dialog.querySelector("#sas-global-results");
+     if(!results||!window.SAS_PORTAL_EXTRAS||!state.user)return;
+     var ticket=++portalSearchSeq;clearTimeout(portalSearchTimer);
+     if(q.length<2){results.hidden=true;results.innerHTML="";return;}
+     results.hidden=false;results.innerHTML='<h3>Räume, Shops, Veranstaltungen und Beiträge</h3><p class="sas-hub-note">Suche läuft …</p>';
+     portalSearchTimer=setTimeout(async function(){
+       try{
+         var items=await window.SAS_PORTAL_EXTRAS.search({api:api},q);
+         if(ticket!==portalSearchSeq||!results.isConnected||!dialog.open)return;
+         results.innerHTML='<h3>Direkte Treffer</h3>'+(items.length?items.map(function(x){
+           return '<button type="button" class="sas-global-result" data-nav="'+esc(x.page)+'"'+(x.focus?' data-room-search="'+esc(x.focus)+'"':'')+
+           '><strong>'+esc(x.title)+'</strong><small>'+esc(x.category+' · '+(x.detail||"Öffnen"))+'</small></button>';
+         }).join(""):'<p class="sas-hub-note">Keine passenden Einträge gefunden.</p>');
+       }catch(e){if(ticket===portalSearchSeq&&results.isConnected)results.innerHTML='<p class="sas-hub-note">Die direkte Suche ist vorübergehend nicht verfügbar.</p>';}
+     },250);
   });
   window.addEventListener("hashchange",function(){
     var hash=location.hash;

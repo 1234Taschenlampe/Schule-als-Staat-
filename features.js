@@ -110,9 +110,9 @@ placesForm(kind||"room",kind?"Geschäft hinzufügen":"Raum oder Ort hinzufügen"
 function renderRooms(){
 const places=related.filter(p=>p.kind==="room"&&p.active);
 const visible=data;
-return wrap(current,'<div class="sas-columns">'+box("Raum reservieren",
+return wrap(current,'<div class="sas-columns">'+box("Raum zeitlich reservieren",
 places.length?form("booking",
-'<label class="sas-field"><span>Raum</span><select name="place_id">'+places.map(p=>'<option value="'+escapeAttr(p.id)+'">'+escapeHtml(p.name+' · '+p.floor_label)+'</option>').join("")+'</select></label>'
+'<label class="sas-field"><span>Raum</span><select name="place_id">'+places.map(p=>'<option value="'+escapeAttr(p.id)+'"'+(ctx?.prefillRoomId===p.id?' selected':'')+'>'+escapeHtml(p.name+' · '+p.floor_label)+'</option>').join("")+'</select></label>'
 +input("Beginn","starts_at","datetime-local")+input("Ende","ends_at","datetime-local")+input("Zweck","purpose","text",'minlength="3" maxlength="180"'),
 "Reservierung beantragen"):empt("Noch keine Räume angelegt. Die Administration kann sie unten einrichten."))+
 box(admin()?"Alle Reservierungen":"Meine Reservierungen und genehmigte Belegungen",

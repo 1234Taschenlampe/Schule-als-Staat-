@@ -2,7 +2,7 @@
 (function(){
 "use strict";
 var PDF="https://www.rng-wangen.de/wp-content/uploads/2024/07/230625_digitaler-uebersichtsplan.pdf";
-var root,api,userId,admin,rooms=[],selected="",chosen=0,query="",busy=false,currentPage=4,currentBuilding="",pdfDocumentPromise=null,paintRun=0,mapZoom=1,lastDrawnPage=0;
+var root,api,userId,admin,rooms=[],selected="",chosen=0,query="",busy=false,currentPage=4,currentBuilding="",pdfDocumentPromise=null,paintRun=0,mapZoom=1,lastDrawnPage=0,mapFilter="all";
 function esc(v){return String(v==null?"":v).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
 function slot(room,n){return (room.slots||[]).find(function(x){return x.number===n;});}
 function msg(s,error){var t=root&&root.querySelector("#shop-map-msg");if(t){t.textContent=s;t.className="sas-shopmap-msg"+(error?" err":"");}}
@@ -30,7 +30,7 @@ function roomDetails(){
  }
  var discrepancy=room.name==="D102"?'<p class="sas-shopmap-anomaly" role="note">Der offizielle Raumindex nennt D102, die Zeichnung an der mutmaßlichen Stelle jedoch D105. Die Position von D102 konnte deshalb nicht zweifelsfrei bestätigt werden. Bitte vor der Nutzung mit der Schule abgleichen.</p>':"";
  var form=chosen&&!slot(room,chosen)?'<form id="sas-shopmap-apply" class="sas-shopmap-form"><h3>Platz '+chosen+' in '+esc(room.name)+' reservieren</h3><label>Shop-Name <input name="name" required minlength="3" maxlength="100" placeholder="z. B. Waffelstand"></label><label>Beschreibung <textarea name="description" maxlength="450" rows="3"></textarea></label><div><button type="submit">Anfrage senden</button><button type="button" data-close>Abbrechen</button></div><p>Der Platz bleibt bis zur Entscheidung der Administration reserviert. Ein Shop wird erst nach Genehmigung angelegt.</p></form>':"";
- return '<div class="sas-shopmap-selected-title"><div><h3>Raum '+esc(room.name)+'</h3><p>'+esc(room.floor||"")+(room.detail?" · "+esc(room.detail):"")+'</p></div><b>'+(4-(room.slots||[]).length)+' frei</b></div>'+discrepancy+'<div class="sas-shopmap-slots">'+[1,2,3,4].map(function(n){return cell(room,n);}).join("")+'</div>'+form;
+ return '<div class="sas-shopmap-selected-title"><div><h3>Raum '+esc(room.name)+'</h3><p>'+esc(room.floor||"")+(room.detail?" · "+esc(room.detail):"")+'</p></div><b>'+(4-(room.slots||[]).length)+' frei</b></div>'+discrepancy+'<div class="sas-shopmap-slots">'+[1,2,3,4].map(function(n){return cell(room,n);}).join("")+'</div>'+form+'<div class="sas-shopmap-linked"><p>Zusätzlich kannst du den Raum für einen bestimmten Zeitraum anfragen. Das ist unabhängig von den Shop-Plätzen.</p><button type="button" data-nav="rooms" data-book-room="'+esc(room.id)+'">Raum zeitlich reservieren</button></div>';
 }
 function adminForm(){return !admin?"":'<details class="sas-shopmap-admin"><summary>Klassenzimmer anhand des offiziellen Plans freigeben</summary><p>Bitte nur Räume eintragen, deren Nummer und Nutzung von der Schule bestätigt wurden.</p><form id="sas-shopmap-roomform" class="sas-shopmap-form"><div class="sas-shopmap-fields"><label>Raumnummer<input name="room" maxlength="20" required placeholder="z. B. A003"></label><label>Gebäude / Stockwerk<input name="floor" maxlength="40" required placeholder="Gebäude A · EG"></label><label>PDF-Seite (optional)<input type="number" min="1" max="40" name="page" placeholder="1"></label></div><label>Beschreibung (optional)<input name="detail" maxlength="500"></label><button type="submit">Raum mit vier Shop-Plätzen freigeben</button></form></details>';}
 
@@ -84,7 +84,7 @@ function mapPins(){
   }).join("");
  }
  return pageRooms(currentPage).filter(function(r){
-  return (!currentBuilding||r.name.startsWith(currentBuilding))&&r.x_percent!==null&&r.y_percent!==null&&
+  return (mapFilter==="all"||r.bookable!==false)&&(!currentBuilding||r.name.startsWith(currentBuilding))&&r.x_percent!==null&&r.y_percent!==null&&
    Number.isFinite(Number(r.x_percent))&&Number.isFinite(Number(r.y_percent));
  }).map(function(r){
   var x=Math.max(1,Math.min(99,Number(r.x_percent))),y=Math.max(1,Math.min(99,Number(r.y_percent)));
@@ -105,7 +105,10 @@ function floorNavigation(){
   var count=pageRooms(p[0]).filter(function(r){return !currentBuilding||r.name.startsWith(currentBuilding);}).length;
   return '<button type="button" data-page="'+p[0]+'" class="'+(p[0]===currentPage?'active':'')+'"'+(p[0]===currentPage?' aria-current="page"':'')+'>'+esc(p[1])+(count?' <small>'+count+' Räume</small>':'')+'</button>';
  }).join("")+'</nav>';
- return buildings+floors;
+ var filter='<div class="sas-shopmap-roomfilter" role="group" aria-label="Markierungen filtern"><span>Im Plan anzeigen:</span>'+
+  '<button type="button" data-map-filter="all" aria-pressed="'+(mapFilter==="all")+'">Alle Räume</button>'+
+  '<button type="button" data-map-filter="bookable" aria-pressed="'+(mapFilter==="bookable")+'">Nur Shopräume</button></div>';
+ return buildings+floors+filter;
 }
 async function paintPdf(){
  var targetCanvas=root&&root.querySelector("#rng-floorplan-canvas");
@@ -198,7 +201,7 @@ async function addRoom(form){if(!admin)throw Error("Nicht berechtigt.");
  var result=await api.from("school_places").insert({name:name,kind:"room",floor_label:floor,detail:detail,active:true,classroom_shop_enabled:true,plan_page:page}).select("id").single();
  if(result.error)throw result.error;selected=result.data.id;chosen=0;await refresh("Raum mit vier Shop-Plätzen angelegt.");
 }
-async function show(context){root=context.target;api=context.api;userId=context.user.id;admin=context.profile&&context.profile.role==="admin";rooms=[];selected="";chosen=0;query="";busy=false;currentPage=4;currentBuilding="";pdfDocumentPromise=null;paintRun=0;mapZoom=window.matchMedia&&window.matchMedia("(max-width:650px)").matches?1.7:1;lastDrawnPage=0;
+async function show(context){root=context.target;api=context.api;userId=context.user.id;admin=context.profile&&context.profile.role==="admin";rooms=[];selected="";chosen=0;query="";busy=false;currentPage=4;currentBuilding="";pdfDocumentPromise=null;paintRun=0;mapZoom=window.matchMedia&&window.matchMedia("(max-width:650px)").matches?1.7:1;lastDrawnPage=0;mapFilter="all";
  root.addEventListener("input",function(e){
  if(e.target.id!=="sas-shopmap-search")return;
  query=e.target.value.trim().toLowerCase();
@@ -206,6 +209,8 @@ async function show(context){root=context.target;api=context.api;userId=context.
  if(list)list.innerHTML=items.length?items.map(roomButton).join(""):'<p class="sas-shopmap-empty">Kein passender Klassenraum gefunden.</p>';
 });
  root.addEventListener("click",function(e){var b=e.target.closest("button");if(!b||busy)return;
+ if(b.dataset.bookRoom){window.SAS_PREFILL_ROOM=b.dataset.bookRoom;return;}
+ if(b.dataset.mapFilter){mapFilter=b.dataset.mapFilter==="bookable"?"bookable":"all";draw();return;}
  if(b.dataset.mapZoom){
    mapZoom=b.dataset.mapZoom==="fit"?1:Math.max(1,Math.min(3,Math.round((mapZoom+(b.dataset.mapZoom==="in"?.25:-.25))*100)/100));
    var h=root.querySelector("#rng-plan-holder"),z=root.querySelector("#rng-zoom-label");
@@ -237,7 +242,22 @@ async function show(context){root=context.target;api=context.api;userId=context.
  });
  root.addEventListener("submit",function(e){var form=e.target;if(form.id!=="sas-shopmap-apply"&&form.id!=="sas-shopmap-roomform")return;e.preventDefault();e.stopPropagation();if(busy)return;void execute(function(){return form.id==="sas-shopmap-apply"?apply(form):addRoom(form);});});
  root.innerHTML='<p class="sas-shopmap-loading">Schulplan und Shopbuchungen laden …</p>';
- try{await refresh();}catch(e){root.innerHTML='<div class="sas-shopmap-error"><h2>Schulplan momentan nicht verfügbar</h2><p>'+esc(e.message||e)+'</p><a target="_blank" rel="noopener noreferrer" href="'+PDF+'">Offizielles PDF öffnen ↗</a></div>';}
+ try{
+  await refresh();
+  if(context.focusRoom){
+   var wanted=String(context.focusRoom).trim().toUpperCase();
+   var focus=allRooms().find(function(r){return r.name.toUpperCase()===wanted;});
+   if(focus){selected=focus.id;currentPage=Number(focus.plan_page)||4;currentBuilding=focus.name.charAt(0);query="";}
+   else query=wanted.toLowerCase();
+   draw();
+  }
+ }catch(e){root.innerHTML='<div class="sas-shopmap-error"><h2>Schulplan momentan nicht verfügbar</h2><p>'+esc(e.message||e)+'</p><a target="_blank" rel="noopener noreferrer" href="'+PDF+'">Offizielles PDF öffnen ↗</a></div>';}
 }
-window.SAS_SHOP_PLAN={show:show};
+function knownRooms(term){
+ var key=String(term||"").trim().toLowerCase();
+ if(key.length<2)return [];
+ return EXTRA_ROOMS.filter(function(r){return r.name.toLowerCase().includes(key)||r.detail.toLowerCase().includes(key);})
+  .slice(0,8).map(function(r){return {name:r.name,floor:r.floor};});
+}
+window.SAS_SHOP_PLAN={show:show,knownRooms:knownRooms};
 })();

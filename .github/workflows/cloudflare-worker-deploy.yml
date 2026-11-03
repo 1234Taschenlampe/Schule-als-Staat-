@@ -1,0 +1,52 @@
+name: Deploy tested school portal to existing Cloudflare Worker
+
+on:
+  workflow_run:
+    workflows: ["V4 source checks"]
+    types: [completed]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: school-portal-cloudflare
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.event == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Recheck source and Worker snapshot
+        run: |
+          node --check app.js
+          node --check features.js
+          node --check portal-extras.js
+          node --check public-visa.js
+          node --check scripts/deploy-worker-safe.mjs
+          node --test tests/portal-extras.mjs
+          node --test tests/rng-hotspots.mjs
+          sh scripts/build-static.sh
+          node scripts/build-worker.mjs
+          node --check dist/schule-als-staat-worker.js
+      - name: Update existing Worker assets only (zero-cost)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "::notice::Cloudflare auto deployment not activated: account ID and API token secrets are not configured."
+            exit 0
+          fi
+          node scripts/deploy-worker-safe.mjs
