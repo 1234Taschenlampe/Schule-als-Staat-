@@ -14,3 +14,31 @@ _site/
 **/zugangsblaetter-vertraulich.pdf
 **/schuelerliste*.xlsx
 **/schuelerliste*.xls
+
+# Streng vertraulich: Schüler-, Lehrkräfte- und Personallisten, Namen und Zugangsdaten
+# Keine Echtdaten, auch nicht in einem privaten Branch oder PR.
+*.xlsx
+*.xls
+*.csv
+*.tsv
+*.docx
+*.pdf
+**/*vertraulich*
+**/*private*
+**/*zugangsdaten*
+**/*zugangsliste*
+**/*zugangszettel*
+**/*passwortliste*
+**/*passwoerter*
+**/*lehrerliste*
+**/*lehrkraefte*
+**/*personalzugang*
+**/*schuelerzugang*
+**/*schuelerliste*
+**/*citizens*.json
+**/*roster*.json
+**/*import-991*.json
+**/*credentials*.json
+**/*passwords*.json
+**/private-data/
+**/secret-data/
