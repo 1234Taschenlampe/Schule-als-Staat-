@@ -644,7 +644,7 @@
     var data=new FormData(form), submit=form.querySelector('[type="submit"]');
     if(submit)submit.disabled=true;
     try{
-      if(form.dataset.action==="review-data-deletion"){
+      if(form.dataset?.action==="review-data-deletion"){
         await rpc("admin_review_school_deletion_request",{p_user_id:String(data.get("user_id")||"")});
         await fetchData();render();showToast("Löschantrag in Prüfung.");return;
       }
