@@ -42,13 +42,32 @@ function draw(){const el=host.querySelector("#cardshop-preview");if(!el||!pixels
  const ctx=el.getContext("2d"),frame=ctx.createImageData(W,H);
  for(let i=0;i<pixels.length;i++){const color=colors[pixels[i]]||"#ffffff";frame.data[4*i]=parseInt(color.slice(1,3),16);frame.data[4*i+1]=parseInt(color.slice(3,5),16);frame.data[4*i+2]=parseInt(color.slice(5,7),16);frame.data[4*i+3]=pixels[i]===255?0:255;}
  ctx.putImageData(frame,0,0);
- const stage=host.querySelector("#cardshop-stage");stage.onpointermove=e=>{if(e.pointerType==="touch")return;const r=stage.getBoundingClientRect();el.style.transform="rotateY("+((.5-(e.clientX-r.left)/r.width)*12)+"deg) rotateX("+(((e.clientY-r.top)/r.height-.5)*10)+"deg)";};
- stage.onpointerleave=()=>{el.style.transform="rotateY(-5deg) rotateX(4deg)";};
+ const stage=host.querySelector("#cardshop-stage"),object=stage?.querySelector(".sas-cardshop-object");
+ if(!stage||!object)return;
+ let angleX=-5,angleY=-8,drag=null;
+ const rotate=()=>{object.style.transform="rotateX("+angleX+"deg) rotateY("+angleY+"deg)";};
+ rotate();
+ stage.onpointerdown=e=>{
+  if(e.button!==0)return;
+  drag={id:e.pointerId,x:e.clientX,y:e.clientY,baseX:angleX,baseY:angleY};
+  stage.setPointerCapture(e.pointerId);stage.classList.add("is-dragging");
+ };
+ stage.onpointermove=e=>{
+  if(!drag||drag.id!==e.pointerId)return;
+  angleY=drag.baseY+(e.clientX-drag.x)*0.8;
+  angleX=Math.max(-40,Math.min(40,drag.baseX-(e.clientY-drag.y)*0.5));
+  rotate();
+ };
+ const release=e=>{if(drag&&drag.id===e.pointerId){drag=null;stage.classList.remove("is-dragging");}};
+ stage.onpointerup=release;stage.onpointercancel=release;
+ const turn=host.querySelector("#cardshop-turn");
+ if(turn)turn.onclick=()=>{angleY+=180;rotate();};
+
 }
 function html(){
  const admin=profile.role==="admin",st=info?.status;
  const list=admin?'<section class="sas-panel"><h2>Druckaufträge · Administration</h2><form id="cardshop-find" class="sas-form"><label class="sas-field">Bürgerkennung<input name="login" required placeholder="SAS-XXXXXXXXXX" pattern="SAS-[A-Z2-9]{10}"></label><button class="sas-btn soft">Ausweis laden</button></form><div class="sas-list">'+(orders.length?orders.map(o=>'<div class="sas-item"><strong>'+esc(o.login_id)+'</strong> · '+esc(o.class_label)+' · '+esc(labels[o.status]||o.status)+' <button class="sas-btn soft" data-card-open="'+esc(o.login_id)+'">Laden</button> <select data-card-state="'+esc(o.login_id)+'" aria-label="Auftragsstatus">'+Object.keys(labels).map(k=>'<option value="'+k+'"'+(o.status===k?" selected":"")+'>'+labels[k]+'</option>').join("")+'</select></div>').join(""):'<p class="sas-note">Noch keine Vormerkungen.</p>')+'</div></section>':"";
- host.innerHTML='<div class="sas-space sas-cardshop"><div class="sas-heading"><div><span class="sas-kicker">SCHULE ALS STAAT · AUSWEIS-SHOP</span><h1>3D-Schülerausweis</h1><p>Wie dein digitaler Ausweis – drei glatte Schichten in Kreditkartengröße.</p></div></div><div class="sas-columns"><section class="sas-panel"><h2>Drehbare 3D-Vorschau</h2><div class="sas-cardshop-stage" id="cardshop-stage"><canvas role="img" aria-label="Vorschau der zweifarbigen 3D-Karte" id="cardshop-preview"></canvas></div><p class="sas-note">85,6 × 54 mm · 3 × 0,2 mm = 0,6 mm · Hellblau, Weiß, Schwarz · völlig bündig</p><p class="sas-note">Offizieller Name, Klasse, Bürgerkennung und ein kurzer, dauerhaft gültiger QR-Code. Der frühere längere QR-Code bleibt ebenfalls gültig.</p></section><section class="sas-panel"><h2>'+(admin?'Druckfertigung':'Mein physischer Ausweis')+'</h2><p><strong>'+esc(info?.name||"Bürgerkennung auswählen")+'</strong> · '+esc(info?.class_label||"Administration")+'</p><p class="sas-note">Status: '+esc(labels[st]||"Noch nicht vorgemerkt")+'</p><p class="sas-note">Der Preis steht noch nicht fest. Die Vormerkung ist kostenlos und unverbindlich. Es wird nichts abgebucht.</p>'+
+ host.innerHTML='<div class="sas-space sas-cardshop"><div class="sas-heading"><div><span class="sas-kicker">SCHULE ALS STAAT · AUSWEIS-SHOP</span><h1>3D-Schülerausweis</h1><p>Wie dein digitaler Ausweis – drei glatte Schichten in Kreditkartengröße.</p></div></div><div class="sas-columns"><section class="sas-panel"><h2>Drehbare 3D-Vorschau</h2><div class="sas-cardshop-stage" id="cardshop-stage" tabindex="0" aria-label="Ausweis mit dem Finger oder der Maus drehen"><div class="sas-cardshop-object"><canvas class="sas-cardshop-front" role="img" aria-label="Vorderseite der zweifarbigen 3D-Karte" id="cardshop-preview"></canvas><div class="sas-cardshop-back" aria-hidden="true"><strong>Schule als Staat</strong><small>Projektwoche 12.–16. Juli 2027</small></div></div></div><div class="sas-cardshop-controls"><button type="button" class="sas-btn soft" id="cardshop-turn">Karte wenden</button><span class="sas-note">Mit dem Finger oder der Maus drehen.</span></div><p class="sas-note">85,6 × 54 mm · exakt 3 × 0,2 mm = 0,6 mm · Hellblau und Dunkelblau · völlig bündig</p><p class="sas-note">Offizieller Name, Klasse, Bürgerkennung und ein kurzer, dauerhaft gültiger QR-Code. Der frühere längere QR-Code bleibt ebenfalls gültig.</p></section><section class="sas-panel"><h2>'+(admin?'Druckfertigung':'Mein physischer Ausweis')+'</h2><p><strong>'+esc(info?.name||"Bürgerkennung auswählen")+'</strong> · '+esc(info?.class_label||"Administration")+'</p><p class="sas-note">Status: '+esc(labels[st]||"Noch nicht vorgemerkt")+'</p><p class="sas-note">Der Preis steht noch nicht fest. Die Vormerkung ist kostenlos und unverbindlich. Es wird nichts abgebucht.</p>'+
  (!admin&&(!st||st==="storniert")?'<button type="button" class="sas-btn primary" id="cardshop-request">Ausweis unverbindlich vormerken</button>':"")+
  (!admin&&st==="vorgemerkt"?'<button type="button" class="sas-btn soft" id="cardshop-cancel">Vormerkung stornieren</button>':"")+
  (admin&&info?'<h3>Druckdatei</h3><p class="sas-note">Erst QR-Code digital prüfen, dann die zweifarbige 3MF herunterladen. Vor Serienproduktion eine reale Karte scannen.</p><button type="button" class="sas-btn soft" id="cardshop-check">QR digital prüfen</button> <button type="button" class="sas-btn primary" id="cardshop-export" '+(verified?"":"disabled")+'>3MF exportieren</button>':"")+
