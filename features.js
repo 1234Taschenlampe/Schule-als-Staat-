@@ -101,7 +101,8 @@ let kind=current==="shops"?"shop":null;
 let entries=kind?data.filter(p=>p.kind===kind):data;
 let withCoordinates=entries.filter(p=>p.x_percent!==null&&p.y_percent!==null);
 return wrap(current,
- (current==="shops"?box("SaS-Ausweis-Shop",'<p class="sas-note">Deinen persönlichen Schülerausweis als dreifarbige, flache 3D-Karte vormerken.</p>'+linkPage("3D-Schülerausweis bestellen","cardshop")):"")+
+ (current==="shops"?box("SaS-Ausweis-Shop",'<p class="sas-note">Deinen persönlichen Schülerausweis als zweifarbige, flache 3D-Karte vormerken.</p>'+linkPage("3D-Schülerausweis bestellen","cardshop")):"")+
+ (current==="shops"&&admin()?box("SaS Android-App · Admin-Vorschau",'<p class="sas-note">Native Android-Testapp mit geschütztem SaS-Login, QR-Kamera und Dateiauswahl. NFC-Zahlungen sind noch nicht freigeschaltet.</p><a class="sas-btn soft" target="_blank" rel="noopener noreferrer" href="https://github.com/1234Taschenlampe/Schule-als-Staat-/actions/workflows/android-app.yml">Android-APK herunterladen (GitHub Actions)</a>'):"")+
  (current==="map"?box("Interaktiver Schulplan",
  withCoordinates.length?'<div class="sas-plan"><div class="sas-plan-caption">Positionen wurden von der Administration hinterlegt · Lageplan nicht maßstabsgetreu</div>'+withCoordinates.map(p=>'<button data-feature-action="place-show" data-id="'+escapeAttr(p.id)+'" class="sas-pin" style="left:'+Number(p.x_percent)+'%;top:'+Number(p.y_percent)+'%" title="'+escapeAttr(p.name)+'">'+escapeHtml(p.name.slice(0,18))+'</button>').join("")+'</div>':empt("Noch keine Orte mit echten Positionen eingetragen. Die Schuladministration kann sie unten ergänzen.")) : "")+
 '<div class="sas-columns">'+box(kind?"Geschäfte und Kassen":"Orte im Schulgebäude",
