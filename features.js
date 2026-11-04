@@ -58,7 +58,7 @@ return wrap(current,
  +form("card",input("Name auf der Karte","display_name","text",'minlength="2" maxlength="80" value="'+escapeAttr(name)+'" '+(identityLocked?"readonly":""))
   +input("Klasse","class_label","text",'maxlength="24" value="'+escapeAttr(c?.class_label||"")+'" '+(identityLocked?"readonly":""))
   +'<label class="sas-field"><span>Ausweisdesign</span><select name="design">'+["classic","blue","forest","mono","custom"].map(v=>'<option value="'+v+'"'+((v==='custom'?design.startsWith('custom:'):v===design)?' selected':'')+'>'+({"classic":"Klassisch","blue":"Blau","forest":"Grün","mono":"Monochrom","custom":"Eigene Farbe"}[v])+'</option>').join("")+'</select></label><label class="sas-field"><span>Eigene Farbe</span><span class="sas-color-control"><input type="color" name="color" value="'+escapeAttr(/^custom:#[0-9a-fA-F]{6}$/.test(design)?design.slice(7):"#4c8c69")+'"><span>Gold- und Silber-Sonderdesigns sind für normale Bürger gesperrt.</span></span></label>',"Ausweis speichern")),
- headerActions(linkPage("Design-Galerie","gallery"))+
+ headerActions(linkPage("Design-Galerie","gallery")+linkPage("3D-Ausweis bestellen","cardshop"))+
  box("Schülerausweis verwenden",'<p class="sas-note">Für die Anwesenheitskontrolle und Guthabenausgabe bleiben eigene QR-Funktionen erhalten. Eine separate QR-Schulverifizierung ist nicht mehr vorgesehen.</p><div class="verify-qr-actions">'+btn("Anwesenheit zeigen","id-attendance-qr")+btn("Ausweis für Guthaben zeigen","id-credit-qr")+'</div><div id="student-id-qr-code" class="verify-qr-wrap" aria-live="polite"><span class="sas-note">Wähle eine QR-Funktion.</span></div>'+msg("Die Verwendung der Funktionen erfordert weiterhin die jeweiligen Berechtigungen.")));
 }
 function renderGallery(){
@@ -101,6 +101,7 @@ let kind=current==="shops"?"shop":null;
 let entries=kind?data.filter(p=>p.kind===kind):data;
 let withCoordinates=entries.filter(p=>p.x_percent!==null&&p.y_percent!==null);
 return wrap(current,
+ (current==="shops"?box("SaS-Ausweis-Shop",'<p class="sas-note">Deinen persönlichen Schülerausweis als dreifarbige, flache 3D-Karte vormerken.</p>'+linkPage("3D-Schülerausweis bestellen","cardshop")):""),
  current==="map"?box("Interaktiver Schulplan",
  withCoordinates.length?'<div class="sas-plan"><div class="sas-plan-caption">Positionen wurden von der Administration hinterlegt · Lageplan nicht maßstabsgetreu</div>'+withCoordinates.map(p=>'<button data-feature-action="place-show" data-id="'+escapeAttr(p.id)+'" class="sas-pin" style="left:'+Number(p.x_percent)+'%;top:'+Number(p.y_percent)+'%" title="'+escapeAttr(p.name)+'">'+escapeHtml(p.name.slice(0,18))+'</button>').join("")+'</div>':empt("Noch keine Orte mit echten Positionen eingetragen. Die Schuladministration kann sie unten ergänzen.")) : "",
 '<div class="sas-columns">'+box(kind?"Geschäfte und Kassen":"Orte im Schulgebäude",
@@ -223,7 +224,7 @@ await query(api.from('job_applications').insert({job_id:v('job_id'),applicant_id
 }}
 async function handle(action,id){
 const api=ctx.api,u=ctx.user.id;
-if(action==="navigate"){if(!pages[id]&&!["wallet","pay","register","votes"].includes(id))throw Error("Seite unbekannt.");await ctx.navigate(id);return;}
+if(action==="navigate"){if(!pages[id]&&!["wallet","pay","register","votes","cardshop"].includes(id))throw Error("Seite unbekannt.");await ctx.navigate(id);return;}
 if(action==="reload"){await refresh();return;}
 if(action==="id-attendance-qr"||action==="id-credit-qr"){
  const rpcName=action==="id-credit-qr"?"my_student_card_code":"create_attendance_pass";
