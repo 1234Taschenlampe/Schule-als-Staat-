@@ -104,10 +104,13 @@ async function export3MF(){
 }
 async function verify(){
  if(!window.Html5Qrcode)throw Error("QR-Prüfbibliothek fehlt.");
- // Decode the QR matrix independently via the existing reader before export.
- const size=(qr.length+8)*8,c=document.createElement("canvas");c.width=size;c.height=size;
- const g=c.getContext("2d");g.fillStyle="#fff";g.fillRect(0,0,size,size);g.fillStyle=colors[2];
- for(let y=0;y<qr.length;y++)for(let x=0;x<qr.length;x++)if(qr[y][x])g.fillRect((x+4)*8,(y+4)*8,8,8);
+ // Decode the actual two-colour card pixels, including the quiet zone, not an ideal QR re-render.
+ const n=qr.length,q=(n+8)*2,x=W-q-8,y=H-q-13;
+ const source=host.querySelector("#cardshop-preview");
+ if(!source)throw Error("Druckvorschau fehlt.");
+ const c=document.createElement("canvas");c.width=q*8;c.height=q*8;
+ const g=c.getContext("2d");g.imageSmoothingEnabled=false;
+ g.drawImage(source,x,y,q,q,0,0,q*8,q*8);
  const b=await new Promise(ok=>c.toBlob(ok,"image/png"));if(!b)throw Error("QR-Bild fehlt.");
  const node=document.createElement("div");node.id="sas-print-qr-check";node.style.cssText="position:fixed;left:-9999px;width:300px;height:300px";document.body.append(node);
  const reader=new Html5Qrcode(node.id);
