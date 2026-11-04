@@ -33,7 +33,7 @@ function makePixels(){
  const d=g.getImageData(0,0,W,H).data;for(let i=0;i<a.length;i++)if(a[i]===0&&d[4*i+3]>104)a[i]=2;
  return a;
 }
-function draw(){const el=host.querySelector("#cardshop-preview");if(!el)return;el.width=W;el.height=H;
+function draw(){const el=host.querySelector("#cardshop-preview");if(!el||!pixels)return;el.width=W;el.height=H;
  const ctx=el.getContext("2d"),frame=ctx.createImageData(W,H);
  for(let i=0;i<pixels.length;i++){const color=colors[pixels[i]]||"#ffffff";frame.data[4*i]=parseInt(color.slice(1,3),16);frame.data[4*i+1]=parseInt(color.slice(3,5),16);frame.data[4*i+2]=parseInt(color.slice(5,7),16);frame.data[4*i+3]=pixels[i]===255?0:255;}
  ctx.putImageData(frame,0,0);
@@ -41,12 +41,12 @@ function draw(){const el=host.querySelector("#cardshop-preview");if(!el)return;e
  stage.onpointerleave=()=>{el.style.transform="rotateY(-5deg) rotateX(4deg)";};
 }
 function html(){
- const admin=profile.role==="admin",st=info.status;
+ const admin=profile.role==="admin",st=info?.status;
  const list=admin?'<section class="sas-panel"><h2>Druckaufträge · Administration</h2><form id="cardshop-find" class="sas-form"><label class="sas-field">Bürgerkennung<input name="login" required placeholder="SAS-XXXXXXXXXX" pattern="SAS-[A-Z2-9]{10}"></label><button class="sas-btn soft">Ausweis laden</button></form><div class="sas-list">'+(orders.length?orders.map(o=>'<div class="sas-item"><strong>'+esc(o.login_id)+'</strong> · '+esc(o.class_label)+' · '+esc(labels[o.status]||o.status)+' <button class="sas-btn soft" data-card-open="'+esc(o.login_id)+'">Laden</button> <select data-card-state="'+esc(o.login_id)+'" aria-label="Auftragsstatus">'+Object.keys(labels).map(k=>'<option value="'+k+'"'+(o.status===k?" selected":"")+'>'+labels[k]+'</option>').join("")+'</select></div>').join(""):'<p class="sas-note">Noch keine Vormerkungen.</p>')+'</div></section>':"";
- host.innerHTML='<div class="sas-space sas-cardshop"><div class="sas-heading"><div><span class="sas-kicker">SCHULE ALS STAAT · AUSWEIS-SHOP</span><h1>3D-Schülerausweis</h1><p>Wie dein digitaler Ausweis – drei glatte Schichten in Kreditkartengröße.</p></div></div><div class="sas-columns"><section class="sas-panel"><h2>Drehbare 3D-Vorschau</h2><div class="sas-cardshop-stage" id="cardshop-stage"><canvas role="img" aria-label="Vorschau der dreifarbigen 3D-Karte" id="cardshop-preview"></canvas></div><p class="sas-note">85,6 × 54 mm · 3 × 0,2 mm = 0,6 mm · Hellblau, Weiß, Schwarz · völlig bündig</p><p class="sas-note">Offizieller Name, Klasse, Bürgerkennung und ein kurzer, dauerhaft gültiger QR-Code. Der frühere längere QR-Code bleibt ebenfalls gültig.</p></section><section class="sas-panel"><h2>Mein physischer Ausweis</h2><p><strong>'+esc(info.name)+'</strong> · '+esc(info.class_label)+'</p><p class="sas-note">Status: '+esc(labels[st]||"Noch nicht vorgemerkt")+'</p><p class="sas-note">Der Preis steht noch nicht fest. Die Vormerkung ist kostenlos und unverbindlich. Es wird nichts abgebucht.</p>'+
- (!st||st==="storniert"?'<button type="button" class="sas-btn primary" id="cardshop-request">Ausweis unverbindlich vormerken</button>':"")+
- (st==="vorgemerkt"?'<button type="button" class="sas-btn soft" id="cardshop-cancel">Vormerkung stornieren</button>':"")+
- (admin?'<h3>Druckdatei</h3><p class="sas-note">Erst QR-Code digital prüfen, dann die dreifarbige 3MF herunterladen. Vor Serienproduktion eine reale Karte scannen.</p><button type="button" class="sas-btn soft" id="cardshop-check">QR digital prüfen</button> <button type="button" class="sas-btn primary" id="cardshop-export" '+(verified?"":"disabled")+'>3MF exportieren</button>':"")+
+ host.innerHTML='<div class="sas-space sas-cardshop"><div class="sas-heading"><div><span class="sas-kicker">SCHULE ALS STAAT · AUSWEIS-SHOP</span><h1>3D-Schülerausweis</h1><p>Wie dein digitaler Ausweis – drei glatte Schichten in Kreditkartengröße.</p></div></div><div class="sas-columns"><section class="sas-panel"><h2>Drehbare 3D-Vorschau</h2><div class="sas-cardshop-stage" id="cardshop-stage"><canvas role="img" aria-label="Vorschau der dreifarbigen 3D-Karte" id="cardshop-preview"></canvas></div><p class="sas-note">85,6 × 54 mm · 3 × 0,2 mm = 0,6 mm · Hellblau, Weiß, Schwarz · völlig bündig</p><p class="sas-note">Offizieller Name, Klasse, Bürgerkennung und ein kurzer, dauerhaft gültiger QR-Code. Der frühere längere QR-Code bleibt ebenfalls gültig.</p></section><section class="sas-panel"><h2>'+(admin?'Druckfertigung':'Mein physischer Ausweis')+'</h2><p><strong>'+esc(info?.name||"Bürgerkennung auswählen")+'</strong> · '+esc(info?.class_label||"Administration")+'</p><p class="sas-note">Status: '+esc(labels[st]||"Noch nicht vorgemerkt")+'</p><p class="sas-note">Der Preis steht noch nicht fest. Die Vormerkung ist kostenlos und unverbindlich. Es wird nichts abgebucht.</p>'+
+ (!admin&&(!st||st==="storniert")?'<button type="button" class="sas-btn primary" id="cardshop-request">Ausweis unverbindlich vormerken</button>':"")+
+ (!admin&&st==="vorgemerkt"?'<button type="button" class="sas-btn soft" id="cardshop-cancel">Vormerkung stornieren</button>':"")+
+ (admin&&info?'<h3>Druckdatei</h3><p class="sas-note">Erst QR-Code digital prüfen, dann die dreifarbige 3MF herunterladen. Vor Serienproduktion eine reale Karte scannen.</p><button type="button" class="sas-btn soft" id="cardshop-check">QR digital prüfen</button> <button type="button" class="sas-btn primary" id="cardshop-export" '+(verified?"":"disabled")+'>3MF exportieren</button>':"")+
  '</section></div>'+list+'<p id="cardshop-message" class="sas-feedback" aria-live="polite" role="status"></p></div>';
  draw();
 }
@@ -92,7 +92,9 @@ async function verify(){
 }
 async function show(ctx){
  host=ctx.target;api=ctx.api;profile=ctx.profile;verified=false;orders=[];host.textContent="Ausweis-Shop lädt …";
- await refreshOrders();await load(await call("my_printed_card_data"));
+ await refreshOrders();
+ if(profile.role==="admin"){info=null;pixels=null;html();}
+ else await load(await call("my_printed_card_data"));
  if(host.dataset.boundCardshop)return;host.dataset.boundCardshop="true";
  host.addEventListener("click",async e=>{
   const b=e.target.closest("#cardshop-request,#cardshop-cancel,#cardshop-check,#cardshop-export,[data-card-open]");
@@ -112,7 +114,7 @@ async function show(ctx){
  });
  host.addEventListener("change",async e=>{
   const el=e.target.closest("[data-card-state]");if(!el)return;const old=orders.find(o=>o.login_id===el.dataset.cardState)?.status;
-  try{if(profile.role!=="admin")throw Error("Nur Admin.");await call("admin_printed_card_status",{p_login_id:el.dataset.cardState,p_status:el.value});await refreshOrders();if(info.login_id===el.dataset.cardState)info.status=el.value;html();message("Auftragsstatus geändert.");}
+  try{if(profile.role!=="admin")throw Error("Nur Admin.");await call("admin_printed_card_status",{p_login_id:el.dataset.cardState,p_status:el.value});await refreshOrders();if(info?.login_id===el.dataset.cardState)info.status=el.value;html();message("Auftragsstatus geändert.");}
   catch(err){el.value=old||"vorgemerkt";message(err.message||String(err),true);}
  });
 }
