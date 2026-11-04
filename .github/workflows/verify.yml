@@ -22,6 +22,8 @@ jobs:
         run: |
           node --check app.js
           node --check features.js
+          node --check physical-card-shop.js
+          node --test tests/physical-card-shop.mjs
           node --check shop-plan.js
           node --check portal-extras.js
           node --check scripts/deploy-worker-safe.mjs
@@ -53,6 +55,8 @@ jobs:
           test -s _site/styles.css
           test -s _site/features.js
           test -s _site/features.css
+          test -s _site/physical-card-shop.css
+          test -s _site/physical-card-shop.js
           test -s _site/shop-plan.js
           test -s _site/shop-plan.css
           test -s _site/mobile-ui.css
