@@ -770,7 +770,7 @@
   }
   root.addEventListener("click",function(e){
     var visibilityButton=e.target.closest("[data-password-toggle]");
-    if(visibilityButton&&root.contains(visibilityButton)){
+    if(visibilityButton&&visibilityButton.dataset&&visibilityButton.dataset.passwordToggle){
       e.preventDefault();
       var passwordInput=document.getElementById(visibilityButton.dataset.passwordToggle);
       if(!passwordInput||!visibilityButton.parentElement.contains(passwordInput))return;
