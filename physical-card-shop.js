@@ -1,7 +1,7 @@
 /* SaS: personal physical ID orders, 3-layer 3MF, no student data in source. */
 (function(){"use strict";
 const W=214,H=135,P=.4,labels={vorgemerkt:"Vorgemerkt",in_produktion:"In Produktion",fertig:"Abholbereit",ausgegeben:"Ausgegeben",storniert:"Storniert"};
-const colors=["#e3eeff","#ffffff","#152941"];
+const colors=["#e3eeff","#152941"];
 const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 let host,api,profile,info,qr,pixels,verified=false,orders=[];
 async function call(name,args={}){const r=await api.rpc(name,args);if(r.error)throw r.error;return r.data;}
@@ -20,17 +20,22 @@ function makePixels(){
  const a=new Uint8Array(W*H);for(let y=0;y<H;y++)for(let x=0;x<W;x++)a[y*W+x]=maskInside(x,y)?0:255;
  const n=qr.length,q=(n+8)*2,x=W-q-8,y=H-q-13;
  if(x<125||y<18)throw Error("QR-Code zu groß.");
- for(let j=0;j<q;j++)for(let i=0;i<q;i++)a[(y+j)*W+x+i]=1;
- for(let j=0;j<n;j++)for(let i=0;i<n;i++)if(qr[j][i])for(let yy=0;yy<2;yy++)for(let xx=0;xx<2;xx++)a[(y+(j+4)*2+yy)*W+x+(i+4)*2+xx]=2;
+ // Preserve a four-module light-blue quiet zone around the code.
+ for(let j=0;j<n;j++)for(let i=0;i<n;i++)if(qr[j][i])for(let yy=0;yy<2;yy++)for(let xx=0;xx<2;xx++)a[(y+(j+4)*2+yy)*W+x+(i+4)*2+xx]=1;
  const c=document.createElement("canvas");c.width=W;c.height=H;const g=c.getContext("2d",{willReadFrequently:true});
  g.fillStyle="#000";g.textBaseline="alphabetic";
  function text(s,px,py,size,bold,max){s=String(s||"");let z=size;g.font=(bold?"bold ":"")+z+"px Arial,sans-serif";while(g.measureText(s).width>max&&z>7){z-=.5;g.font=(bold?"bold ":"")+z+"px Arial,sans-serif";}if(g.measureText(s).width>max)throw Error("Beschriftung zu lang. Bitte vor dem Druck prüfen.");g.fillText(s,px,py);}
- text("SCHULE ALS STAAT",9,22,11,true,112);
- text("PERSONALAUSWEIS",9,32,7,false,112);
+ // Two-colour layout modeled after the official digital student card.
+ g.lineWidth=1.3;g.beginPath();g.arc(14,17,6.7,0,Math.PI*2);g.stroke();
+ text("S",11.1,20.5,9,true,7);
+ text("Schule als Staat",24,20,10,true,98);
+ text("PERSONALAUSWEIS",24,30,6,false,98);
+ text("MITGLIED · SCHULZUORDNUNG",9,56,6,false,118);
  text(info.name,9,76,12,true,x-17);
- text("KLASSE "+info.class_label,9,94,10,false,x-17);
- text(info.login_id,9,117,8,false,x-17);
- const d=g.getImageData(0,0,W,H).data;for(let i=0;i<a.length;i++)if(a[i]===0&&d[4*i+3]>104)a[i]=2;
+ text("KLASSE "+info.class_label,9,92,9,false,x-17);
+ text(info.login_id,9,112,7,false,x-17);
+ text("SCHULSTAAT 12.–16.07.2027",9,125,6,false,x-17);
+ const d=g.getImageData(0,0,W,H).data;for(let i=0;i<a.length;i++)if(a[i]===0&&d[4*i+3]>104)a[i]=1;
  return a;
 }
 function draw(){const el=host.querySelector("#cardshop-preview");if(!el||!pixels)return;el.width=W;el.height=H;
@@ -43,10 +48,10 @@ function draw(){const el=host.querySelector("#cardshop-preview");if(!el||!pixels
 function html(){
  const admin=profile.role==="admin",st=info?.status;
  const list=admin?'<section class="sas-panel"><h2>Druckaufträge · Administration</h2><form id="cardshop-find" class="sas-form"><label class="sas-field">Bürgerkennung<input name="login" required placeholder="SAS-XXXXXXXXXX" pattern="SAS-[A-Z2-9]{10}"></label><button class="sas-btn soft">Ausweis laden</button></form><div class="sas-list">'+(orders.length?orders.map(o=>'<div class="sas-item"><strong>'+esc(o.login_id)+'</strong> · '+esc(o.class_label)+' · '+esc(labels[o.status]||o.status)+' <button class="sas-btn soft" data-card-open="'+esc(o.login_id)+'">Laden</button> <select data-card-state="'+esc(o.login_id)+'" aria-label="Auftragsstatus">'+Object.keys(labels).map(k=>'<option value="'+k+'"'+(o.status===k?" selected":"")+'>'+labels[k]+'</option>').join("")+'</select></div>').join(""):'<p class="sas-note">Noch keine Vormerkungen.</p>')+'</div></section>':"";
- host.innerHTML='<div class="sas-space sas-cardshop"><div class="sas-heading"><div><span class="sas-kicker">SCHULE ALS STAAT · AUSWEIS-SHOP</span><h1>3D-Schülerausweis</h1><p>Wie dein digitaler Ausweis – drei glatte Schichten in Kreditkartengröße.</p></div></div><div class="sas-columns"><section class="sas-panel"><h2>Drehbare 3D-Vorschau</h2><div class="sas-cardshop-stage" id="cardshop-stage"><canvas role="img" aria-label="Vorschau der dreifarbigen 3D-Karte" id="cardshop-preview"></canvas></div><p class="sas-note">85,6 × 54 mm · 3 × 0,2 mm = 0,6 mm · Hellblau, Weiß, Schwarz · völlig bündig</p><p class="sas-note">Offizieller Name, Klasse, Bürgerkennung und ein kurzer, dauerhaft gültiger QR-Code. Der frühere längere QR-Code bleibt ebenfalls gültig.</p></section><section class="sas-panel"><h2>'+(admin?'Druckfertigung':'Mein physischer Ausweis')+'</h2><p><strong>'+esc(info?.name||"Bürgerkennung auswählen")+'</strong> · '+esc(info?.class_label||"Administration")+'</p><p class="sas-note">Status: '+esc(labels[st]||"Noch nicht vorgemerkt")+'</p><p class="sas-note">Der Preis steht noch nicht fest. Die Vormerkung ist kostenlos und unverbindlich. Es wird nichts abgebucht.</p>'+
+ host.innerHTML='<div class="sas-space sas-cardshop"><div class="sas-heading"><div><span class="sas-kicker">SCHULE ALS STAAT · AUSWEIS-SHOP</span><h1>3D-Schülerausweis</h1><p>Wie dein digitaler Ausweis – drei glatte Schichten in Kreditkartengröße.</p></div></div><div class="sas-columns"><section class="sas-panel"><h2>Drehbare 3D-Vorschau</h2><div class="sas-cardshop-stage" id="cardshop-stage"><canvas role="img" aria-label="Vorschau der zweifarbigen 3D-Karte" id="cardshop-preview"></canvas></div><p class="sas-note">85,6 × 54 mm · 3 × 0,2 mm = 0,6 mm · Hellblau, Weiß, Schwarz · völlig bündig</p><p class="sas-note">Offizieller Name, Klasse, Bürgerkennung und ein kurzer, dauerhaft gültiger QR-Code. Der frühere längere QR-Code bleibt ebenfalls gültig.</p></section><section class="sas-panel"><h2>'+(admin?'Druckfertigung':'Mein physischer Ausweis')+'</h2><p><strong>'+esc(info?.name||"Bürgerkennung auswählen")+'</strong> · '+esc(info?.class_label||"Administration")+'</p><p class="sas-note">Status: '+esc(labels[st]||"Noch nicht vorgemerkt")+'</p><p class="sas-note">Der Preis steht noch nicht fest. Die Vormerkung ist kostenlos und unverbindlich. Es wird nichts abgebucht.</p>'+
  (!admin&&(!st||st==="storniert")?'<button type="button" class="sas-btn primary" id="cardshop-request">Ausweis unverbindlich vormerken</button>':"")+
  (!admin&&st==="vorgemerkt"?'<button type="button" class="sas-btn soft" id="cardshop-cancel">Vormerkung stornieren</button>':"")+
- (admin&&info?'<h3>Druckdatei</h3><p class="sas-note">Erst QR-Code digital prüfen, dann die dreifarbige 3MF herunterladen. Vor Serienproduktion eine reale Karte scannen.</p><button type="button" class="sas-btn soft" id="cardshop-check">QR digital prüfen</button> <button type="button" class="sas-btn primary" id="cardshop-export" '+(verified?"":"disabled")+'>3MF exportieren</button>':"")+
+ (admin&&info?'<h3>Druckdatei</h3><p class="sas-note">Erst QR-Code digital prüfen, dann die zweifarbige 3MF herunterladen. Vor Serienproduktion eine reale Karte scannen.</p><button type="button" class="sas-btn soft" id="cardshop-check">QR digital prüfen</button> <button type="button" class="sas-btn primary" id="cardshop-export" '+(verified?"":"disabled")+'>3MF exportieren</button>':"")+
  '</section></div>'+list+'<p id="cardshop-message" class="sas-feedback" aria-live="polite" role="status"></p></div>';
  draw();
 }
@@ -57,8 +62,8 @@ function box(mesh,x,y,z,xx,yy,zz){
  [[0,2,1],[0,3,2],[4,5,6],[4,6,7],[0,1,5],[0,5,4],[1,2,6],[1,6,5],[2,3,7],[2,7,6],[3,0,4],[3,4,7]].forEach(t=>mesh.t.push(t.map(i=>i+k)));
 }
 function geometry(){
- const meshes=Array.from({length:3},()=>({v:[],t:[]}));
- // Two continuous blue base layers; three flush colours in the third/top layer.
+ const meshes=Array.from({length:2},()=>({v:[],t:[]}));
+ // Two light-blue base layers plus the two flush colours in the top layer.
  for(let y=0;y<H;y++){
   let x=0;while(x<W){while(x<W&&pixels[y*W+x]===255)x++;if(x===W)break;const a=x;while(x<W&&pixels[y*W+x]!==255)x++;box(meshes[0],a*P,y*P,0,x*P,(y+1)*P,.4);}
   x=0;while(x<W){if(pixels[y*W+x]===255){x++;continue;}const color=pixels[y*W+x],a=x;while(x<W&&pixels[y*W+x]===color)x++;box(meshes[color],a*P,y*P,.4,x*P,(y+1)*P,.6);}
@@ -70,7 +75,7 @@ async function export3MF(){
  if(profile.role!=="admin"||!verified)throw Error("Die Druckdatei darf nur nach QR-Prüfung exportiert werden.");
  if(!window.JSZip)throw Error("Die 3MF-Bibliothek ist nicht geladen.");
  const g=geometry(),zip=new JSZip();
- const model='<?xml version="1.0" encoding="UTF-8"?><model unit="millimeter" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02"><resources><basematerials id="1"><base name="Hellblau" displaycolor="#E3EEFFFF"/><base name="Weiss" displaycolor="#FFFFFFFF"/><base name="Schwarz" displaycolor="#152941FF"/></basematerials>'+g.map((m,i)=>'<object id="'+(i+2)+'" type="model" pid="1" pindex="'+i+'">'+meshXML(m)+'</object>').join("")+'</resources><build><item objectid="2"/><item objectid="3"/><item objectid="4"/></build></model>';
+ const model='<?xml version="1.0" encoding="UTF-8"?><model unit="millimeter" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02"><resources><basematerials id="1"><base name="Hellblau" displaycolor="#E3EEFFFF"/><base name="Dunkelblau" displaycolor="#152941FF"/></basematerials>'+g.map((m,i)=>'<object id="'+(i+2)+'" type="model" pid="1" pindex="'+i+'">'+meshXML(m)+'</object>').join("")+'</resources><build><item objectid="2"/><item objectid="3"/></build></model>';
  zip.file("[Content_Types].xml",'<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="model" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml"/></Types>');
  zip.file("_rels/.rels",'<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="r0" Target="/3D/3dmodel.model" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/></Relationships>');
  zip.file("3D/3dmodel.model",model);
