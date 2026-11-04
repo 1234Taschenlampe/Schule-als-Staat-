@@ -10,7 +10,7 @@ const probeCode=source.replace("window.SAS_SHOP_PLAN={show:show,knownRooms:known
   "window.SAS_SHOP_PLAN={show:show,knownRooms:knownRooms};globalThis.__probe={"+
   "points:OFFICIAL_ROOM_POINTS,extra:EXTRA_ROOMS,allRooms,roomDetails,floorNavigation,"+
   "unpositioned:(n,bookable)=>{currentPage=n;currentBuilding='';rooms=bookable||[];return unpositionedNotice();},"+
-  "adminAdd:(form,ctx)=>{admin=ctx.admin;rooms=ctx.rooms||[];api=ctx.api;root=ctx.root;return addRoom(form);}"+
+  "adminAdd:(form,ctx)=>{admin=ctx.admin;rooms=ctx.rooms||[];api=ctx.api;root=ctx.root;return addRoom(form);},"+
   "page:(n,bookable)=>{currentPage=n;currentBuilding='';rooms=bookable||[];return mapPins();},"+
   "adminDetails:(id,enabled)=>{admin=enabled;rooms=[];selected=id;return roomDetails();},"+
   "enable:(id,ctx)=>{admin=ctx.admin;rooms=ctx.rooms||[];api=ctx.api;root=ctx.root;return enableKnownRoom(id);},"+
