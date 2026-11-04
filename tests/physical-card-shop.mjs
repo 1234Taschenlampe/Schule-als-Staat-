@@ -5,15 +5,24 @@ import vm from "node:vm";
 const read=p=>readFileSync(new URL("../"+p,import.meta.url),"utf8");
 const js=read("physical-card-shop.js"),css=read("physical-card-shop.css");
 const migration=read("supabase/migrations/20261104_card_print_shop_three_layers.sql");
-test("three-level 0.6 mm multi-color card, real 3MF model and no raised lettering",()=>{
+test("three flat 0.2mm layers, exactly two filament colors and scannable QR",()=>{
  assert.match(js,/W=214,H=135,P=\.4/);
- assert.match(js,/Two continuous blue base layers; three flush colours in the third\/top layer/);
+ assert.match(js,/Two light-blue base layers plus the two flush colours in the top layer/);
  assert.match(js,/box\(meshes\[0\],[\s\S]*?,0,[\s\S]*?,\.4\)/);
  assert.match(js,/box\(meshes\[color\],[\s\S]*?,\.4,[\s\S]*?,\.6\)/);
  assert.match(js,/3D\/3dmodel\.model/);
  assert.match(js,/application\/vnd\.ms-package\.3dmanufacturing-3dmodel\+xml/);
  assert.match(js,/objec[t].+pid="1"/);
- assert.match(css,/perspective:880px/);
+ assert.match(js,/const colors=\["#e3eeff","#152941"\]/);
+ assert.match(js,/Array\.from\(\{length:2\}/);
+ assert.doesNotMatch(js,/base name="Weiss"/);
+ assert.match(css,/perspective:900px/);
+ assert.match(css,/touch-action:none/);
+ assert.match(css,/backface-visibility:hidden/);
+ assert.match(js,/stage\.onpointerdown/);
+ assert.match(js,/stage\.onpointermove/);
+ assert.match(js,/stage\.setPointerCapture/);
+ assert.match(js,/cardshop-turn/);
 });
 test("QR is a genuine generated payload with quiet zone and independent digital scan gate",()=>{
  assert.match(js,/my_printed_card_data/);
@@ -24,6 +33,9 @@ test("QR is a genuine generated payload with quiet zone and independent digital 
  assert.match(js,/getMatrix\(record\.qr_code\)/);
  assert.match(js,/x\+\(i\+4\)\*2/);
  assert.match(js,/reader\.scanFile/);
+ assert.match(js,/g\.drawImage\(source,x,y,q,q,0,0,q\*8,q\*8\)/);
+ assert.match(js,/const colors=\["#e3eeff","#152941"\]/);
+
  assert.match(js,/value!==info\.qr_code/);
  assert.match(js,/profile\.role!=="admin"\|\|!verified/);
  assert.doesNotMatch(js,/Math\.random\(\).*SAS-ID:/);
