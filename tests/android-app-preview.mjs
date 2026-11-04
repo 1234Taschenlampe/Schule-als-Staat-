@@ -1,0 +1,37 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+const read=p=>readFileSync(new URL("../"+p,import.meta.url),"utf8");
+const activity=read("android-app/app/src/main/java/de/schulealsstaat/portal/MainActivity.java");
+const manifest=read("android-app/app/src/main/AndroidManifest.xml");
+const workflow=read(".github/workflows/android-app.yml");
+test("native Android APK project with secure official origin and camera selection",()=>{
+ assert.match(activity,/extends Activity/);
+ assert.match(activity,/schule-als-staat\.schule-als-staat-jfe\.workers\.dev/);
+ assert.match(activity,/settings\.setJavaScriptEnabled\(true\)/);
+ assert.match(activity,/settings\.setDomStorageEnabled\(true\)/);
+ assert.match(activity,/settings\.setAllowFileAccess\(false\)/);
+ assert.match(activity,/settings\.setAllowContentAccess\(false\)/);
+ assert.match(activity,/MIXED_CONTENT_NEVER_ALLOW/);
+ assert.match(activity,/handler\.cancel\(\)/);
+ assert.match(activity,/onShowFileChooser/);
+ assert.match(activity,/onPermissionRequest/);
+ assert.match(activity,/RESOURCE_VIDEO_CAPTURE/);
+ assert.match(activity,/request\.getOrigin\(\)\.getScheme\(\)/);
+ assert.doesNotMatch(activity,/addJavascriptInterface/);
+ assert.match(manifest,/android:allowBackup="false"/);
+ assert.match(manifest,/android:usesCleartextTraffic="false"/);
+ assert.match(manifest,/android:icon="@drawable\/ic_school"/);
+ assert.doesNotMatch(activity,/HostApduService|create_payment_request|issue_credits/);
+});
+test("admin-only SaaS shop application discoverability and real APK CI",()=>{
+ const features=read("features.js");
+ assert.match(features,/current==="shops"&&admin\(\)\?box\("SaS Android-App · Admin-Vorschau"/);
+ assert.match(features,/actions\/workflows\/android-app\.yml/);
+ assert.match(features,/NFC-Zahlungen sind noch nicht freigeschaltet/);
+ assert.match(workflow,/assembleDebug/);
+ assert.match(workflow,/upload-artifact@v4/);
+ assert.match(workflow,/app-debug\.apk/);
+ assert.match(read("android-app/build.gradle"),/version '9\.4\.1'/);
+ assert.match(read("android-app/app/build.gradle"),/targetSdk 36/);
+});
