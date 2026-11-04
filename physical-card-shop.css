@@ -1,0 +1,25 @@
+/* Three flush colour regions on a thin physical card. */
+.sas-cardshop .sas-columns{align-items:start}
+.sas-cardshop .sas-panel{min-width:0}
+.sas-cardshop .sas-cardshop-stage{
+ background:radial-gradient(ellipse at center,#edf3fc 0,#e1e8f2 70%,#d7dfe9 100%);
+ min-height:235px;display:grid;place-items:center;padding:26px 17px;
+ perspective:880px;overflow:hidden;border-radius:18px;touch-action:pan-y
+}
+.sas-cardshop #cardshop-preview{
+ display:block;width:min(100%,440px);height:auto;aspect-ratio:214 / 135;
+ image-rendering:pixelated;image-rendering:crisp-edges;border-radius:15px;
+ transform:rotateY(-5deg) rotateX(4deg);
+ box-shadow:0 15px 24px rgba(23,47,74,.23),0 2px 4px rgba(23,47,74,.1);
+ transition:transform .18s ease-out;transform-origin:center center
+}
+.sas-cardshop .sas-panel h3{font-size:1rem;margin:18px 0 10px}
+.sas-cardshop .sas-panel .sas-btn{margin:6px 5px 6px 0}
+.sas-cardshop .sas-item select{max-width:190px;border:1px solid #c5ccd5;padding:7px;border-radius:9px;background:white}
+.sas-cardshop #cardshop-message{margin:14px 0}
+@media(max-width:680px){
+ .sas-cardshop .sas-cardshop-stage{min-height:175px;padding:22px 12px}
+ .sas-cardshop #cardshop-preview{width:100%}
+ .sas-cardshop .sas-item select{display:block;margin-top:10px;max-width:100%}
+}
+@media(prefers-reduced-motion:reduce){.sas-cardshop #cardshop-preview{transition:none;transform:none!important}}
