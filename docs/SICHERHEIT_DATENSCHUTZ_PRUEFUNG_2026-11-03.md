@@ -50,3 +50,8 @@
 - `public.submit_vote` prüft serverseitig zusätzlich zur Wahlberechtigung die aktive Bürgerlistenmitgliedschaft oder die Adminrolle; Doppelstimmen und Stimmen nach Wahlschluss bleiben blockiert.
 - Die Änderungen werden mit reproduzierbaren SQL-Migrationen und Quelltests im Repository dokumentiert. Personenbezogene Schülerdaten wurden nicht eingecheckt.
 - Unverändert offen: vollständige reale Mehrrollen-End-to-End-Tests, schulische/DSGVO-Freigabe, Prüfung der exponierten `SECURITY DEFINER`-Funktionen sowie nachgewiesene sichere Entsorgung der ursprünglichen Schülerliste. Das ist keine Freigabeerklärung und kein vollständiger Penetrationstest.
+
+
+### 04.11.2026 – serverseitiger Zwang zur Startpasswort-Änderung
+
+`submit_vote` kontrolliert jetzt auch das aus dem vertrauenswürdigen Supabase-`app_metadata` gespeicherte `sas_initial_password`-Merkmal in `auth.users`. Solange dieses noch `true` ist, kann ein registriertes Mitglied nicht abstimmen, auch wenn es die Browseroberfläche umgeht. Der bestehende Datenbanktrigger löscht das Merkmal erst nach einer tatsächlichen Passwort-Hash-Änderung. Verfügbarkeit und Abnahme des Erstlogin-Ablaufs auf echten Geräten bleiben gesondert zu prüfen. Diese Änderung schränkt bewusst nur die Stimmabgabe ein, nicht alle denkbaren Auth-Endpunkte.
