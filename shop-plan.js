@@ -25,14 +25,16 @@ function roomDetails(){
   var releaseAction=admin?
    '<div class="sas-shopmap-admin-approve"><p>Nur freigeben, wenn die Schule die Nutzung dieses Raums für Shops ausdrücklich genehmigt hat. Die Administration bestätigt dies vor der Aktivierung.</p>'+
    '<button type="button" data-enable-room="'+esc(room.id)+'">Raum für vier Shop-Plätze freigeben</button></div>':"";
+  var ambiguity=room.name==="A305"?
+   '<p class="sas-shopmap-anomaly" role="note">A305 steht im Raumverzeichnis, der Grundriss zeigt an der fraglichen Stelle A306. Die Schule muss die korrekte Nummer bestätigen; ein Pin wird nicht geschätzt.</p>':"";
   return '<div class="sas-shopmap-selected-title"><div><h3>Raum '+esc(room.name)+'</h3><p>'+esc(room.floor)+'</p></div><b class="sas-shopmap-info-badge">Rauminformation</b></div>'+
-   '<p class="sas-shopmap-readonly-info"><strong>'+esc(room.detail||"Raum im Schulplan")+'</strong><span>Im Gebäudeplan vorhanden. Für diesen Raum können derzeit keine Shops gebucht werden.</span></p>'+releaseAction;
+   '<p class="sas-shopmap-readonly-info"><strong>'+esc(room.detail||"Raum im Schulplan")+'</strong><span>Im Gebäudeplan vorhanden. Für diesen Raum können derzeit keine Shops gebucht werden.</span></p>'+ambiguity+releaseAction;
  }
  var discrepancy=room.name==="D102"?'<p class="sas-shopmap-anomaly" role="note">Der offizielle Raumindex nennt D102, die Zeichnung an der mutmaßlichen Stelle jedoch D105. Die Position von D102 konnte deshalb nicht zweifelsfrei bestätigt werden. Bitte vor der Nutzung mit der Schule abgleichen.</p>':"";
  var form=chosen&&!slot(room,chosen)?'<form id="sas-shopmap-apply" class="sas-shopmap-form"><h3>Platz '+chosen+' in '+esc(room.name)+' reservieren</h3><label>Shop-Name <input name="name" required minlength="3" maxlength="100" placeholder="z. B. Waffelstand"></label><label>Beschreibung <textarea name="description" maxlength="450" rows="3"></textarea></label><div><button type="submit">Anfrage senden</button><button type="button" data-close>Abbrechen</button></div><p>Der Platz bleibt bis zur Entscheidung der Administration reserviert. Ein Shop wird erst nach Genehmigung angelegt.</p></form>':"";
  return '<div class="sas-shopmap-selected-title"><div><h3>Raum '+esc(room.name)+'</h3><p>'+esc(room.floor||"")+(room.detail?" · "+esc(room.detail):"")+'</p></div><b>'+(4-(room.slots||[]).length)+' frei</b></div>'+discrepancy+'<div class="sas-shopmap-slots">'+[1,2,3,4].map(function(n){return cell(room,n);}).join("")+'</div>'+form+'<div class="sas-shopmap-linked"><p>Zusätzlich kannst du den Raum für einen bestimmten Zeitraum anfragen. Das ist unabhängig von den Shop-Plätzen.</p><button type="button" data-nav="rooms" data-book-room="'+esc(room.id)+'">Raum zeitlich reservieren</button></div>';
 }
-function adminForm(){return !admin?"":'<details class="sas-shopmap-admin"><summary>Klassenzimmer anhand des offiziellen Plans freigeben</summary><p>Bitte nur Räume eintragen, deren Nummer und Nutzung von der Schule bestätigt wurden.</p><form id="sas-shopmap-roomform" class="sas-shopmap-form"><div class="sas-shopmap-fields"><label>Raumnummer<input name="room" maxlength="20" required placeholder="z. B. A003"></label><label>Gebäude / Stockwerk<input name="floor" maxlength="40" required placeholder="Gebäude A · EG"></label><label>PDF-Seite (optional)<input type="number" min="1" max="40" name="page" placeholder="1"></label></div><label>Beschreibung (optional)<input name="detail" maxlength="500"></label><button type="submit">Raum mit vier Shop-Plätzen freigeben</button></form></details>';}
+function adminForm(){return !admin?"":'<details class="sas-shopmap-admin"><summary>Klassenzimmer anhand des offiziellen Plans freigeben</summary><p>Bitte nur Räume eintragen, deren Nummer und Nutzung von der Schule bestätigt wurden.</p><form id="sas-shopmap-roomform" class="sas-shopmap-form"><div class="sas-shopmap-fields"><label>Raumnummer<input name="room" maxlength="20" required placeholder="z. B. A003"></label><label>Gebäude / Stockwerk<input name="floor" maxlength="40" required placeholder="Gebäude A · EG"></label><label>PDF-Seite (optional)<input type="number" min="1" max="40" name="page" placeholder="1"></label></div><label>Beschreibung (optional)<input name="detail" maxlength="500"></label><p>Ist der Raum im offiziellen PDF beschriftet, wird dessen verifizierte Pin-Position automatisch übernommen. Ansonsten bleibt er im Raumverzeichnis ohne Kartenpunkt. Nur mit Schulfreigabe eintragen.</p><button type="submit">Raum mit vier Shop-Plätzen freigeben</button></form></details>';}
 
 var PDF_LOCAL="/rng-floorplan.pdf";
 var PDFJS_URL="https://cdn.jsdelivr.net/npm/pdfjs-dist@4.10.38/build/pdf.min.mjs";
@@ -94,6 +96,15 @@ function mapPins(){
    (active?' active':'')+'" style="left:'+x+'%;top:'+y+'%" title="'+esc(label)+'" aria-label="'+esc(label)+'">'+esc(r.name)+'</button>';
  }).join("");
 
+}
+function unpositionedNotice(){
+ var missing=pageRooms(currentPage).filter(function(r){
+  return (!currentBuilding||r.name.startsWith(currentBuilding))&&(r.x_percent==null||r.y_percent==null);
+ });
+ if(!missing.length)return "";
+ return '<div class="sas-shopmap-unpositioned" role="note"><strong>Raum ohne eindeutig bestätigten Kartenpunkt:</strong> '+
+  missing.map(function(r){return '<button type="button" data-room="'+esc(r.id)+'">'+esc(r.name)+' im Verzeichnis auswählen</button>';}).join("")+
+  '<p>Der Originalplan zeigt keine verlässliche Position. Deshalb wird hier kein falscher Pin gesetzt.</p></div>';
 }
 function floorNavigation(){
  var buildings='<div class="sas-shopmap-buildings" aria-label="Gebäudeteil wählen">'+
@@ -158,7 +169,7 @@ function draw(){
  '<div class="sas-shopmap-zoom" aria-label="Kartenvergrößerung"><button type="button" data-map-zoom="out" aria-label="Karte verkleinern">−</button><output id="rng-zoom-label">'+Math.round(mapZoom*100)+'%</output><button type="button" data-map-zoom="in" aria-label="Karte vergrößern">+</button><button type="button" data-map-zoom="fit">Einpassen</button></div>'+
  '<div class="sas-shopmap-scroll" id="rng-plan-scroll" aria-label="Schulgrundriss, bei Vergrößerung verschiebbar"><div class="sas-shopmap-pdf" id="rng-plan-holder" style="width:'+(mapZoom*100)+'%"><canvas id="rng-floorplan-canvas" aria-label="RNG-Grundriss, Seite '+currentPage+'"></canvas><div class="sas-shopmap-pins" aria-label="Alle Räume im Grundriss">'+mapPins()+'</div></div></div>'+
  '<p class="sas-shopmap-hint" id="rng-plan-status" role="status">Originalplan, Seite '+currentPage+' laden …</p>'+
- '<p class="sas-shopmap-hint">'+esc(pageInfo)+'</p></section>'+
+ '<p class="sas-shopmap-hint">'+esc(pageInfo)+'</p>'+unpositionedNotice()+'</section>'+
  '<section class="sas-shopmap-card"><div class="sas-shopmap-head"><h2>Alle Räume</h2><span id="rng-map-room-count">'+total+' Räume · '+rooms.length+' für Shops freigegeben</span></div>'+
  '<label class="sas-shopmap-search">Raumnummer suchen<input id="sas-shopmap-search" type="search" placeholder="z. B. C202 oder E101" value="'+esc(query)+'"></label>'+
  '<div class="sas-shopmap-roomlist">'+(shown.length?shown.map(roomButton).join(""):'<p class="sas-shopmap-empty">'+(query?"Keine Raumbezeichnung gefunden.":"Auf dieser Planseite wurden keine Räume erkannt.")+'</p>')+'</div></section></div>'+
@@ -169,7 +180,7 @@ function draw(){
  void paintPdf();
 }
 async function call(name,p){var r=await api.rpc(name,p||{});if(r.error)throw r.error;return r.data;}
-async function refresh(note){var rows=await call("shop_room_catalog");rooms=Array.isArray(rows)?rows:[];if(selected&&!rooms.some(function(x){return x.id===selected;})){selected="";chosen=0;}draw();if(note)msg(note);}
+async function refresh(note){var rows=await call("shop_room_catalog");rooms=Array.isArray(rows)?rows:[];if(selected&&!allRooms().some(function(x){return x.id===selected;})){selected="";chosen=0;}draw();if(note)msg(note);}
 async function execute(task){busy=true;try{await task();}catch(e){msg(e.message||String(e),true);}finally{busy=false;}}
 async function apply(form){var r=rooms.find(function(x){return x.id===selected;});if(!r||!chosen||slot(r,chosen))throw Error("Platz ist nicht frei.");
  var d=new FormData(form),name=String(d.get("name")||"").trim(),description=String(d.get("description")||"").trim();
@@ -197,8 +208,15 @@ async function enableKnownRoom(id){
 async function addRoom(form){if(!admin)throw Error("Nicht berechtigt.");
  var d=new FormData(form),name=String(d.get("room")||"").trim().toUpperCase(),floor=String(d.get("floor")||"").trim(),detail=String(d.get("detail")||"").trim(),pageValue=String(d.get("page")||"").trim();
  var page=pageValue===""?null:Number(pageValue);
- if(!/^[A-Z][A-Z0-9 /-]{1,19}$/.test(name)||floor.length<2||floor.length>40||(page!==null&&(!Number.isInteger(page)||page<1||page>40)))throw Error("Raumnummer, Stockwerk oder PDF-Seite ungültig.");
- var result=await api.from("school_places").insert({name:name,kind:"room",floor_label:floor,detail:detail,active:true,classroom_shop_enabled:true,plan_page:page}).select("id").single();
+ if(!/^[A-Z][A-Z0-9 /-]{1,19}$/.test(name)||floor.length<2||floor.length>40||(page!==null&&(!Number.isInteger(page)||page<3||page>7)))throw Error("Raumnummer, Stockwerk oder PDF-Seite (3–7) ungültig.");
+ var hits=OFFICIAL_ROOM_POINTS.filter(function(p){return p[1]===name;});
+ if(page===null&&hits.length===1)page=hits[0][0];
+ if(page===null)throw Error("Bitte die passende PDF-Seite (3–7) angeben.");
+ if(rooms.some(function(r){return r.name===name&&Number(r.plan_page)===page;}))
+  throw Error("Dieser Raum ist bereits für Shops vorhanden.");
+ var pos=PIN_LOOKUP.get(page+":"+name);
+ var result=await api.from("school_places").insert({name:name,kind:"room",floor_label:floor,detail:detail,active:true,
+   classroom_shop_enabled:true,plan_page:page,x_percent:pos?pos[0]:null,y_percent:pos?pos[1]:null}).select("id").single();
  if(result.error)throw result.error;selected=result.data.id;chosen=0;await refresh("Raum mit vier Shop-Plätzen angelegt.");
 }
 async function show(context){root=context.target;api=context.api;userId=context.user.id;admin=context.profile&&context.profile.role==="admin";rooms=[];selected="";chosen=0;query="";busy=false;currentPage=4;currentBuilding="";pdfDocumentPromise=null;paintRun=0;mapZoom=window.matchMedia&&window.matchMedia("(max-width:650px)").matches?1.7:1;lastDrawnPage=0;mapFilter="all";

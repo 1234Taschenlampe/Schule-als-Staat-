@@ -41,3 +41,12 @@
 - DSGVO Grundsätze: https://eur-lex.europa.eu/legal-content/DE/TXT/?uri=CELEX%3A32016R0679
 
 **Keine Zugangsdaten, Personendaten, Schlüsselwerte oder echten Stimmen in dieser Datei.**
+
+
+## Ergänzung 04.11.2026 – aktiver Bürgerlisten-Schutz
+
+- Die Produktionskonfiguration hat nun `roster_enforced=true`. Der Wechsel wurde erst nach einem konsistenten 991/991-Abgleich aller offiziellen Mitglieder, Auth-Konten, verschlüsselten Namenswerte und Mitgliedsprofile durchgeführt. Vorhandene Konten und Passwörter blieben unverändert.
+- Selbstregistrierung über den Auth-Endpunkt bleibt durch `sas_roster_registration_guard` vor dem INSERT in `auth.users` gesperrt. Die Schulverwaltung kann berechtigte neue Mitglieder nur über den geschützten Admin-Import anlegen.
+- `public.submit_vote` prüft serverseitig zusätzlich zur Wahlberechtigung die aktive Bürgerlistenmitgliedschaft oder die Adminrolle; Doppelstimmen und Stimmen nach Wahlschluss bleiben blockiert.
+- Die Änderungen werden mit reproduzierbaren SQL-Migrationen und Quelltests im Repository dokumentiert. Personenbezogene Schülerdaten wurden nicht eingecheckt.
+- Unverändert offen: vollständige reale Mehrrollen-End-to-End-Tests, schulische/DSGVO-Freigabe, Prüfung der exponierten `SECURITY DEFINER`-Funktionen sowie nachgewiesene sichere Entsorgung der ursprünglichen Schülerliste. Das ist keine Freigabeerklärung und kein vollständiger Penetrationstest.

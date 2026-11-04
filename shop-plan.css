@@ -128,3 +128,10 @@ button.sas-shopmap-stall:hover{background:#e5f6eb;border-color:#59a578}
 .sas-shopmap-linked p{font-size:13px;color:#41556b;margin:0 0 9px}
 .sas-shopmap-linked button{min-height:44px;border:1px solid #1d6297;border-radius:10px;background:#fff;padding:10px 14px;font:inherit;color:#195681;font-weight:700;cursor:pointer}
 @media(max-width:650px){.sas-shopmap-roomfilter{gap:6px}.sas-shopmap-roomfilter span{flex:0 0 100%}.sas-shopmap-linked button{width:100%}}
+
+
+/* Accessible room-directory selection when official PDF geometry is ambiguous. */
+.sas-shopmap-unpositioned{margin-top:12px;padding:12px;border:1px solid var(--border, #a5a8b4);border-radius:10px;display:flex;flex-wrap:wrap;align-items:center;gap:8px;font-size:14px}
+.sas-shopmap-unpositioned button{font:inherit;cursor:pointer;padding:8px 10px;border-radius:8px;border:1px solid currentColor;background:transparent;color:inherit;min-height:44px}
+.sas-shopmap-unpositioned button:focus-visible{outline:3px solid #296de0;outline-offset:2px}
+.sas-shopmap-unpositioned p{width:100%;margin:0;font-size:13px}

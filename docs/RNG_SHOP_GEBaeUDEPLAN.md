@@ -145,3 +145,12 @@ Shop-Katalog und Original-PDF). Die direkte öffentliche HTTP-Auslieferung
 und die Bedienung auf **einem realen Smartphone** konnten aus dieser Umgebung
 nicht separat bestätigt werden. Künftige GitHub-Pushes lösen weiterhin **kein**
 automatisches Cloudflare-Worker-Deployment aus.
+
+
+## Nachbesserung 04.11.2026 – überprüfbare Kartenpositionen
+
+Alle **115 tatsächlich beschrifteten** Raumpositionen des siebenseitigen Original-PDF sind in `OFFICIAL_ROOM_POINTS` enthalten. Weitere Einträge des Raumverzeichnisses sind such- und auswählbar. Die bislang nicht eindeutig belegbaren Koordinaten im modellierten Plan betreffen D102 (Verzeichnis vs. D105 im Grundriss) und A305 (Verzeichnis vs. A306 im Grundriss). Beide sind im jeweiligen Geschoss ausdrücklich über einen bedienbaren Hinweis auswählbar; **es wird kein Pin erfunden**.
+
+Das administrative Hinzufügen eines Raums übernimmt die ursprüngliche PDF-Position automatisch, wenn die entsprechende beschriftete Raumposition für diese Seite eindeutig existiert. Ansonsten bleibt der Kartenpunkt leer, bis eine belastbare Quelle vorliegt. Die 47 amtlich als Klassenräume ausgewiesenen Shopräume bleiben unverändert mit je vier Plätzen. Fach-, Kunst-, Musik- und Verwaltungsräume sind weiterhin nur nach bestätigter Schulfreigabe zur Shopbuchung aktivierbar.
+
+Der physische Abgleich für D102/D105 und A305/A306 wird in [Issue #24](https://github.com/1234Taschenlampe/Schule-als-Staat-/issues/24) geführt. Die technische Umsetzung kann diese Schulauskunft nicht ersetzen.

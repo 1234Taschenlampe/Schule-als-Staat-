@@ -1,12 +1,16 @@
 # Schule als Staat – V4 (Projektname; Staatsname noch offen)
 
-## Vorübergehender Schulstaat-Testbetrieb (23.10.2026)
+## Geschlossener Bürgerzugang – Stand 04.11.2026
 
-**Neue normale Schülerkonten können sich direkt registrieren und sofort abstimmen, ohne zusätzliche Schul- oder Konto-E-Mail-Verifizierung.** Der gesamte normale Schülerbereich einschließlich Schülerausweis und QR-Funktionen ist zugänglich; nur Administrator-, Operator-, Kassen- und Kontrollfunktionen bleiben gesondert berechtigt. Jede Abstimmung zählt je angemeldetem Konto höchstens eine Stimme. Bis zum späteren Listenabgleich sind Mehrfachkonten möglich; deshalb sind diese Abstimmungen **Testabstimmungen und keine verifizierten Schulwahlen**.
+**Aktueller Datenbankstand:** 991 offizielle Bürgerkonten und ein Administratorkonto. Alle 991 Mitglieder sind mit Supabase Auth, ihrem Mitgliedsprofil und einem verschlüsselten Namensdatensatz verbunden. `school_access_settings.roster_enforced=true` ist in der Produktionsdatenbank aktiviert. Der aktive `auth.users`-Trigger `sas_roster_registration_guard` verhindert öffentliche Registrierungen auf Serverebene; das Frontend bietet keine neue Kontoerstellung.
 
-Aktive Supabase-Migrationen `pre_roster_student_trial_access_v27` und `pre_roster_editable_id_cards_v28`: Neue Schüler erhalten automatisch `vote_eligible=true`, alle sieben bisherigen normalen Mitgliedskonten sind ebenfalls freigeschaltet, und QR-Anwesenheits-/Arbeitszeitfunktionen benötigen in der Testphase keine zusätzliche Schulverifizierung. Ein privates Verzeichnis `school_test_accounts` erfasst bisherige und neue Testkonten (nur IDs). **Keine Löschung wird vor Eingang und Prüfung der offiziellen Schul-Excel-Datei durchgeführt.** Nach geschütztem Import werden Testkonten sowie Testdaten und Test-Abstimmungen unter Wahrung des Administratorkontos kontrolliert bereinigt und die schulseitige Listen-Zuordnung eingeschaltet. Siehe [Details zum Schülerlisten-Onboarding](docs/SCHUELERLISTE_ONBOARDING.md).
+**Anmeldung:** Bürger nutzen die zugewiesene Kennung `SAS-XXXXXXXXXX` und ihr persönliches Passwort beziehungsweise ein einmaliges Startpasswort mit verpflichtendem Passwortwechsel. Ein Wiederherstellungslink für interne Pseudo-E-Mail-Adressen ist nicht möglich; die Schulverwaltung übernimmt die sichere Wiederherstellung.
 
-**Für öffentliche Gast-ViSA-Anträge bleibt die E-Mail-Bestätigung ausdrücklich bestehen**; der Gmail-Versand ist bis zum erfolgreichen End-to-End-Test und Bot-Schutz separat gesperrt.
+**Schulische Verifizierung:** Die Eintragung auf der offiziellen Liste ist **nicht** identisch mit einer persönlichen Identitätskontrolle. `school_verified_at` wurde nicht künstlich befüllt. Anwesenheits-/Arbeitszeitfunktionen können daher bis zur individuellen Bestätigung eingeschränkt sein.
+
+**Abstimmungen:** `submit_vote` verlangt zusätzlich zur Wahlberechtigung eine aktive Bürgerlistenmitgliedschaft (oder das explizite Adminprofil). Wettbewerbsvorschläge für Staatsname und Staatsflagge werden erst nach finaler Auswahl freigeschaltet.
+
+**Datenschutz:** Verschlüsselte Schülernamen liegen in einem privaten Datenbankschema. RLS, eingeschränkte Rollenrechte und Prüfungen verhindern nicht jeden möglichen Missbrauch. Vor breiter Inbetriebnahme bleiben schulseitige Freigabe, Entsorgung der ursprünglichen XLSX-Liste und reale Multirollen-Sicherheitstests notwendig.
 
 **Offizielle Live-Adresse:** https://schule-als-staat.schule-als-staat-jfe.workers.dev/
 

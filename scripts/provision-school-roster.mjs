@@ -21,11 +21,11 @@ const emailSuffix="@accounts.schule-als-staat.invalid";
 const ids=new Set(),pins=new Set(),emails=new Set();
 for(const entry of raw.citizens){
   assert.match(entry.login_id,/^SAS-[A-HJ-NP-Z2-9]{10}$/);
-  assert.match(entry.temporary_password,/^\d{8}$/);
+  assert.match(entry.temporary_password,/^\d{7}$/);
   assert.equal(entry.email,entry.login_id.slice(4).toLowerCase()+emailSuffix);
   assert.ok(entry.first_name&&entry.last_name&&entry.class_label,"Incomplete roster record");
   assert.ok(!ids.has(entry.login_id)&&!pins.has(entry.temporary_password)&&!emails.has(entry.email),
-    "Duplicate login or eight-digit start PIN");
+    "Duplicate login or seven-digit start PIN");
   ids.add(entry.login_id);pins.add(entry.temporary_password);emails.add(entry.email);
 }
 if(!confirmed){

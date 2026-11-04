@@ -66,3 +66,8 @@ Rolle `member` und damit **keine** Admin-/Operator-/Kassenrechte.
 - Vorhandene Profile, Stimmen, Guthaben, Rollen, Buchungen und Testkonten bleiben
   unverändert, bis die Liste tatsächlich vorliegt und eine separate Bereinigung
   geprüft ist.
+
+
+## 04.11.2026 – kontrollierte produktive Durchsetzung
+
+Nach vollständigem Abgleich der 991 aktiven Bürgerlisteneinträge mit Supabase Auth, Mitgliedsprofilen und privaten verschlüsselten Namen wurde `school_access_settings.roster_enforced=true` gesetzt. Die SQL-Migration ist unter `supabase/migrations/20261104_enforce_official_roster.sql` abgelegt. Es wurden keine Konten, Passwörter oder Stimmen verändert. Die 991 Datensätze erhalten dadurch **keine erfundene** individuelle Verifizierung: `school_verified_at` bleibt unverändert. Nicht eingetragene Konten sind nicht Mitglied der offiziellen Bürgerliste. Der gesonderte `auth.users`-Trigger verhindert weiterhin Selbstregistrierung per Auth API.
