@@ -9,6 +9,8 @@ const css=load("shop-plan.css");
 const probeCode=source.replace("window.SAS_SHOP_PLAN={show:show,knownRooms:knownRooms};",
   "window.SAS_SHOP_PLAN={show:show,knownRooms:knownRooms};globalThis.__probe={"+
   "points:OFFICIAL_ROOM_POINTS,extra:EXTRA_ROOMS,allRooms,roomDetails,floorNavigation,"+
+  "unpositioned:(n,bookable)=>{currentPage=n;currentBuilding='';rooms=bookable||[];return unpositionedNotice();},"+
+  "adminAdd:(form,ctx)=>{admin=ctx.admin;rooms=ctx.rooms||[];api=ctx.api;root=ctx.root;return addRoom(form);}"+
   "page:(n,bookable)=>{currentPage=n;currentBuilding='';rooms=bookable||[];return mapPins();},"+
   "adminDetails:(id,enabled)=>{admin=enabled;rooms=[];selected=id;return roomDetails();},"+
   "enable:(id,ctx)=>{admin=ctx.admin;rooms=ctx.rooms||[];api=ctx.api;root=ctx.root;return enableKnownRoom(id);},"+
@@ -112,4 +114,28 @@ test("booking selection and map filter do not alter four-slot policy",()=>{
   assert.match(source,/window\.SAS_PREFILL_ROOM=b\.dataset\.bookRoom/);
   assert.equal([...details.matchAll(/data-slot="/g)].length,4);
   assert.match(source,/function knownRooms\(term\)/);
+});
+
+
+test("ambiguous room listings remain selectable without guessed pins",()=>{
+  const d102={id:"class-D102",name:"D102",plan_page:5,x_percent:null,y_percent:null,slots:[],floor:"1. OG"};
+  assert.match(p.unpositioned(5,[d102]),/data-room="class-D102"/);
+  assert.match(p.unpositioned(7),/data-room="plan:A305:7"/);
+  assert.match(p.details("plan:A305:7"),/A306/);
+});
+
+test("admin manual room entries inherit only verified PDF pin coordinates",async()=>{
+  scope.FormData=class{constructor(form){this.fields=form.fields;}get(name){return this.fields[name]}};
+  const writes=[];
+  const ctx={admin:true,rooms:[],root:{innerHTML:"",querySelector:()=>null},api:{
+    from:(name)=>({insert:(row)=>({select:()=>({single:async()=>{writes.push({name,row});return {data:{id:"new-A204"}};}})})}),
+    rpc:async(name)=>({data:name==="shop_room_catalog"?[{id:"new-A204",name:"A204",plan_page:6,x_percent:41.83,y_percent:63.28,slots:[]}]:null})
+  }};
+  await p.adminAdd({fields:{room:"A204",floor:"Gebäude A · 2. OG",page:"6",detail:"Geografie"}},ctx);
+  assert.equal(writes.length,1);
+  assert.equal(writes[0].row.name,"A204");
+  assert.equal(writes[0].row.plan_page,6);
+  assert.equal(writes[0].row.x_percent,41.83);
+  assert.equal(writes[0].row.y_percent,63.28);
+  assert.match(css,/\.sas-shopmap-unpositioned/);
 });
