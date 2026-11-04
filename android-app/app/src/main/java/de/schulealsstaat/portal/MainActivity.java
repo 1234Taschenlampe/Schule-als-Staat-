@@ -84,8 +84,8 @@ public final class MainActivity extends Activity {
                 if ("https".equals(scheme) && HOST.equals(u.getHost())) return false;
                 // Other links leave the isolated SaS WebView; no untrusted origin runs
                 // with the portal's WebView permissions.
-                if (("https".equals(scheme) || "http".equals(scheme) || "mailto".equals(scheme))
-                        && u.getHost() != null || "mailto".equals(scheme)) {
+                if ((("https".equals(scheme) || "http".equals(scheme)) && u.getHost() != null)
+                        || "mailto".equals(scheme)) {
                     openExternal(u);
                 }
                 return true;
@@ -135,7 +135,7 @@ public final class MainActivity extends Activity {
     private void handleWebPermission(PermissionRequest request) {
         String origin = request.getOrigin().getHost();
         String[] resources = request.getResources();
-        if (!HOST.equals(origin) || resources.length != 1 ||
+        if (!"https".equals(request.getOrigin().getScheme()) || !HOST.equals(origin) || resources.length != 1 ||
                 !PermissionRequest.RESOURCE_VIDEO_CAPTURE.equals(resources[0])) {
             request.deny(); // No microphone and no permissions for foreign origins.
             return;
