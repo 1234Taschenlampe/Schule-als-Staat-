@@ -8,7 +8,7 @@ const app=read("app.js");
 const tutorial=read("tutorial.js");
 
 test("preview hides neither the student card nor ballot functionality",()=>{
- assert.match(app,/previewOpenPages=new Set\(\["home","apps","idcard","gallery","votes","settings"\]\)/);
+ assert.match(app,/previewOpenPages=new Set\(\["home","apps","idcard","gallery","cardshop","votes","settings"\]\)/);
  assert.match(app,/previewTeaserPages=new Set/);
  assert.match(app,/function previewLocked\(id\)/);
  assert.match(app,/function roleAllowed\(id\)/);
