@@ -31,3 +31,14 @@
 .sas-preview-cards{grid-template-columns:repeat(2,minmax(0,1fr));margin:20px 0 34px}
 .sas-preview-cards .overview-card{min-height:226px}
 @media(max-width:700px){.sas-preview-cards{grid-template-columns:1fr}.sas-preview-cards .overview-card{min-height:185px}}
+
+/* Sichtbarkeit von Login-, Erstaktivierungs- und Passwortwechsel-Feldern. */
+.sas-password-input{position:relative;display:block;width:100%}
+.sas-password-input>.field{width:100%;padding-right:54px}
+.sas-password-toggle{position:absolute;right:7px;top:50%;transform:translateY(-50%);display:grid;place-items:center;width:42px;height:42px;padding:0;border:0;border-radius:10px;background:transparent;color:#53647e;cursor:pointer;touch-action:manipulation}
+.sas-password-toggle:hover{background:#edf2f8;color:#18395d}
+.sas-password-toggle:focus-visible{outline:3px solid #1e66b6;outline-offset:1px}
+.sas-password-toggle svg{width:20px;height:20px;pointer-events:none}
+.sas-password-toggle .sas-eye-closed{display:none}
+.sas-password-toggle[aria-pressed="true"] .sas-eye-closed{display:block}
+.sas-password-toggle[aria-pressed="true"] .sas-eye-open{display:none}
