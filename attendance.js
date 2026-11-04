@@ -30,18 +30,22 @@ async function createStudentPass(api,node){
 async function refreshSessions(){sessions=await rpc("list_attendance_sessions");if(!Array.isArray(sessions))sessions=[];if(!sessions.some(x=>x.id===selected&&x.is_open))selected=sessions.find(x=>x.is_open)?.id||"";}
 function paint(){
  const active=sessions.find(x=>x.id===selected);
- host.innerHTML='<div class="sas-space"><div class="sas-heading"><div><span class="sas-kicker">SCHULSTAAT / ANWESENHEIT</span><h1>Anwesenheit kontrollieren</h1><p>Schüler zeigen den einmalig gültigen QR-Code auf ihrem digitalen Schülerausweis.</p></div></div>'+
+ host.innerHTML='<div class="sas-space"><div class="sas-heading"><div><span class="sas-kicker">SCHULSTAAT / ANWESENHEIT</span><h1>Anwesenheit kontrollieren</h1><p>Digitaler Zwei-Minuten-QR oder physischer Ausweis mit persönlicher Sichtprüfung.</p></div></div>'+
  '<div class="sas-columns"><section class="sas-panel"><h2>Anwesenheitsliste auswählen</h2><form class="sas-form" id="attendance-new"><label class="sas-field"><span>Bezeichnung, z. B. „Klasse 5a – 1. Stunde“</span><input name="title" minlength="3" maxlength="100" required></label><label class="sas-field"><span>Wie lange bleibt die Liste offen?</span><select name="minutes"><option value="30">30 Minuten</option><option value="60" selected>60 Minuten</option><option value="120">120 Minuten</option><option value="240">4 Stunden</option></select></label><button type="submit" class="sas-btn primary">Neue Liste öffnen</button></form>'+
  '<div class="sas-list attendance-list">'+sessions.map(s=>'<div class="sas-item"><h3>'+escape(s.title)+'</h3><p>'+Number(s.scans||0)+' anwesend · '+(s.is_open?"Offen":"Geschlossen")+'</p><div>'+ (s.is_open?'<button class="sas-btn '+(s.id===selected?"muted":"soft")+'" type="button" data-att-action="select" data-id="'+escape(s.id)+'">Auswählen</button>':'')+
  '<button class="sas-btn soft" type="button" data-att-action="details" data-id="'+escape(s.id)+'">Einträge: '+Number(s.scans||0)+'</button>'+(s.is_open?'<button class="sas-btn soft" type="button" data-att-action="close" data-id="'+escape(s.id)+'">Schließen</button>':'')+'</div></div>').join("")+'</div></section>'+
  '<section class="sas-panel"><h2>Schülerausweis scannen</h2>'+(active?'<p class="sas-note">Aktive Liste: <strong>'+escape(active.title)+'</strong></p>':'<p class="sas-note">Wähle oder erstelle zuerst eine offene Anwesenheitsliste.</p>')+
  '<div class="verify-camera-area" id="attendance-camera"></div><div class="verify-qr-actions"><button type="button" class="sas-btn primary" data-att-action="scan" '+(active?'':'disabled')+'>Kamera starten</button><button type="button" class="sas-btn soft" data-att-action="stop">Kamera stoppen</button></div>'+
- '<form id="attendance-manual" class="sas-form"><label class="sas-field"><span>Alternativ: QR-Code-Inhalt</span><input name="code" placeholder="SAS-ATTEND:…" autocapitalize="off" autocomplete="off" spellcheck="false" required></label><button class="sas-btn soft" '+(active?'':'disabled')+'>Code prüfen und Anwesenheit speichern</button></form>'+
+ '<label class="sas-field"><span><input type="checkbox" id="attendance-physical-confirm"> Person vor Ort anhand der physischen Karte und Schulidentität geprüft</span></label><p class="sas-note">Bei gedruckten Ausweisen (SAS-ID:) ist die persönliche Kontrolle Pflicht. Statische QR-Codes allein beweisen keine Anwesenheit.</p><form id="attendance-manual" class="sas-form"><label class="sas-field"><span>Alternativ: QR-Code-Inhalt</span><input name="code" placeholder="SAS-ATTEND:…" autocapitalize="off" autocomplete="off" spellcheck="false" required></label><button class="sas-btn soft" '+(active?'':'disabled')+'>Code prüfen und Anwesenheit speichern</button></form>'+
  '<div id="attendance-result" class="attendance-result"></div><p class="sas-note">Es wird nur eine Anwesenheit pro Schüler und Termin gespeichert. Ein erneuter Scan führt zu keiner zweiten Anwesenheit.</p></section></div><p class="sas-feedback" role="status" aria-live="polite" id="attendance-feedback">'+escape(status)+'</p></div>';
 }
 async function scanCode(code){
  if(!selected)throw Error("Bitte zuerst eine Liste auswählen.");
- const res=await rpc("scan_attendance_pass",{p_code:code,p_session_id:selected});
+ const physical=/^SAS-ID:/i.test(String(code||"").trim());
+ const confirm=host?.querySelector("#attendance-physical-confirm");
+ if(physical&&!confirm?.checked)throw Error("Für gedruckte Karten muss die Identität vor Ort bestätigt werden.");
+ const res=physical?await rpc("scan_printed_card_attendance",{p_code:code,p_session_id:selected,p_identity_checked:true}):await rpc("scan_attendance_pass",{p_code:code,p_session_id:selected});
+ if(physical&&confirm)confirm.checked=false;
  const area=host?.querySelector("#attendance-result");
  if(area)area.innerHTML='<div class="verify-success"><div class="verify-checkmark">✓</div><h2>'+escape(res.already_present?"Bereits eingetragen":"Anwesenheit gespeichert")+'</h2><p>'+escape(res.display_name)+" · "+escape(res.class_label||"Keine Klassenangabe")+'</p></div>';
  await refreshSessions();
