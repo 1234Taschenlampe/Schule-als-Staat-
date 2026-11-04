@@ -1,0 +1,68 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+import vm from "node:vm";
+const read=p=>readFileSync(new URL("../"+p,import.meta.url),"utf8");
+const js=read("physical-card-shop.js"),css=read("physical-card-shop.css");
+const migration=read("supabase/migrations/20261104_card_print_shop_three_layers.sql");
+test("three-level 0.6 mm multi-color card, real 3MF model and no raised lettering",()=>{
+ assert.match(js,/W=214,H=135,P=\.4/);
+ assert.match(js,/Two continuous blue base layers; three flush colours in the third\/top layer/);
+ assert.match(js,/box\(meshes\[0\],[\s\S]*?,0,[\s\S]*?,\.4\)/);
+ assert.match(js,/box\(meshes\[color\],[\s\S]*?,\.4,[\s\S]*?,\.6\)/);
+ assert.match(js,/3D\/3dmodel\.model/);
+ assert.match(js,/application\/vnd\.ms-package\.3dmanufacturing-3dmodel\+xml/);
+ assert.match(js,/objec[t].+pid="1"/);
+ assert.match(css,/perspective:880px/);
+});
+test("QR is a genuine generated payload with quiet zone and independent digital scan gate",()=>{
+ assert.match(js,/my_printed_card_data/);
+ assert.match(js,/admin_printed_card_data/);
+ assert.match(js,/^.*SAS-ID:\[a-f0-9\]\{16\}.*$/m);
+ assert.match(js,/new QRCode/);
+ assert.match(js,/q\._oQRCode\.modules/);
+ assert.match(js,/getMatrix\(record\.qr_code\)/);
+ assert.match(js,/x\+\(i\+4\)\*2/);
+ assert.match(js,/reader\.scanFile/);
+ assert.match(js,/value!==info\.qr_code/);
+ assert.match(js,/profile\.role!=="admin"\|\|!verified/);
+ assert.doesNotMatch(js,/Math\.random\(\).*SAS-ID:/);
+});
+test("existing static and print QR codes are both recognized by secure school RPCs",()=>{
+ assert.match(migration,/short_code text/);
+ assert.match(migration,/gen_random_bytes\(8\)/);
+ assert.match(migration,/where sc\.code=v_code or sc\.short_code=v_code/);
+ assert.match(migration,/where code=v_code or short_code=v_code/);
+ assert.match(migration,/sas_private\.decrypt_school_name/);
+ assert.match(migration,/revoke all on public\.printed_card_orders from public,anon,authenticated/);
+ assert.match(migration,/p_identity_checked is distinct from true/);
+ assert.doesNotMatch(migration,/GRANT SELECT ON public\.printed_card_orders TO/);
+});
+test("admin without student roster membership sees private production order management",async()=>{
+ const actions={};
+ const host={innerHTML:"",textContent:"",dataset:{},querySelector:()=>null,
+  addEventListener:(k,f)=>{actions[k]=f}};
+ const api={rpc:async(name)=>({data:name==="admin_printed_card_orders"?[]:null,error:null})};
+ const sandbox={window:{},document:{},console};
+ vm.runInNewContext(js,sandbox,{filename:"physical-card-shop.js"});
+ await sandbox.window.SAS_CARD_SHOP.show({target:host,api,user:{id:"admin-example"},profile:{role:"admin"}});
+ assert.match(host.innerHTML,/Druckaufträge · Administration/);
+ assert.match(host.innerHTML,/Bürgerkennung/);
+ assert.match(host.innerHTML,/Noch keine Vormerkungen/);
+ assert.doesNotMatch(host.innerHTML,/undefined|SAS-ID:[a-f0-9]/);
+ assert.equal(typeof actions.click,"function");
+ assert.equal(typeof actions.submit,"function");
+});
+test("portal links physical card shop before launch without unlocking other school modules",()=>{
+ const app=read("app.js"),features=read("features.js"),index=read("index.html");
+ assert.match(app,/var previewOpenPages=new Set\(\["home","apps","idcard","gallery","cardshop","votes","settings"\]\)/);
+ assert.match(app,/if\(state\.page==="cardshop"&&window\.SAS_CARD_SHOP\)/);
+ assert.match(features,/3D-Ausweis bestellen/);
+ assert.match(features,/3D-Schülerausweis bestellen/);
+ assert.match(index,/physical-card-shop\.js/);
+ assert.match(index,/physical-card-shop\.css/);
+ assert.match(index,/jszip@3\.10\.1/);
+ assert.match(read("scripts/build-worker.mjs"),/physical-card-shop\.js/);
+ assert.match(read("scripts/deploy-worker-safe.mjs"),/physical-card-shop\.css/);
+ assert.match(read("scripts/build-static.sh"),/physical-card-shop\.js/);
+});
