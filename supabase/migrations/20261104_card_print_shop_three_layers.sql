@@ -306,8 +306,8 @@ begin
 end;
 $function$
 
-revoke all on function public.admin_credit_scanned_card(p_code text, p_amount_cents integer, p_operation_id uuid, p_note text DEFAULT ''::text) from public,anon,authenticated;
-grant execute on function public.admin_credit_scanned_card(p_code text, p_amount_cents integer, p_operation_id uuid, p_note text DEFAULT ''::text) to authenticated;
+revoke all on function public.admin_credit_scanned_card(p_code text, p_amount_cents integer, p_operation_id uuid, p_note text) from public,anon,authenticated;
+grant execute on function public.admin_credit_scanned_card(p_code text, p_amount_cents integer, p_operation_id uuid, p_note text) to authenticated;
 revoke all on function public.admin_lookup_credit_card(p_code text) from public,anon,authenticated;
 grant execute on function public.admin_lookup_credit_card(p_code text) to authenticated;
 revoke all on function public.admin_printed_card_data(p_login_id text) from public,anon,authenticated;
