@@ -22,3 +22,13 @@ test("voting gallery does not fetch author identity, even using untrusted client
  assert.match(sql,/GRANT SELECT \(id, competition_slug, title, image_path, approved, created_at, meaning, option_id\)/);
  assert.doesNotMatch(sql,/GRANT SELECT \([^)]*submitted_by/);
 });
+
+test("student card is a project-internal identity document during the official school-state week",()=>{
+ const features=read("features.js"),terms=read("nutzungsregeln.html");
+ assert.match(features,/GÜLTIG IM SCHULSTAAT 12.–16\.07\.2027/);
+ assert.match(features,/dient er im Schulstaat als projektinterner Identitätsnachweis/);
+ assert.match(features,/Er ersetzt außerhalb des Projekts keinen amtlichen Ausweis/);
+ assert.match(features,/VORSCHAU · SCHULSTAAT 2027/);
+ assert.doesNotMatch(features,/NICHT ALS IDENTITÄTSNACHWEIS GÜLTIG|VORSCHAU · KEIN IDENTITÄTSNACHWEIS/);
+ assert.match(terms,/innerhalb des Schulstaats als projektinterner Identitätsnachweis/);
+});
