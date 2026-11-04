@@ -183,3 +183,8 @@ Der Originalprototyp `SaS_ONE_Prototyp_v3.html` konnte aus früheren Gesprächsd
 - Für echte Personalausweise, Visa-Anträge und Schülerfotos sind Freigaben der Schule, DSGVO-Prüfung, Berechtigungskonzept und gesonderte serverseitige Speicherung nötig. Dies wird nicht ohne diese Voraussetzungen aktiviert.
 - Statisches GitHub-Pages-Deployment benutzt `sh scripts/build-static.sh` und kopiert `portal/`. Der kostenlose Cloudflare Worker wurde außerdem manuell aktualisiert; er erhält Änderungen nicht automatisch.
 - Keine kostenpflichtigen Upgrades, externen Dienste oder Zahlungen. Gesamtkostenbudget: 0 EUR.
+
+
+## Sicherheit und schulische Abnahme (04.11.2026)
+
+Die aktuellen, **nicht destruktiven** Datenbank-Rollentests für anonyme Nutzer, zwei unabhängige Bürger, Operator und Administration sind unter [`tests/live-readonly-identity-security.sql`](tests/live-readonly-identity-security.sql) dokumentiert. Alle Szenarien nutzen ausschließlich schreibgeschützte Transaktionen. Die [technischen Abnahmebedingungen und noch offenen Schulbestätigungen](docs/ABNAHME_RAUM_DATENSCHUTZ_2026-11-04.md) unterscheiden geprüfte Schutzmaßnahmen ausdrücklich von noch ausstehenden organisatorischen Freigaben. Keine Klarnamen, Passwörter oder Studentendateien werden durch die Tests ausgegeben.
