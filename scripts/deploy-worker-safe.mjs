@@ -11,6 +11,7 @@ if(!/^[0-9a-f]{32}$/.test(accountId)||!token)throw Error("Cloudflare credentials
 const names=[
  "index.html","datenschutz.html","nutzungsregeln.html","styles.css","features.css","tutorial.css","brand-emblem.css",
  "public-visa.css","shop-plan.css","portal-extras.css","app.js","features.js",
+ "physical-card-shop.css","physical-card-shop.js",
  "roles.js","attendance.js","tutorial.js","config.js","work-hours.js",
  "shop-management.js","admin-credit.js","public-visa.js","shop-plan.js",
  "mobile-ui.css","portal-extras.js"
