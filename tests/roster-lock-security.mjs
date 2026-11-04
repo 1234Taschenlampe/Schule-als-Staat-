@@ -5,6 +5,7 @@ import {readFileSync} from "node:fs";
 const read=(path)=>readFileSync(new URL("../"+path,import.meta.url),"utf8");
 const roster=read("supabase/migrations/20261104_enforce_official_roster.sql");
 const votes=read("supabase/migrations/20261104_roster_scoped_vote_authorization.sql");
+const rotatedVotes=read("supabase/migrations/20261104_enforce_initial_password_rotation.sql");
 const signup=read("supabase/migrations/20261024_roster_only_signup_guard.sql");
 const app=read("app.js");
 
@@ -36,4 +37,12 @@ test("the login never invites public account creation",()=>{
   assert.match(app,/Bürgerkennung oder Verwaltungs-E-Mail/);
   assert.match(app,/Eigenständige Registrierung ist deaktiviert/);
   assert.doesNotMatch(app,/Dein Konto wird von der Schule anhand der offiziellen Bürgerliste angelegt\./);
+});
+
+test("official votes cannot be cast using the unchanged seven-digit start PIN",()=>{
+  assert.match(rotatedVotes,/auth\.users u/);
+  assert.match(rotatedVotes,/sas_initial_password/);
+  assert.match(rotatedVotes,/Bitte ändere zuerst dein einmaliges Startpasswort/);
+  assert.match(rotatedVotes,/r\.active/);
+  assert.match(rotatedVotes,/unique_violation/);
 });
