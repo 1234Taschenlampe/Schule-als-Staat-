@@ -33,7 +33,7 @@ Responsive Projektplattform mit digitalen Guthaben, QR-Kassenzahlungen, Bargeldb
 - Abstimmungen mit mehreren Antworten, administrativer Freischaltung und aggregierter Live-Auswertung.
 - Genau eine Stimme pro freigeschaltetem Konto und Abstimmung; keine automatische Gleichsetzung eines Kontos mit einer Person.
 - Der endgültige Staatsname wird erst abgestimmt und ist in V4 ausdrücklich nicht vorgegeben.
-- Datenschutz: RLS, eingeschränkte RPC-Rechte, keine geheimen API-Schlüssel im Client. Keine Kreditkarten-/Echtgeldabwicklung.
+- Datenschutz: RLS, eingeschränkte RPC-Rechte, keine geheimen API-Schlüssel im Client. Keine Euro-Zahlung für den Erwerb von Schulwährung innerhalb dieser Web-App; der Erwerb gegen echte Euro außerhalb der App ist davon zu unterscheiden.
 
 ## Voraussetzungen zur echten Mehrgeräte-Nutzung
 
@@ -48,7 +48,7 @@ Responsive Projektplattform mit digitalen Guthaben, QR-Kassenzahlungen, Bargeldb
    update public.profiles set role = 'cashier'
    where id = (select id from auth.users where email = 'kasse@example.org');
    ```
-6. Admin kann nach Anmeldung über die SQL-RPC `issue_credits` (oder den SQL-Editor) Testguthaben zuteilen; siehe Schema. **Keine echten Geldbeträge**.
+6. Admin kann nach Anmeldung über die SQL-RPC `issue_credits` (oder den SQL-Editor) Testguthaben zuteilen; siehe Schema. **Die digitale Zuteilung ist keine Euro-Zahlung über die Webseite; Schulwährung kann außerhalb des Portals gegen echte Euro erworben werden.**
 7. Website per HTTPS deployen. `.github/workflows/pages.yml` ist für GitHub Pages vorbereitet. Beim **privaten** GitHub-Repository kann GitHub Pages je nach Tarif eingeschränkt sein. Eine Veröffentlichung und die nötigen Repository-Einstellungen sind **nicht automatisch aktiviert**. Alternativ statische Dateien auf Cloudflare Pages oder Netlify bereitstellen.
 8. Mit zwei echten, getrennten Smartphone-Logins Zahlung testen (Kassierer und Käufer), Browser Safari/Chrome/Firefox prüfen, Ablaufzeit, Doppelzahlung und Bargeld getrennt prüfen.
 
@@ -60,7 +60,7 @@ Responsive Projektplattform mit digitalen Guthaben, QR-Kassenzahlungen, Bargeldb
 - Kassenpersonal kann keine Guthaben anderer Nutzer ohne deren Freigabe abbuchen.
 - Kamera-Streams werden nicht gespeichert oder auf Server hochgeladen.
 - Bargeld ist ein Umsatzprotokoll ohne Auswirkung auf die digitale Wallet; tatsächliche Kassenbestände müssen getrennt abgestimmt werden.
-- Zahlungen in dieser Version sind für eine **interne, virtuelle Schulwährung**, nicht für Kartenanbieter/SEPA/Stripe. Bei Echtgeld sind zusätzliche Provider-, Rechts-, Steuer- und Jugendschutzanforderungen nötig.
+- Digitale Kontobuchungen in dieser Version nutzen eine **interne Schulwährung**, nicht unmittelbar Kartenanbieter/SEPA/Stripe. Der Erwerb von Schulwährung gegen echte Euro ist ein eigener, finanziell relevanter Vorgang; Kurs, Ausgabe, Erstattung und die rechtlichen Anforderungen sind vor einem solchen Erwerb verbindlich zu klären.
 - `config.js` enthält absichtlich keine gültige Verbindung. Vor Einrichtung zeigt die Oberfläche keinen vorgetäuschten erfolgreichen Zahlungsbetrieb.
 
 ## Lokale Vorschau
