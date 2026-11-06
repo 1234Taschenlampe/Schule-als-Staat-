@@ -33,7 +33,7 @@ test('dashboard and portal have usable role-aware navigation; user text is escap
   await x.click('apps');
   assert.match(x.root.innerHTML,/Alle Bereiche/);
   for(const id of ['idcard','gallery','map','rooms','shops','votes','lost'])assert.match(x.root.innerHTML,new RegExp('data-nav="'+id+'"'));
-  assert.equal(x.root.innerHTML.includes('data-nav="visa"'),role==='admin','visa remains admin-only');
+  assert.doesNotMatch(x.root.innerHTML,/data-nav="(?:visa|guestvisa)"/,'paused ViSA is not listed for any role');
   for(const id of ['bulletin','blog','events','jobs','laws','parties','courts']){
    assert.equal(x.root.innerHTML.includes('data-nav="'+id+'"'),role==='admin'||role==='member',id+' navigation preview mismatch');
   }
@@ -132,11 +132,16 @@ test('citizen account shows real Bürgerkennung, administrative account shows re
  await admin.click('settings');
  assert.match(admin.root.innerHTML,/<strong>E-Mail<\/strong><p>verwaltung@example\.test<\/p>/);
 });
-test('public ViSA hash link is handled even when a citizen is already logged in',async()=>{
- const user=await launch('member','a1b2c3d4e5@accounts.schule-als-staat.invalid',true);
- assert.equal(typeof user.windowListeners.hashchange,'function');
- user.sandbox.location.hash='#visa-onboarding';
- user.windowListeners.hashchange();
- assert.match(user.root.innerHTML,/sas-public-visa-page/);
- assert.match(user.visaRoot.innerHTML,/guest-visa-form/);
+test('paused ViSA is hidden from login, administration and direct hash routes',async()=>{
+ const admin=await launch('admin','verwaltung@example.test',true);
+ await admin.click('apps');
+ assert.doesNotMatch(admin.root.innerHTML,/data-nav="(?:visa|guestvisa)"/);
+ await admin.click('visa');
+ assert.doesNotMatch(admin.root.innerHTML,/sas-public-visa-page|Öffentliches ViSA/);
+ const member=await launch('member','a1b2c3d4e5@accounts.schule-als-staat.invalid',true);
+ assert.equal(typeof member.windowListeners.hashchange,'function');
+ member.sandbox.location.hash='#visa-onboarding';
+ member.windowListeners.hashchange();
+ assert.doesNotMatch(member.root.innerHTML,/sas-public-visa-page|guest-visa-form/);
+ assert.equal(member.visaRoot.innerHTML,'');
 });

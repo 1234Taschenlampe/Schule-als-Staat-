@@ -13,7 +13,6 @@ async function collect(ctx){
  const tasks=[
   ["rooms",()=>records(api.from("room_bookings").select("id,place_id,starts_at,ends_at,purpose,status,submitted_at").eq("booked_by",id).order("submitted_at",{ascending:false}).limit(60))],
   ["jobs",()=>records(api.from("job_applications").select("id,job_id,submitted_at").eq("applicant_id",id).order("submitted_at",{ascending:false}).limit(60))],
-  ["visas",()=>records(api.from("visa_applications").select("id,planned_entry,status,submitted_at").eq("applicant_id",id).order("submitted_at",{ascending:false}).limit(60))],
   ["shops",async()=>{const r=await api.rpc("shop_room_catalog");if(r.error)throw r.error;return Array.isArray(r.data)?r.data:[];}]
  ];
  const all=await Promise.allSettled(tasks.map(([,fn])=>fn()));
@@ -22,7 +21,6 @@ async function collect(ctx){
  const items=[];
  found.rooms.forEach(r=>items.push({kind:"Raumreservierung",title:"Raumanfrage",detail:(r.purpose||"Raum reservieren")+" · "+time(r.starts_at),date:r.submitted_at,status:r.status,page:"rooms"}));
  found.jobs.forEach(r=>items.push({kind:"Beruf",title:"Bewerbung",detail:"Bewerbung eingereicht · "+time(r.submitted_at),date:r.submitted_at,status:"submitted",page:"jobs"}));
- found.visas.forEach(r=>items.push({kind:"ViSA",title:"ViSA-Antrag",detail:"Geplante Einreise: "+(r.planned_entry||"unbekannt"),date:r.submitted_at,status:r.status,page:"visa"}));
  found.shops.forEach(r=>(r.slots||[]).filter(s=>s.mine).forEach(s=>items.push({kind:"Shop",title:"Shop-Anfrage · "+r.name+" / Platz "+s.number,detail:s.shop||"Shopplatz",date:null,status:s.status,page:"map"})));
  items.sort((a,b)=>String(b.date||"").localeCompare(String(a.date||"")));
  return {items,unavailable};
@@ -30,7 +28,7 @@ async function collect(ctx){
 function heading(name,sub){return '<div class="sas-hub-header"><span class="sas-kicker">SCHULE ALS STAAT</span><h1>'+esc(name)+'</h1><p>'+esc(sub)+'</p></div>';}
 function issues(unavailable){return unavailable.length?'<p class="sas-hub-warning" role="status">Einige Antragsdaten sind vorübergehend nicht abrufbar. Die angezeigte Übersicht ist möglicherweise unvollständig.</p>':"";}
 async function showApplications(ctx){
- const target=ctx.target;target.innerHTML=heading("Meine Anträge","Shopplätze, Raumreservierungen, Bewerbungen und ViSA auf einen Blick.")+'<p role="status">Anträge werden geladen …</p>';
+ const target=ctx.target;target.innerHTML=heading("Meine Anträge","Shopplätze, Raumreservierungen und Bewerbungen auf einen Blick.")+'<p role="status">Anträge werden geladen …</p>';
  const result=await collect(ctx);if(!target.isConnected)return;
  const filters=['Alle','In Prüfung','Genehmigt','Abgelehnt','Eingereicht'];
  target.innerHTML=heading("Meine Anträge","Der jeweilige Status stammt aus deinem angemeldeten Benutzerkonto.")+
@@ -62,7 +60,7 @@ async function showUpdates(ctx){
 async function enrichHome(ctx){
  const host=ctx.target;if(!host)return;
  const role=ctx.profile?.role==="admin"?"Administration":ctx.schoolRoles?.operator?"Operator":ctx.schoolRoles?.jobs?.length?"Schulberuf / Shop":"Schulbürger";
- const options=role==="Administration"?[["admin","Verwaltung"],["guestvisa","ViSA-Anträge"],["map","Schulplan"]]:
+ const options=role==="Administration"?[["admin","Verwaltung"],["map","Schulplan"]]:
    role==="Operator"?[["roles","Berufe & Rollen"],["jobs","Bewerbungen"],["map","Schulplan"]]:
    role==="Schulberuf / Shop"?[["shopmanage","Shopverwaltung"],["applications","Meine Anträge"],["workhours","Arbeitszeit"]]:
    [["applications","Meine Anträge"],["map","Shopplätze"],["workhours","Meine Arbeitszeit"]];

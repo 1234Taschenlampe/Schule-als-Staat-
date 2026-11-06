@@ -4,7 +4,6 @@
 const navigation=[
  ["idcard","Schülerausweis","Digitale, selbst gepflegte Ausweiskarte"],
  ["gallery","Ausweis-Galerie","Ausweisdesign wählen und speichern"],
- ["visa","ViSA","Einreiseanträge verwalten"],
  ["bulletin","Schwarzes Brett","Offizielle Nachrichten"],
  ["blog","Blog","Projektbeiträge"],
  ["shops","Geschäfte","Geschäfte und ihre Kassen"],
