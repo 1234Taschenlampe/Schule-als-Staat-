@@ -26,9 +26,9 @@ test("native Android APK project with secure official origin and camera selectio
 });
 test("admin-only SaaS shop application discoverability and real APK CI",()=>{
  const features=read("features.js");
- assert.match(features,/current==="shops"&&admin\(\)\?box\("SaS Android-App · Admin-Vorschau"/);
+ assert.match(features,/current==="shops"&&admin\(\)\?box\("Android-App · Entwicklung"/);
  assert.match(features,/actions\/workflows\/android-app\.yml/);
- assert.match(features,/NFC-Zahlungen sind noch nicht freigeschaltet/);
+ assert.match(features,/NFC-Zahlungen sind nicht freigeschaltet/);
  assert.match(workflow,/assembleDebug/);
  assert.match(workflow,/upload-artifact@v4/);
  assert.match(workflow,/app-debug\.apk/);
