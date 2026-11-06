@@ -10,7 +10,7 @@ function notice(text,err=false){
 }
 function render(){
  const ctx=state,admin=ctx.profile?.role==="admin";
- const wrap='<div class="sas-space"><div class="sas-heading"><div><span class="sas-kicker">VERWALTUNG / SCHULSTAAT</span><h1>Berufe & Rollen</h1><p>Admin hat den höchsten Rang. Operatoren können Schulberufe verwalten – keine höheren Berechtigungen vergeben.</p></div></div>';
+ const wrap='<div class="sas-space"><div class="sas-heading"><div><span class="sas-kicker">VERWALTUNG / SCHULSTAAT</span><h1>Berufe & Rollen</h1><p>Die Administration verwaltet Berechtigungen. Operatoren dürfen Schulberufe zuweisen, aber keine zusätzlichen Verwaltungsrechte vergeben.</p></div></div>';
  const roles=roleList.filter(r=>admin||r.tier<80);
  const card=people.length?people.map(p=>{
   const locked=!admin&&(p.system_role==="admin"||(p.jobs||[]).includes("operator"));
