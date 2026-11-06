@@ -37,7 +37,7 @@ async function showApplications(ctx){
   issues(result.unavailable)+
   '<div class="sas-hub-filters" role="group" aria-label="Antragsstatus filtern">'+filters.map((f,i)=>'<button type="button" data-hub-filter="'+i+'" aria-pressed="'+(i===0)+'">'+esc(f)+'</button>').join("")+'</div>'+
   '<div id="sas-hub-application-list" class="sas-hub-list"></div>'+
-  '<div class="sas-hub-shortcuts">'+button("map","Shop-Platz suchen")+button("rooms","Raum reservieren")+button("jobs","Berufe entdecken")+'</div>';
+  '<div class="sas-hub-shortcuts">'+button("map","Shop-Platz suchen")+button("rooms","Raum reservieren")+button("jobs","Stellenangebote")+'</div>';
  const host=target.querySelector("#sas-hub-application-list");
  function draw(filter){
   const list=result.items.filter(x=>filter===0||(filter===1&&x.status==="pending")||(filter===2&&x.status==="approved")||(filter===3&&x.status==="rejected")||(filter===4&&x.status==="submitted"));
@@ -53,8 +53,8 @@ async function showUpdates(ctx){
  const decisions=applications.items.filter(x=>["approved","rejected","pending"].includes(x.status)).slice(0,10);
  const dateEvents=(events||[]).map(e=>'<article class="sas-hub-item"><div><strong>'+esc(e.title)+'</strong><p>'+esc(time(e.starts_at))+'</p></div>'+button("events","Veranstaltung")+'</article>');
  const pollCount=Array.isArray(ctx.polls)?ctx.polls.filter(p=>p.status==="open"&&!p.has_voted).length:0;
- const poll=pollCount?'<article class="sas-hub-item"><div><strong>'+pollCount+' offene Abstimmung'+(pollCount===1?'':'en')+'</strong><p>Deine Stimme steht noch aus.</p></div>'+button("votes","Abstimmen")+'</article>':"";
- target.innerHTML=heading("Mitteilungen","Diese Ansicht zeigt den aktuellen Datenstand beim Öffnen; sie verschickt keine Push-Nachrichten.")+
+ const poll=pollCount?'<article class="sas-hub-item"><div><strong>'+pollCount+' offene Abstimmung'+(pollCount===1?'':'en')+'</strong><p>Du hast bei mindestens einer offenen Abstimmung noch nicht abgestimmt.</p></div>'+button("votes","Abstimmen")+'</article>':"";
+ target.innerHTML=heading("Mitteilungen","Stand beim Öffnen der Seite. Es werden keine Push-Nachrichten verschickt.")+
   issues(applications.unavailable)+(events===null?'<p class="sas-hub-warning">Veranstaltungen konnten nicht geladen werden.</p>':"")+
   '<section class="sas-hub-list"><h2>Deine Vorgänge</h2>'+ (decisions.length?decisions.map(x=>card(x.title,x.detail,x.status,x.page)).join(""):'<p class="sas-hub-empty">Keine offenen oder entschiedenen Anträge vorhanden.</p>')+'</section>'+
   '<section class="sas-hub-list"><h2>Demnächst</h2>'+poll+(dateEvents.length?dateEvents.join(""):'<p class="sas-hub-empty">Keine bevorstehenden Veranstaltungen eingetragen.</p>')+'</section>';
