@@ -10,7 +10,7 @@ const token=process.env.CLOUDFLARE_API_TOKEN||"";
 if(!/^[0-9a-f]{32}$/.test(accountId)||!token)throw Error("Cloudflare credentials missing; deployment aborted.");
 const names=[
  "index.html","datenschutz.html","nutzungsregeln.html","styles.css","features.css","tutorial.css","brand-emblem.css",
- "public-visa.css","shop-plan.css","portal-extras.css","app.js","features.js",
+ "public-visa.css","shop-plan.css","portal-extras.css","flag-voting.css","flag-voting.js","app.js","features.js",
  "physical-card-shop.css","physical-card-shop.js",
  "roles.js","attendance.js","tutorial.js","config.js","work-hours.js",
  "shop-management.js","admin-credit.js","public-visa.js","shop-plan.js",
