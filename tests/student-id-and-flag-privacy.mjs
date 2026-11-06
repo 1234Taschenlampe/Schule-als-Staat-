@@ -28,7 +28,7 @@ test("student card is a project-internal identity document during the official s
  assert.match(features,/GÜLTIG IM SCHULSTAAT 12.–16\.07\.2027/);
  assert.match(features,/dient er im Schulstaat als projektinterner Identitätsnachweis/);
  assert.match(features,/Er ersetzt außerhalb des Projekts keinen amtlichen Ausweis/);
- assert.match(features,/VORSCHAU · SCHULSTAAT 2027/);
+ assert.match(features,/DESIGNVORSCHAU · PROJEKT 2027/);
  assert.doesNotMatch(features,/NICHT ALS IDENTITÄTSNACHWEIS GÜLTIG|VORSCHAU · KEIN IDENTITÄTSNACHWEIS/);
  assert.match(terms,/innerhalb des Schulstaats als projektinterner Identitätsnachweis/);
 });
