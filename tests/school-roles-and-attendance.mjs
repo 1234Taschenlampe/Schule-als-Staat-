@@ -82,7 +82,7 @@ test("first-visit tutorial is per-account and never asks for real passwords or p
  assert.match(tutorial,/student_onboarding/);
  assert.match(tutorial,/completed_at/);
  assert.match(tutorial,/Später/);
- assert.match(tutorial,/Im Tutorial wird nichts bezahlt/);
+ assert.match(tutorial,/In diesem Rundgang wird nichts bezahlt/);
  assert.match(tutorialSQL,/student_onboarding_read/);
  assert.match(tutorialSQL,/student_onboarding_update/);
  assert.match(app,/SAS_TUTORIAL\.start/);
