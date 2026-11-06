@@ -26,7 +26,7 @@ test('dashboard and portal have usable role-aware navigation; user text is escap
  for(const role of ['member','cashier','admin']){
   const x=await launch(role);
   assert.match(x.root.innerHTML,/Alex &lt;Beispiel&gt;/);
-  assert.match(x.root.innerHTML,role==='member'?/Dein Schulstaat startet bald/:/Guten Tag,/);
+  assert.match(x.root.innerHTML,role==='member'?/Dein Zugang ist eingerichtet/:/Guten Tag,/);
   assert.doesNotMatch(x.root.innerHTML,/NaN|\.\/portal\/|V4 ·/);
   assert.equal(x.root.innerHTML.includes('data-nav="admin"'),role==='admin');
   assert.equal(x.root.innerHTML.includes('data-nav="register"'),role!=='member');
@@ -64,7 +64,7 @@ test('polls close for normal pupils after 26 November but ID remains available',
  assert.match(x.root.innerHTML,/Abstimmungsphase .* beendet/);
  assert.match(x.root.innerHTML,/data-nav="votes"[^>]*disabled aria-disabled="true"/);
  await x.click('votes');
- assert.match(x.root.innerHTML,/Dein Schulstaat startet bald/);
+ assert.match(x.root.innerHTML,/Dein Zugang ist eingerichtet/);
  await x.click('idcard');
  assert.match(x.document.title,/Schülerausweis/);
  const elevated=await launch('cashier','ui@example.test',false,{operator:false,jobs:[]},AfterNikolausmarkt);
