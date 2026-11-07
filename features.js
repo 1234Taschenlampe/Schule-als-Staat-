@@ -2,13 +2,13 @@
 (function(){
 "use strict";
 const navigation=[
- ["idcard","Schülerausweis","Digitale, selbst gepflegte Ausweiskarte"],
+ ["idcard","Schülerausweis","Persönlicher Ausweis mit QR-Code"],
  ["gallery","Ausweis-Galerie","Ausweisdesign wählen und speichern"],
  ["bulletin","Schwarzes Brett","Offizielle Nachrichten"],
  ["blog","Blog","Projektbeiträge"],
  ["shops","Geschäfte","Geschäfte und ihre Kassen"],
- ["map","Schulplan & Shops","Vier Shops pro Klassenzimmer buchen"],
- ["rooms","Raumreservierung","Raumreservierung"],
+ ["map","Schulplan & Shops","Shopplätze im Schulplan anfragen"],
+ ["rooms","Raumreservierung","Raumanfragen und Reservierungen"],
  ["events","Veranstaltungen","Termine und Anmeldungen"],
  ["lost","Fundbüro","Verloren und gefunden"],
  ["jobs","Berufe","Offene Stellen und Bewerbungen"],
@@ -62,7 +62,7 @@ return wrap(current,
 }
 function renderGallery(){
  const currentDesign=data[0]?.design||"classic";
- return wrap(current,box("Designs für deinen Schülerausweis",'<p class="sas-note">Die Vorlagen werden aus deinem tatsächlichen Konto erstellt, ohne erfundene Personendaten.</p><div class="sas-design-grid">'
+ return wrap(current,box("Designs für deinen Schülerausweis",'<p class="sas-note">Die Vorschau verwendet die Angaben aus deinem Bürgerkonto.</p><div class="sas-design-grid">'
  +["classic","blue","forest","mono","custom:#4c8c69"].map(v=>'<article class="sas-design-tile"><div class="sas-id '+cardTheme(v).cls+'"'+cardTheme(v).style+'><div class="sas-id-top"><strong>Schule als Staat</strong><span>SCHÜLERAUSWEIS</span></div><div><small>MITGLIED</small><h2>'+escapeHtml(ctx.profile.display_name||data[0]?.display_name||'Name nicht verfügbar')+'</h2></div><span class="sas-id-bottom">DESIGNVORSCHAU · PROJEKT 2027</span></div><h3>'+escapeHtml({"classic":"Klassisch","blue":"Blau","forest":"Waldgrün","mono":"Monochrom","custom:#4c8c69":"Eigene Farbe"}[v])+'</h3>'+btn(currentDesign===v?"Aktuell ausgewählt":"Design verwenden","choose-design",v,currentDesign===v?"muted":"primary")+'</article>').join("")+'</div>'));
 }
 function renderVisa(){
@@ -100,7 +100,7 @@ let kind=current==="shops"?"shop":null;
 let entries=kind?data.filter(p=>p.kind===kind):data;
 let withCoordinates=entries.filter(p=>p.x_percent!==null&&p.y_percent!==null);
 return wrap(current,
- (current==="shops"?box("SaS-Ausweis-Shop",'<p class="sas-note">Deinen persönlichen Schülerausweis als zweifarbige, flache 3D-Karte vormerken.</p>'+linkPage("3D-Schülerausweis bestellen","cardshop")):"")+
+ (current==="shops"?box("SaS-Ausweis-Shop",'<p class="sas-note">Gedruckten Schülerausweis in zwei Farben unverbindlich vormerken.</p>'+linkPage("3D-Schülerausweis bestellen","cardshop")):"")+
  (current==="shops"&&admin()?box("Android-App · Entwicklung",'<p class="sas-note">Android-App im Entwicklungsstand mit Anmeldung und QR-Kamera. NFC-Zahlungen sind nicht freigeschaltet.</p><a class="sas-btn soft" target="_blank" rel="noopener noreferrer" href="https://github.com/1234Taschenlampe/Schule-als-Staat-/actions/workflows/android-app.yml">Android-APK herunterladen (GitHub Actions)</a>'):"")+
  (current==="map"?box("Interaktiver Schulplan",
  withCoordinates.length?'<div class="sas-plan"><div class="sas-plan-caption">Positionen wurden von der Administration hinterlegt · Lageplan nicht maßstabsgetreu</div>'+withCoordinates.map(p=>'<button data-feature-action="place-show" data-id="'+escapeAttr(p.id)+'" class="sas-pin" style="left:'+Number(p.x_percent)+'%;top:'+Number(p.y_percent)+'%" title="'+escapeAttr(p.name)+'">'+escapeHtml(p.name.slice(0,18))+'</button>').join("")+'</div>':empt("Noch keine Orte mit echten Positionen eingetragen. Die Schuladministration kann sie unten ergänzen.")) : "")+
