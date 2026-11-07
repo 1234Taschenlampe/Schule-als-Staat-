@@ -17,7 +17,8 @@ test("all portal screens render without demo data or backend errors", async()=>{
  const sandbox={window:{},Date,Intl,console,confirm:()=>true,alert:()=>{}};
  vm.runInNewContext(js,sandbox);
  const pages=sandbox.window.SAS_FEATURES.pages;
- assert.equal(Object.keys(pages).length,14);
+ assert.equal(Object.keys(pages).length,13);
+ assert.equal(Object.hasOwn(pages,"visa"),false,"ViSA remains hidden until reactivation");
  const mock=()=>{
   const t=new Proxy({}, {get(_,property){if(property==="then")return (ok)=>ok({data:[],error:null});return ()=>t;}});
   return t;
