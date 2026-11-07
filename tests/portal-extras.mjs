@@ -48,11 +48,11 @@ test("all application items are scoped to the signed-in account and shop mine fl
  const {api,user}=apiFixture();
  const r=await hub.collect({api,user:{id:user}});
  assert.equal(r.unavailable.length,0);
- assert.equal(r.items.length,4);
+ assert.equal(r.items.length,3);
  assert.ok(r.items.some(x=>x.title.includes("A003 / Platz 1")));
  assert.ok(!r.items.some(x=>x.title.includes("Platz 2")));
  assert.ok(!r.items.some(x=>x.detail.includes("Geheim")));
- assert.ok(r.items.some(x=>x.status==="approved"&&x.kind==="ViSA"));
+ assert.ok(r.items.every(x=>x.kind!=="ViSA"),"Paused ViSA must not appear in the application overview");
 });
 test("global search finds real rooms, events and static school plan labels without personal directory",async()=>{
  const {api}=apiFixture();
