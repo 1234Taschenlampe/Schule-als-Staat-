@@ -24,6 +24,7 @@ jobs:
           node --check features.js
           node --check physical-card-shop.js
           node --test tests/physical-card-shop.mjs
+          node --test tests/editorial-quality.mjs
           node --test tests/android-app-preview.mjs
           node --check shop-plan.js
           node --check portal-extras.js
