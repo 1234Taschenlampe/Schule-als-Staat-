@@ -109,7 +109,7 @@
     state.schoolRoles=await rpc("my_school_roles",{})||{operator:false,jobs:[]};
     state.users=state.profile.role==="admin"?await rpc("admin_list_user_ids",{}):[];
     state.deletionRequests=state.profile.role==="admin"?await rpc("admin_list_school_deletion_requests",{}):[];
-    state.polls=(state.profile.role==="admin"||state.schoolRoles?.operator)?await rpc("poll_catalog",{}):[];
+    state.polls=state.profile.role==="admin"?await rpc("poll_catalog",{}):[];
     state.pollResults=(state.profile.role==="admin"||state.schoolRoles?.operator)?await rpc("admin_poll_results",{}):[];
   }
   var refreshPending=false;
@@ -153,7 +153,7 @@
     var pupilPages=["home","apps","idcard","gallery","cardshop","wallet","pay","history","map","rooms","shops","lost","settings","workhours","myjob","applications","updates"];
     // ViSA is paused for all roles, including admins. Keep the implementation for later reuse.
     if(id==="visa"||id==="guestvisa")return false;
-    if(id==="votes"&&!administrator&&!operator)return false;
+    if(id==="votes"&&!administrator)return false;
     if(id==="overlord"||id==="admincredit"||id==="admin")return administrator;
     if(id==="register")return adminOrCashier();
     if(id==="roles")return administrator||operator;
@@ -607,7 +607,7 @@
       if(id==="close-search"){document.getElementById("portal-search").close();return;}
       if(id.indexOf("to-")===0)return await navigate(id.slice(3));
       if(id==="camera-test")return await cameraTest();
-      if(id==="restart-tutorial"&&window.SAS_TUTORIAL)return await window.SAS_TUTORIAL.reopen(api,state.user.id,{previewOnly:isPreviewMember(),pollsOpen:!previewVotingClosed(),pollsVisible:state.profile?.role==="admin"||Boolean(state.schoolRoles?.operator)});
+      if(id==="restart-tutorial"&&window.SAS_TUTORIAL)return await window.SAS_TUTORIAL.reopen(api,state.user.id,{previewOnly:isPreviewMember(),pollsOpen:!previewVotingClosed(),pollsVisible:state.profile?.role==="admin"});
       if(id==="close-poll"){
         if(!state.profile||(state.profile.role!=="admin"&&!state.schoolRoles?.operator))throw Error("Keine Verwaltungsberechtigung");
         if(!window.confirm("Diese Abstimmung wirklich schließen? Danach sind keine Stimmen mehr möglich."))return;
@@ -842,7 +842,7 @@
     if(state.user){await claimDesignatedAdmin();await fetchData();restorePage();}
 
     render();
-    if(state.user&&!state.legalStatus?.needs_acknowledgement&&!state.deletionStatus?.requested&&window.SAS_TUTORIAL)void window.SAS_TUTORIAL.start(api,state.user.id,{previewOnly:isPreviewMember(),pollsOpen:!previewVotingClosed(),pollsVisible:state.profile?.role==="admin"||Boolean(state.schoolRoles?.operator)});
+    if(state.user&&!state.legalStatus?.needs_acknowledgement&&!state.deletionStatus?.requested&&window.SAS_TUTORIAL)void window.SAS_TUTORIAL.start(api,state.user.id,{previewOnly:isPreviewMember(),pollsOpen:!previewVotingClosed(),pollsVisible:state.profile?.role==="admin"});
     if(deepLink&&state.user&&!state.legalStatus?.needs_acknowledgement&&!state.deletionStatus?.requested&&!isPreviewMember()){try{await openInvoice(deepLink);}catch(e){fail(e);}}
     api.auth.onAuthStateChange(function(event,session){
       var next=session&&session.user||null;
@@ -856,7 +856,7 @@
       state.user=next;state.profile=null;state.legalStatus=null;state.deletionStatus=null;state.deletionRequests=[];state.showDeletionForm=false;state.deletionStage=1;state.deletionReadToEnd=false;state.wallet=null;state.ledger=[];state.cash=[];state.requests=[];state.users=[];state.polls=[];state.pollResults=[];state.schoolRoles={operator:false,jobs:[]};state.active=null;state.invoice=null;
       if(window.SAS_TUTORIAL)window.SAS_TUTORIAL.logout();
       void stopScanner().then(async function(){
-        try{if(state.user){await claimDesignatedAdmin();await fetchData();}render();if(state.user&&!state.legalStatus?.needs_acknowledgement&&!state.deletionStatus?.requested&&window.SAS_TUTORIAL)void window.SAS_TUTORIAL.start(api,state.user.id,{previewOnly:isPreviewMember(),pollsOpen:!previewVotingClosed(),pollsVisible:state.profile?.role==="admin"||Boolean(state.schoolRoles?.operator)});if(deepLink&&state.user&&!isPreviewMember())await openInvoice(deepLink);}
+        try{if(state.user){await claimDesignatedAdmin();await fetchData();}render();if(state.user&&!state.legalStatus?.needs_acknowledgement&&!state.deletionStatus?.requested&&window.SAS_TUTORIAL)void window.SAS_TUTORIAL.start(api,state.user.id,{previewOnly:isPreviewMember(),pollsOpen:!previewVotingClosed(),pollsVisible:state.profile?.role==="admin"});if(deepLink&&state.user&&!isPreviewMember())await openInvoice(deepLink);}
         catch(e){fail(e);render();}
       });
     });
