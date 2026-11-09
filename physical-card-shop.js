@@ -75,7 +75,7 @@ function html(){
  draw();
 }
 async function load(record){if(!/^SAS-[A-Z2-9]{10}$/.test(record?.login_id||""))throw Error("Ausweisdaten fehlen.");qr=getMatrix(record.qr_code);info=record;pixels=makePixels();verified=false;html();}
-async function refreshOrders(){if(profile.role==="admin"){orders=await call("admin_printed_card_orders");if(!Array.isArray(orders))orders=[];}}
+async function refreshOrders(){if(profile.role==="admin"){orders=await call("admin_printed_card_orders_ids");if(!Array.isArray(orders))orders=[];}}
 function box(mesh,x,y,z,xx,yy,zz){
  const k=mesh.v.length;mesh.v.push([x,y,z],[xx,y,z],[xx,yy,z],[x,yy,z],[x,y,zz],[xx,y,zz],[xx,yy,zz],[x,yy,zz]);
  [[0,2,1],[0,3,2],[4,5,6],[4,6,7],[0,1,5],[0,5,4],[1,2,6],[1,6,5],[2,3,7],[2,7,6],[3,0,4],[3,4,7]].forEach(t=>mesh.t.push(t.map(i=>i+k)));
@@ -121,7 +121,7 @@ async function show(ctx){
  host=ctx.target;api=ctx.api;profile=ctx.profile;verified=false;orders=[];host.textContent="Ausweis-Shop lädt …";
  await refreshOrders();
  if(profile.role==="admin"){info=null;pixels=null;html();}
- else await load(await call("my_printed_card_data"));
+ else await load(await call("my_printed_card_data_ids"));
  if(host.dataset.boundCardshop)return;host.dataset.boundCardshop="true";
  host.addEventListener("click",async e=>{
   const b=e.target.closest("#cardshop-request,#cardshop-cancel,#cardshop-check,#cardshop-export,[data-card-open]");
@@ -131,12 +131,12 @@ async function show(ctx){
    else if(b.id==="cardshop-cancel"){if(!confirm("Vormerkung stornieren?"))return;await call("cancel_printed_card");info.status="storniert";await refreshOrders();html();message("Vormerkung storniert.");}
    else if(b.id==="cardshop-check")await verify();
    else if(b.id==="cardshop-export")await export3MF();
-   else if(b.dataset.cardOpen){if(profile.role!=="admin")throw Error("Nur Admin.");await load(await call("admin_printed_card_data",{p_login_id:b.dataset.cardOpen}));message("Offizielle Ausweisdaten für den Druck geladen.");}
+   else if(b.dataset.cardOpen){if(profile.role!=="admin")throw Error("Nur Admin.");await load(await call("admin_printed_card_data_ids",{p_login_id:b.dataset.cardOpen}));message("Offizielle Ausweisdaten für den Druck geladen.");}
   }catch(err){message(err.message||String(err),true);}finally{if(b.isConnected)b.disabled=false;}
  });
  host.addEventListener("submit",async e=>{
   const f=e.target.closest("#cardshop-find");if(!f)return;e.preventDefault();e.stopPropagation();const b=f.querySelector("button");b.disabled=true;
-  try{if(profile.role!=="admin")throw Error("Nur Admin.");const id=String(new FormData(f).get("login")||"").trim().toUpperCase();await load(await call("admin_printed_card_data",{p_login_id:id}));message("Ausweis geladen, bitte QR-Code prüfen.");}
+  try{if(profile.role!=="admin")throw Error("Nur Admin.");const id=String(new FormData(f).get("login")||"").trim().toUpperCase();await load(await call("admin_printed_card_data_ids",{p_login_id:id}));message("Ausweis geladen, bitte QR-Code prüfen.");}
   catch(err){message(err.message||String(err),true);}finally{if(b.isConnected)b.disabled=false;}
  });
  host.addEventListener("change",async e=>{
