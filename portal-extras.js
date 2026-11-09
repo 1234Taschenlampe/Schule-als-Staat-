@@ -50,7 +50,7 @@ async function showUpdates(ctx){
  if(!target.isConnected)return;
  const decisions=applications.items.filter(x=>["approved","rejected","pending"].includes(x.status)).slice(0,10);
  const dateEvents=(events||[]).map(e=>'<article class="sas-hub-item"><div><strong>'+esc(e.title)+'</strong><p>'+esc(time(e.starts_at))+'</p></div>'+button("events","Veranstaltung")+'</article>');
- const pollCount=Array.isArray(ctx.polls)?ctx.polls.filter(p=>p.status==="open"&&!p.has_voted).length:0;
+ const pollCount=(ctx.profile?.role==="admin"||ctx.schoolRoles?.operator)&&Array.isArray(ctx.polls)?ctx.polls.filter(p=>p.status==="open"&&!p.has_voted).length:0;
  const poll=pollCount?'<article class="sas-hub-item"><div><strong>'+pollCount+' offene Abstimmung'+(pollCount===1?'':'en')+'</strong><p>Du hast bei mindestens einer offenen Abstimmung noch nicht abgestimmt.</p></div>'+button("votes","Abstimmen")+'</article>':"";
  target.innerHTML=heading("Mitteilungen","Stand beim Öffnen der Seite. Es werden keine Push-Nachrichten verschickt.")+
   issues(applications.unavailable)+(events===null?'<p class="sas-hub-warning">Veranstaltungen konnten nicht geladen werden.</p>':"")+
@@ -64,7 +64,7 @@ async function enrichHome(ctx){
    role==="Operator"?[["roles","Berufe & Rollen"],["jobs","Bewerbungen"],["map","Schulplan"]]:
    role==="Schulberuf / Shop"?[["shopmanage","Shopverwaltung"],["applications","Meine Anträge"],["workhours","Arbeitszeit"]]:
    [["applications","Meine Anträge"],["map","Shopplätze"],["workhours","Meine Arbeitszeit"]];
- const polls=Array.isArray(ctx.polls)?ctx.polls.filter(p=>p.status==="open"&&!p.has_voted).length:0;
+ const polls=(ctx.profile?.role==="admin"||ctx.schoolRoles?.operator)&&Array.isArray(ctx.polls)?ctx.polls.filter(p=>p.status==="open"&&!p.has_voted).length:0;
  host.innerHTML='<div class="sas-hub-home-title"><h2>Dein Bereich</h2><span>'+esc(role)+'</span></div><div class="sas-hub-shortcuts">'+options.map(([page,title])=>button(page,title)).join("")+button("updates","Mitteilungen")+'</div>'+
   '<p class="sas-hub-note" role="status">'+(polls?polls+' offene Abstimmung'+(polls===1?'':'en')+'. ':'')+'Aktuelle Anträge und Termine findest du unter „Mitteilungen“.</p>';
 }
