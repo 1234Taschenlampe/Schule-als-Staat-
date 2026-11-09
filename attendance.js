@@ -44,7 +44,7 @@ async function scanCode(code){
  const physical=/^SAS-ID:/i.test(String(code||"").trim());
  const confirm=host?.querySelector("#attendance-physical-confirm");
  if(physical&&!confirm?.checked)throw Error("Für gedruckte Karten muss die Identität vor Ort bestätigt werden.");
- const res=physical?await rpc("scan_printed_card_attendance",{p_code:code,p_session_id:selected,p_identity_checked:true}):await rpc("scan_attendance_pass",{p_code:code,p_session_id:selected});
+ const res=physical?await rpc("scan_printed_card_attendance_ids",{p_code:code,p_session_id:selected,p_identity_checked:true}):await rpc("scan_attendance_pass_ids",{p_code:code,p_session_id:selected});
  if(physical&&confirm)confirm.checked=false;
  const area=host?.querySelector("#attendance-result");
  if(area)area.innerHTML='<div class="verify-success"><div class="verify-checkmark">✓</div><h2>'+escape(res.already_present?"Bereits eingetragen":"Anwesenheit gespeichert")+'</h2><p>'+escape(res.login_id||"Bürgerkonto")+" · "+escape(res.class_label||"Keine Klassenangabe")+'</p></div>';
@@ -104,7 +104,7 @@ async function show(context){
      else if(action==="scan")await scanCamera();
      else if(action==="select"){await stop();selected=id;paint();}
      else if(action==="details"){
-       const students=await rpc("attendance_session_roster",{p_session_id:id});
+       const students=await rpc("attendance_session_roster_ids",{p_session_id:id});
        const area=host?.querySelector("#attendance-result");
        if(area){
          const list=Array.isArray(students)?students:[];
