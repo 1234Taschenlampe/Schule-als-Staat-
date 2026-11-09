@@ -34,7 +34,7 @@ async function enhance({api,polls=[],target}){
   const selectable=active&&!voted&&enabled;
   const cards=entries.map((e,i)=>{
     const title="Entwurf "+(i+1);
-    const meaning=String(e.meaning||"").trim()||"Zu diesem Entwurf wurde noch keine Beschreibung hinterlegt.";
+    const meaning=String(e.meaning||"").trim()||"Die Bedeutung zu diesem Vorschlag folgt.";
     const eligible=selectable&&e.option_id;
     return '<article class="sas-flag-card" data-flag-entry="'+escapeText(e.id)+'">'+
       '<button type="button" class="sas-flag-flipper" aria-pressed="false" aria-label="'+title+': Bedeutung anzeigen">'+
@@ -46,7 +46,7 @@ async function enhance({api,polls=[],target}){
       '</article>';
   }).join("");
   const status=!active?"Abstimmung noch nicht freigeschaltet":voted?"Deine Stimme wurde bereits abgegeben":!enabled?"Stimmrecht noch nicht freigeschaltet":"Wähle einen Entwurf. Deine Stimme zählt erst nach der Bestätigung.";
-  target.innerHTML='<p class="sas-flag-overview-note">Jeder Entwurf erscheint ohne Namen der entwerfenden Person. Rückseite durch Antippen öffnen.</p>'+
+  target.innerHTML='<p class="sas-flag-overview-note">Jeder Entwurf erscheint anonym. Weitere Vorschläge und Bedeutungen folgen. Rückseite durch Antippen öffnen.</p>'+
     '<form id="flag-vote-form" data-poll-id="'+escapeText(competition?.poll_id||"")+'"><fieldset class="poll-fieldset" '+(selectable?'':'disabled')+'><legend class="sr-only">Wähle einen Flaggenentwurf</legend><div class="sas-flag-grid">'+cards+'</div></fieldset>'+
     '<div class="sas-flag-vote-footer"><span class="details">'+escapeText(status)+'</span>'+
     (selectable?'<button type="submit" class="btn primary">Verbindlich abstimmen</button>':'')+
