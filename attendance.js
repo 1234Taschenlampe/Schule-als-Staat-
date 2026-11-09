@@ -47,7 +47,7 @@ async function scanCode(code){
  const res=physical?await rpc("scan_printed_card_attendance",{p_code:code,p_session_id:selected,p_identity_checked:true}):await rpc("scan_attendance_pass",{p_code:code,p_session_id:selected});
  if(physical&&confirm)confirm.checked=false;
  const area=host?.querySelector("#attendance-result");
- if(area)area.innerHTML='<div class="verify-success"><div class="verify-checkmark">✓</div><h2>'+escape(res.already_present?"Bereits eingetragen":"Anwesenheit gespeichert")+'</h2><p>'+escape(res.display_name)+" · "+escape(res.class_label||"Keine Klassenangabe")+'</p></div>';
+ if(area)area.innerHTML='<div class="verify-success"><div class="verify-checkmark">✓</div><h2>'+escape(res.already_present?"Bereits eingetragen":"Anwesenheit gespeichert")+'</h2><p>Bürgerausweis erfasst</p></div>';
  await refreshSessions();
  const count=sessions.find(x=>x.id===selected)?.scans??0;
  status=(res.already_present?"Kein doppelter Eintrag.":"Erfolgreich eingetragen.")+" Jetzt "+count+" anwesend.";
@@ -109,7 +109,7 @@ async function show(context){
        if(area){
          const list=Array.isArray(students)?students:[];
          area.innerHTML='<div class="sas-item"><h3>Anwesenheitsliste · '+list.length+' Personen</h3>'+
-           (list.length?'<div class="sas-list">'+list.map((p,i)=>'<div class="sas-item"><strong>'+(i+1)+'. '+escape(p.display_name)+'</strong> · '+escape(p.class_label||"Klasse offen")+'<p>'+escape(new Date(p.scanned_at).toLocaleString("de-DE",{dateStyle:"short",timeStyle:"short"}))+'</p></div>').join("")+'</div>':'<p>Es sind noch keine Schüler eingetragen.</p>')+'</div>';
+           (list.length?'<div class="sas-list">'+list.map((p,i)=>'<div class="sas-item"><strong>Eintrag '+(i+1)+'</strong>'+'<p>'+escape(new Date(p.scanned_at).toLocaleString("de-DE",{dateStyle:"short",timeStyle:"short"}))+'</p></div>').join("")+'</div>':'<p>Es sind noch keine Schüler eingetragen.</p>')+'</div>';
          area.scrollIntoView({behavior:"smooth",block:"nearest"});
        }
        feedback("Teilnehmerliste geladen. Nur berechtigtes Schulpersonal kann sie einsehen.");
