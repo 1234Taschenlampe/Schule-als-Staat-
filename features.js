@@ -47,7 +47,7 @@ function futureISO(value){const t=new Date(value);if(!Number.isFinite(t.getTime(
 function iso(value){const t=new Date(value);if(!Number.isFinite(t.getTime()))throw Error("Datum nicht gültig.");return t.toISOString();}
 function topLink(){return headerActions((ctx?.profile?.role==="admin"?linkPage("Abstimmungen","votes"):"")+linkPage("Konto und Zahlungen","wallet"));}
 function cardTheme(d){const m=/^custom:(#[0-9a-fA-F]{6})$/.exec(d||"");if(!m)return {cls:"sas-id-"+escapeAttr(d||"classic"),style:""};const rgb=[1,3,5].map(i=>parseInt(m[1].slice(i,i+2),16));const bright=(rgb[0]*299+rgb[1]*587+rgb[2]*114)/1000;return {cls:"sas-id-custom",style:' style="--sas-card-bg:'+m[1]+';--sas-card-ink:'+(bright>145?"#14231c":"#ffffff")+';"'};}
-function citizenLabel(user){const m=/^([a-z0-9]{10})@accounts\.schule-als-staat\.invalid$/i.exec(String(user?.email||""));return m?"SAS-"+m[1].toUpperCase():"Verwaltung";}
+function citizenLabel(user){const chosen=String(ctx?.profile?.display_name||"");if(/^SAS-[0-9]{6}$/.test(chosen))return chosen;const m=/^([a-z0-9]{10})@accounts\.schule-als-staat\.invalid$/i.exec(String(user?.email||""));return m?"SAS-"+m[1].toUpperCase():"Verwaltung";}
 function renderId(){
 const c=data[0],design=c?.design||"classic",theme=cardTheme(design),citizen=citizenLabel(ctx.user);
 return wrap(current,
