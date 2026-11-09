@@ -1,7 +1,7 @@
 /* Interactive first-use tour: visits real portal pages; no typing or test payments. */
 (function(){"use strict";
 const fullSteps=[
- {page:"home",title:"Rundgang durch das Portal",desc:"Hier findest du einen Überblick über Ausweis, Guthaben, Abstimmungen und Mitteilungen."},
+ {page:"home",title:"Rundgang durch das Portal",desc:"Hier findest du einen Überblick über Ausweis, Guthaben und Mitteilungen."},
  {page:"idcard",title:"Dein Schülerausweis",desc:"Dein digitaler Ausweis enthält einen festen QR-Code zur Identifikation im Projekt."},
  {page:"wallet",title:"Dein Guthaben",desc:"Hier siehst du deine Schulwährung und Buchungen. Nur die Verwaltung kann neues Guthaben ausgeben."},
  {page:"pay",title:"QR-Zahlungen",desc:"An der Kasse kannst du einen Zahlungs-QR-Code scannen. Eine Zahlung erfolgt erst nach deiner Bestätigung. In diesem Rundgang wird nichts bezahlt."},
@@ -9,7 +9,7 @@ const fullSteps=[
  {page:"lost",title:"Fundsachen",desc:"Hier kannst du verlorene oder gefundene Gegenstände melden. Wir speichern jetzt keine Meldung."}
 ];
 let steps=fullSteps;
-function selectSteps(options={}){steps=options.previewOnly?fullSteps.filter(s=>s.page==="home"||s.page==="idcard"||(options.pollsOpen!==false&&s.page==="votes")):fullSteps;}
+function selectSteps(options={}){const available=fullSteps.filter(s=>s.page!=="votes"||options.pollsOpen!==false);steps=options.previewOnly?available.filter(s=>s.page==="home"||s.page==="idcard"||s.page==="votes"):available;}
 let api=null,uid="",step=0,layer=null,version=0,busy=false,finished=false;
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function clear(){if(layer){layer.remove();layer=null;}busy=false;finished=false;document.querySelectorAll(".sas-tour-highlight").forEach(x=>x.classList.remove("sas-tour-highlight"));}
