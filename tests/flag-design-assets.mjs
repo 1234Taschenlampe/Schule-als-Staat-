@@ -16,7 +16,7 @@ for(let i=1;i<=7;i++){
 test("Worker and static builder both serve flag images locally",()=>{
   const build=readFileSync(new URL("scripts/build-worker.mjs",root),"utf8");
   const stat=readFileSync(new URL("scripts/build-static.sh",root),"utf8");
-  assert.match(build,/flagImageAssets/);
-  assert.match(build,/path in FLAG_ASSETS/);
+  assert.match(build,/flagImageNames/);
+  assert.ok(build.includes("path in ASSETS"));
   assert.ok(stat.includes("cp assets/flags/entwurf-*.webp _site/assets/flags/"));
 });
