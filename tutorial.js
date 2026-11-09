@@ -9,7 +9,7 @@ const fullSteps=[
  {page:"lost",title:"Fundsachen",desc:"Hier kannst du verlorene oder gefundene Gegenstände melden. Wir speichern jetzt keine Meldung."}
 ];
 let steps=fullSteps;
-function selectSteps(options={}){steps=options.previewOnly?fullSteps.filter(s=>s.page==="home"||s.page==="idcard"||(options.pollsOpen!==false&&s.page==="votes")):fullSteps;}
+function selectSteps(options={}){steps=(options.previewOnly?fullSteps.filter(s=>s.page==="home"||s.page==="idcard"||(options.pollsOpen!==false&&s.page==="votes")):fullSteps).filter(s=>s.page!=="votes"||options.pollsVisible===true);}
 let api=null,uid="",step=0,layer=null,version=0,busy=false,finished=false;
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 function clear(){if(layer){layer.remove();layer=null;}busy=false;finished=false;document.querySelectorAll(".sas-tour-highlight").forEach(x=>x.classList.remove("sas-tour-highlight"));}
