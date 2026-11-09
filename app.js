@@ -435,7 +435,7 @@
     return header("ADMINISTRATION","Konten & IT-Support","Schülerkonten anhand der Bürgerkennung finden und bei Bedarf ein vorläufiges Passwort ausgeben.")+
       '<section class="card"><form id="sas-support-lookup"><div class="form-group"><label for="sas-support-id">Bürgerkennung</label><input class="field" id="sas-support-id" name="login_id" placeholder="SAS-123456" maxlength="14" autocapitalize="none" autocomplete="off" spellcheck="false" required></div><button type="submit" class="btn primary">Konto suchen</button></form></section>'+
       (account?'<section class="card"><h2>'+esc(account.login_id)+'</h2><p>'+esc(statuses[account.status])+'</p>'+
-      (!["active","temporary"].includes(account.status)?"":'<form id="sas-support-reset"><fieldset class="sas-legal-fieldset"><legend>Persönliche Identitätsprüfung</legend><label class="sas-legal-check"><input type="checkbox" name="identity_checked" required> <span>Ich habe die Identität der Person vor Ort anhand der geschützten Ausgabeliste der Schule geprüft. Kennung und QR-Code allein reichen dafür nicht aus.</span></label></fieldset><p class="field-help">Nach dem Zurücksetzen muss sich die Person erneut anmelden und ein eigenes Passwort festlegen.</p><button type="submit" class="btn primary">Vorläufiges Passwort erzeugen</button></form>')+'</section>':'');
+      (!["active","temporary"].includes(account.status)?"":'<form id="sas-support-reset"><fieldset class="sas-legal-fieldset"><legend>Persönliche Identitätsprüfung</legend><label class="sas-legal-check"><input type="checkbox" name="identity_checked" required> <span>Ich habe die Identität der Person vor Ort anhand der geschützten Ausgabeliste der Schule geprüft. Kennung und QR-Code allein reichen dafür nicht aus.</span></label></fieldset><p class="field-help">Der QR-Link gilt nur einmal. Nach dem Scannen legt die Person ein eigenes Passwort fest.</p><button type="submit" class="btn primary">Einmaligen Reset-QR erzeugen</button></form>')+'</section>':'');
   }
 
   async function supportRequest(action, login, verified){
@@ -443,7 +443,8 @@
     var response=await api.auth.getSession();
     var access=response.data?.session?.access_token;
     if(response.error||!access)throw Error("Bitte melde dich erneut an.");
-    var result=await fetch(cfg.supabaseUrl+"/functions/v1/sas-account-support",{
+    var endpoint=action==="qr"?"sas-account-recovery-qr":"sas-account-support";
+    var result=await fetch(cfg.supabaseUrl+"/functions/v1/"+endpoint,{
       method:"POST",headers:{"Content-Type":"application/json","apikey":cfg.supabaseAnonKey,"Authorization":"Bearer "+access},
       body:JSON.stringify({action:action,login_id:login,identity_checked:verified}),cache:"no-store"
     });
@@ -453,9 +454,21 @@
   }
 
   function showSupportSlip(result){
-    mount(header("ADMINISTRATION","Passwort zurückgesetzt","Übergib das vorläufige Passwort direkt an die geprüfte Person. Nach dem Schließen kannst du es nicht erneut abrufen.")+
-      '<section class="card" id="sas-support-slip"><h2>Schule als Staat · Zugangsdaten</h2><p>Bürgerkennung <strong>'+esc(result.login_id)+'</strong></p><p>Vorläufiges Passwort <strong id="sas-support-secret">'+esc(result.temporary_password)+'</strong></p><p>Melde dich im Schulportal an und lege anschließend dein eigenes Passwort fest.</p><p>'+esc(location.origin)+'</p></section>'+
-      '<div class="button-row">'+btn("Passwort kopieren","support-copy")+btn("Übergabezettel drucken","support-print","dark")+btn("Schließen","support-close","dark")+'</div>');
+    var link=String(result.recovery_link||"");
+    if(!/^https:\/\/schule-als-staat\.schule-als-staat-jfe\.workers\.dev\/#sas-reset=[A-Za-z0-9_-]{32,256}$/.test(link))
+      throw Error("Ungültiger Wiederherstellungslink.");
+    mount(header("ADMINISTRATION","Reset-QR erstellt","Lass die geprüfte Person den QR-Code direkt mit ihrem eigenen Gerät scannen. Der Link kann nur einmal verwendet werden.")+
+      '<section class="card" id="sas-support-slip"><h2>Schule als Staat · Kontowiederherstellung</h2><p>Bürgerkennung <strong>'+esc(result.login_id)+'</strong></p>'+
+      '<div id="sas-support-qr" style="display:flex;justify-content:center;padding:20px 0" aria-label="Einmaliger Passwort-Reset-QR-Code"></div>'+
+      '<p>QR-Code scannen, neues Passwort selbst festlegen und anschließend anmelden.</p>'+
+      '<p class="field-help">Der Link ist nur für die persönlich überprüfte Person bestimmt. Bei Verlust oder Ablauf muss ein neuer QR-Code erzeugt werden. Nach dem Schließen wird der Link nicht wieder angezeigt.</p>'+
+      '<p><a id="sas-support-link" href="'+esc(link)+'" rel="noopener noreferrer" referrerpolicy="no-referrer" target="_blank">Wiederherstellungslink öffnen</a></p></section>'+
+      '<div class="button-row">'+btn("Link kopieren","support-copy")+btn("Übergabezettel drucken","support-print","dark")+btn("Schließen","support-close","dark")+'</div>');
+    var node=document.getElementById("sas-support-qr");
+    if(window.QRCode&&node){
+      try{new window.QRCode(node,{text:link,width:240,height:240,colorDark:"#223751",colorLight:"#ffffff"});}
+      catch(error){node.textContent="QR-Code nicht verfügbar. Link verwenden.";}
+    }else if(node){node.textContent="QR-Code nicht verfügbar. Link verwenden.";}
   }
 
   function settingsPage(){
@@ -652,9 +665,9 @@
         await navigator.clipboard.writeText(state.profile.display_name);showToast("Bürgerkennung kopiert.");return;
       }
       if(state.page==="itsupport"&&state.profile?.role==="admin"){
-        var secret=document.getElementById("sas-support-secret");
-        if(id==="support-copy"&&secret){await navigator.clipboard.writeText(secret.textContent);showToast("Vorläufiges Passwort kopiert.");return;}
-        if(id==="support-print"&&secret){window.print();return;}
+        var link=document.getElementById("sas-support-link");
+        if(id==="support-copy"&&link){await navigator.clipboard.writeText(link.href);showToast("Einmaligen Reset-Link kopiert.");return;}
+        if(id==="support-print"&&link){window.print();return;}
         if(id==="support-close"){supportAccount=null;render();return;}
       }
       if(id==="camera-test")return await cameraTest();
@@ -703,9 +716,9 @@
         var target=supportAccount.login_id;
         supportAccount=null;
         var result;
-        try{result=await supportRequest("reset",target,verified);}
+        try{result=await supportRequest("qr",target,verified);}
         catch(error){render();throw error;}
-        if(!result.temporary_password){render();throw Error("Das vorläufige Passwort konnte nicht angezeigt werden.");}
+        if(!result.recovery_link){render();throw Error("Der Reset-QR konnte nicht angezeigt werden.");}
         if(state.profile?.role==="admin"&&state.page==="itsupport")showSupportSlip(result);
         return;
       }
@@ -742,7 +755,7 @@
         state.user=refreshed.data.user;
         if(state.user?.app_metadata?.sas_initial_password===true)
           throw Error("Passwort geändert, aber die Erstaktivierung wurde serverseitig noch nicht bestätigt.");
-        await fetchData();state.page="home";render();showToast("Persönliches Passwort gespeichert.");
+        state.recovering=false;await fetchData();state.page="home";render();showToast("Persönliches Passwort gespeichert.");
         return;
       }
       if(form.id==="sas-myjob-form"){
@@ -917,7 +930,7 @@
   });
   window.addEventListener("pagehide",function(){
     void stopScanner();
-    if(document.getElementById("sas-support-secret")){supportAccount=null;render();}
+    if(document.getElementById("sas-support-link")){supportAccount=null;render();}
   });
   async function loadSessionData(){
     try{
@@ -934,6 +947,19 @@
   }
   async function start(){
     if(!api)return render();
+    var resetMatch=/^#sas-reset=([A-Za-z0-9_-]{32,256})$/.exec(location.hash);
+    if(resetMatch){
+      // Remove the bearer token from browser history before exchanging it.
+      history.replaceState(null,"",location.pathname+location.search);
+      var verified=await api.auth.verifyOtp({token_hash:resetMatch[1],type:"recovery"});
+      if(verified.error||!verified.data?.session){
+        root.innerHTML='<div class="welcome"><section class="welcome-side" style="margin:auto;max-width:600px"><div class="login-box">'+
+          header("KONTO SICHERN","Reset-Link ungültig","Der Link wurde bereits verwendet oder ist abgelaufen. Bitte frage den IT-Support nach einem neuen QR-Code.")+
+          '<a class="btn primary full" href="/">Zur Anmeldung</a></div></section></div>';
+        return;
+      }
+      state.recovering=true;
+    }
     var session=await api.auth.getSession();
     if(session.error)throw session.error;
     state.user=session.data.session&&session.data.session.user||null;
