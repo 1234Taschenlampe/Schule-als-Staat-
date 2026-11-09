@@ -42,7 +42,7 @@ async function show(ctx){
      const input=new FormData(form);
      if(form.id==="school-role-search"){
        query=String(input.get("query")||"").trim();
-       people=await rpc("school_role_find_students",{p_query:query});
+       people=await rpc("school_role_find_by_login_id",{p_query:query});
        render();notice(people.length+" passende Konten gefunden.");
      }else{
        const slug=String(input.get("slug")||"").trim();
@@ -62,7 +62,7 @@ async function show(ctx){
    btn.disabled=true;
    try{
      await rpc("assign_school_role",{p_user_id:user,p_role_slug:slug,p_enabled:enable});
-     people=await rpc("school_role_find_students",{p_query:query});
+     people=await rpc("school_role_find_by_login_id",{p_query:query});
      render();notice(enable?"Schulberuf zugewiesen.":"Schulberuf entfernt.");
    }catch(err){btn.disabled=false;notice(err.message||String(err),true);}
  });
