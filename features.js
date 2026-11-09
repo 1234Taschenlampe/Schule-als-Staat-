@@ -45,7 +45,7 @@ function sectionOptions(kind){return '<option value="'+escapeAttr(kind)+'">'+esc
 function isUuid(x){return /^[\da-f]{8}-[\da-f]{4}-[1-8][\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$/i.test(x);}
 function futureISO(value){const t=new Date(value);if(!Number.isFinite(t.getTime())||t.getTime()<=Date.now())throw Error("Bitte einen zukünftigen Zeitpunkt wählen.");return t.toISOString();}
 function iso(value){const t=new Date(value);if(!Number.isFinite(t.getTime()))throw Error("Datum nicht gültig.");return t.toISOString();}
-function topLink(){return headerActions((ctx?.profile?.role==="admin"||ctx?.schoolRoles?.operator?linkPage("Abstimmungen","votes"):"")+linkPage("Konto und Zahlungen","wallet"));}
+function topLink(){return headerActions((ctx?.profile?.role==="admin"?linkPage("Abstimmungen","votes"):"")+linkPage("Konto und Zahlungen","wallet"));}
 function cardTheme(d){const m=/^custom:(#[0-9a-fA-F]{6})$/.exec(d||"");if(!m)return {cls:"sas-id-"+escapeAttr(d||"classic"),style:""};const rgb=[1,3,5].map(i=>parseInt(m[1].slice(i,i+2),16));const bright=(rgb[0]*299+rgb[1]*587+rgb[2]*114)/1000;return {cls:"sas-id-custom",style:' style="--sas-card-bg:'+m[1]+';--sas-card-ink:'+(bright>145?"#14231c":"#ffffff")+';"'};}
 function citizenLabel(user){const m=/^([a-z0-9]{10})@accounts\.schule-als-staat\.invalid$/i.exec(String(user?.email||""));return m?"SAS-"+m[1].toUpperCase():"Verwaltung";}
 function renderId(){
