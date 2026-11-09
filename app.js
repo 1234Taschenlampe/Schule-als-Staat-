@@ -454,6 +454,14 @@
   }
 
   function showSupportSlip(result){
+    if(!result.recovery_link&&result.temporary_password){
+      mount(header("ADMINISTRATION","Vorläufiges Passwort","Ein Reset-QR war nicht verfügbar. Übergib das vorläufige Passwort nur der persönlich geprüften Person.")+
+        '<section class="card" id="sas-support-slip"><h2>Schule als Staat · Kontowiederherstellung</h2><p>Bürgerkennung <strong>'+esc(result.login_id)+'</strong></p>'+
+        '<p>Vorläufiges Passwort <strong id="sas-support-secret">'+esc(result.temporary_password)+'</strong></p>'+
+        '<p>Mit diesen Zugangsdaten anmelden und sofort ein eigenes Passwort festlegen.</p><p class="field-help">Nach dem Schließen kann das vorläufige Passwort nicht erneut angezeigt werden.</p></section>'+
+        '<div class="button-row">'+btn("Passwort kopieren","support-copy")+btn("Übergabezettel drucken","support-print","dark")+btn("Schließen","support-close","dark")+'</div>');
+      return;
+    }
     var link=String(result.recovery_link||"");
     if(!/^https:\/\/schule-als-staat\.schule-als-staat-jfe\.workers\.dev\/#sas-reset=[A-Za-z0-9_-]{32,256}$/.test(link))
       throw Error("Ungültiger Wiederherstellungslink.");
@@ -665,9 +673,9 @@
         await navigator.clipboard.writeText(state.profile.display_name);showToast("Bürgerkennung kopiert.");return;
       }
       if(state.page==="itsupport"&&state.profile?.role==="admin"){
-        var link=document.getElementById("sas-support-link");
-        if(id==="support-copy"&&link){await navigator.clipboard.writeText(link.href);showToast("Einmaligen Reset-Link kopiert.");return;}
-        if(id==="support-print"&&link){window.print();return;}
+        var link=document.getElementById("sas-support-link"),secret=document.getElementById("sas-support-secret");
+        if(id==="support-copy"&&(link||secret)){await navigator.clipboard.writeText(link?link.href:secret.textContent);showToast(link?"Reset-Link kopiert.":"Vorläufiges Passwort kopiert.");return;}
+        if(id==="support-print"&&(link||secret)){window.print();return;}
         if(id==="support-close"){supportAccount=null;render();return;}
       }
       if(id==="camera-test")return await cameraTest();
@@ -718,7 +726,7 @@
         var result;
         try{result=await supportRequest("qr",target,verified);}
         catch(error){render();throw error;}
-        if(!result.recovery_link){render();throw Error("Der Reset-QR konnte nicht angezeigt werden.");}
+        if(!result.recovery_link&&!result.temporary_password){render();throw Error("Der Reset-QR konnte nicht angezeigt werden.");}
         if(state.profile?.role==="admin"&&state.page==="itsupport")showSupportSlip(result);
         return;
       }
@@ -931,7 +939,7 @@
   });
   window.addEventListener("pagehide",function(){
     void stopScanner();
-    if(document.getElementById("sas-support-link")){supportAccount=null;render();}
+    if(document.getElementById("sas-support-link")||document.getElementById("sas-support-secret")){supportAccount=null;render();}
   });
   async function loadSessionData(){
     try{
