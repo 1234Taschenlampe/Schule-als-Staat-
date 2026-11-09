@@ -104,13 +104,20 @@
       api.from("payment_requests").select("*").order("created_at",{ascending:false}).limit(50)
     ]);
     rows.forEach(function(row){if(row.error)throw row.error;});
-    state.profile=rows[0].data;state.legalStatus=await rpc('school_legal_status',{});state.deletionStatus=await rpc('my_school_deletion_status',{});if(state.profile)state.profile.display_name=accountDisplay(state.user.email).value;state.wallet=rows[1].data;state.ledger=rows[2].data||[];state.cash=rows[3].data||[];state.requests=rows[4].data||[];
+    state.profile=rows[0].data;state.legalStatus=await rpc('school_legal_status',{});state.deletionStatus=await rpc('my_school_deletion_status',{});if(state.profile){
+      var alias=accountDisplay(state.user.email);
+      state.profile.display_name=alias.value;
+      if(alias.label==="Bürgerkennung"){
+        var shortId=await rpc("my_short_login_id",{});
+        if(/^SAS-[0-9]{6}$/.test(String(shortId||"")))state.profile.display_name=shortId;
+      }
+    }state.wallet=rows[1].data;state.ledger=rows[2].data||[];state.cash=rows[3].data||[];state.requests=rows[4].data||[];
     if(state.active)state.active=state.requests.find(function(x){return x.id===state.active.id;})||state.active;
     state.schoolRoles=await rpc("my_school_roles",{})||{operator:false,jobs:[]};
     state.users=state.profile.role==="admin"?await rpc("admin_list_user_ids",{}):[];
     state.deletionRequests=state.profile.role==="admin"?await rpc("admin_list_school_deletion_requests",{}):[];
     state.polls=state.profile.role==="admin"?await rpc("poll_catalog",{}):[];
-    state.pollResults=(state.profile.role==="admin"||state.schoolRoles?.operator)?await rpc("admin_poll_results",{}):[];
+    state.pollResults=state.profile.role==="admin"?await rpc("admin_poll_results",{}):[];
   }
   var refreshPending=false;
   async function refresh(silent){
@@ -209,7 +216,7 @@
       '<a class="btn primary full" href="/">Erneut versuchen</a></div></section></div>';
   }
   function login(){
-    root.innerHTML='<div class="welcome"><section class="welcome-left"><div class="brand" style="padding:0"><div class="brand-mark">S/S</div><div><div class="brand-name" >Schule als Staat</div><div class="brand-sub" >RNG Wangen</div></div></div><div><div class="eyebrow" >PROJEKTWOCHE 2027</div><div class="welcome-hero">Das Schulportal.</div><p class="welcome-sub">Schülerausweis, Abstimmungen und organisatorische Informationen zur Projektwoche.</p></div><div class="small" >12.–16. Juli 2027 · RNG Wangen</div><a href="https://www.instagram.com/schule.als.staat_rng/" class="project-social" target="_blank" rel="noopener noreferrer" aria-label="Schule als Staat auf Instagram öffnen">Instagram · @schule.als.staat_rng ↗</a></section><section class="welcome-side"><div class="login-box">'+header("ZUGANG","Anmelden","")+'<form id="password-login-form"><div class="form-group"><label for="account-email">Bürgerkennung oder Verwaltungs-E-Mail</label><input class="field" type="text" autocomplete="username" name="email" id="account-email" placeholder="SAS-XXXXXXXXXX" maxlength="160" required></div><div class="form-group"><label for="account-password">Passwort</label><span class="sas-password-input"><input class="field" type="password" autocomplete="current-password" name="password" id="account-password" minlength="6" required><button type="button" class="sas-password-toggle" data-password-toggle="account-password" aria-controls="account-password" aria-label="Passwort anzeigen" title="Passwort anzeigen" aria-pressed="false"><svg class="sas-eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg><svg class="sas-eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 3 18 18M10.58 5.15A11.8 11.8 0 0 1 12 5c6.5 0 10 7 10 7a15 15 0 0 1-3.03 3.8M6.7 6.7C3.6 8.6 2 12 2 12s3.5 7 10 7a10.8 10.8 0 0 0 4.37-.9"/><path d="M10 10a3 3 0 0 0 4 4"/></svg></button></span></div><button type="submit" class="btn primary full">Mit Passwort anmelden</button></form><p class="field-help">Ein Schülerkonto wird ausschließlich anhand der offiziellen Schulliste ausgegeben. Deine Bürgerkennung und dein Startpasswort erhältst du persönlich. Beim ersten Login musst du das Startpasswort ändern.</p><details class="alternate-auth"><summary>Passwort vergessen? (Verwaltung)</summary><p class="field-help">Für Bürgerkennungen ohne echte E-Mail-Adresse erfolgt die Rücksetzung nur über die Schulverwaltung. Nur vorhandene Verwaltungskonten mit echter E-Mail können hier einen Rücksetzlink anfordern.</p><form id="password-reset-request-form"><div class="form-group"><label for="password-reset-email">E-Mail-Adresse</label><input class="field" type="email" autocomplete="email" name="email" id="password-reset-email" placeholder="name@schule.de" required></div><button type="submit" class="btn dark full">Passwort-Link anfordern</button></form></details><p class="login-footer">Nur für gelistete Bürger und berechtigte Verwaltung. Gib deine Zugangsdaten niemals weiter. Schulwährung kann gegen Euro erworben werden; Guthaben hat damit einen realen finanziellen Bezug.</p></div></section></div>';
+    root.innerHTML='<div class="welcome"><section class="welcome-left"><div class="brand" style="padding:0"><div class="brand-mark">S/S</div><div><div class="brand-name" >Schule als Staat</div><div class="brand-sub" >RNG Wangen</div></div></div><div><div class="eyebrow" >PROJEKTWOCHE 2027</div><div class="welcome-hero">Das Schulportal.</div><p class="welcome-sub">Schülerausweis, Abstimmungen und organisatorische Informationen zur Projektwoche.</p></div><div class="small" >12.–16. Juli 2027 · RNG Wangen</div><a href="https://www.instagram.com/schule.als.staat_rng/" class="project-social" target="_blank" rel="noopener noreferrer" aria-label="Schule als Staat auf Instagram öffnen">Instagram · @schule.als.staat_rng ↗</a></section><section class="welcome-side"><div class="login-box">'+header("ZUGANG","Anmelden","")+'<form id="password-login-form"><div class="form-group"><label for="account-email">Bürgerkennung oder Verwaltungs-E-Mail</label><input class="field" type="text" autocomplete="username" name="email" id="account-email" placeholder="SAS-123456" maxlength="160" required></div><div class="form-group"><label for="account-password">Passwort</label><span class="sas-password-input"><input class="field" type="password" autocomplete="current-password" name="password" id="account-password" minlength="6" required><button type="button" class="sas-password-toggle" data-password-toggle="account-password" aria-controls="account-password" aria-label="Passwort anzeigen" title="Passwort anzeigen" aria-pressed="false"><svg class="sas-eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg><svg class="sas-eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 3 18 18M10.58 5.15A11.8 11.8 0 0 1 12 5c6.5 0 10 7 10 7a15 15 0 0 1-3.03 3.8M6.7 6.7C3.6 8.6 2 12 2 12s3.5 7 10 7a10.8 10.8 0 0 0 4.37-.9"/><path d="M10 10a3 3 0 0 0 4 4"/></svg></button></span></div><button type="submit" class="btn primary full">Mit Passwort anmelden</button></form><p class="field-help">Ein Schülerkonto wird ausschließlich anhand der offiziellen Schulliste ausgegeben. Deine Bürgerkennung und dein Startpasswort erhältst du persönlich. Auch die bisherige längere Kennung funktioniert weiterhin. Beim ersten Login musst du das Startpasswort ändern.</p><details class="alternate-auth"><summary>Passwort vergessen? (Verwaltung)</summary><p class="field-help">Wenn du dein Passwort vergessen hast, wende dich mit deiner Bürgerkennung an den IT-Support der Schule. Eine E-Mail-Rücksetzung ist für Bürgerkonten nicht verfügbar. Nur vorhandene Verwaltungskonten mit echter E-Mail können hier einen Rücksetzlink anfordern.</p><form id="password-reset-request-form"><div class="form-group"><label for="password-reset-email">E-Mail-Adresse</label><input class="field" type="email" autocomplete="email" name="email" id="password-reset-email" placeholder="name@schule.de" required></div><button type="submit" class="btn dark full">Passwort-Link anfordern</button></form></details><p class="login-footer">Nur für gelistete Bürger und berechtigte Verwaltung. Gib deine Zugangsdaten niemals weiter. Schulwährung kann gegen Euro erworben werden; Guthaben hat damit einen realen finanziellen Bezug.</p></div></section></div>';
   }
   function legalReceiptFields(){
     return '<fieldset class="sas-legal-fieldset" aria-describedby="school-legal-help"><legend>Pflichtbestätigungen vor der Nutzung</legend>'+
@@ -424,7 +431,7 @@
     }catch(e){target.textContent="Diagnose nicht verfügbar: "+(e?.message||"Unbekannter Fehler");}
   }
   function settingsPage(){
-    var account=accountDisplay(state.user.email);
+    var account={label:state.profile.role==="admin"?"Konto":"Bürgerkennung",value:state.profile.display_name};
     var memberOptions=(state.users||[]).map(function(u){return '<option value="'+esc(u.id)+'">'+esc(u.login_id||"Verwaltung")+' ('+esc(u.role)+')</option>';}).join("");
     var adminPanel=state.profile.role!=="admin"?"":'<h2 class="section-title">Administration</h2><div class="grid two"><section class="card"><div class="card-header"><h2>Guthaben ausgeben</h2><span class="pill blue">Nur Admin</span></div><form id="credit-form"><div class="form-group"><label for="credit-user">Mitglied</label><select id="credit-user" name="user_id" class="field" required>'+memberOptions+'</select></div><div class="form-group"><label for="credit-amount">Betrag in '+esc(units)+'</label><input id="credit-amount" name="amount" class="field" type="number" min=".01" max="10000" step=".01" required></div><div class="form-group"><label for="credit-note">Grund</label><input class="field" id="credit-note" name="note" maxlength="140" placeholder="z. B. Startguthaben"></div><button class="btn primary full" type="submit">Guthaben zuweisen</button></form><p class="field-help">Jede Ausgabe wird im digitalen Buchungsverlauf dokumentiert.</p></section><section class="card"><div class="card-header"><h2>Kassenberechtigung</h2><span class="pill">Rollen</span></div><form id="permission-form"><div class="form-group"><label for="permission-user">Mitglied</label><select class="field" id="permission-user" name="user_id" required>'+memberOptions+'</select></div><div class="form-group"><label for="permission-role">Berechtigung</label><select class="field" id="permission-role" name="enabled"><option value="true">Kassenpersonal</option><option value="false">Normales Mitglied</option></select></div><button class="btn dark full" type="submit">Berechtigung speichern</button></form><p class="field-help">Administratorrollen können hier nicht vergeben oder entfernt werden.</p></section></div>';
     var approvePanel=state.profile.role==="admin"?'<h2 class="section-title">Stimmberechtigungen</h2><section class="card"><h2>Teilnahme freischalten</h2><p class="details" style="margin-top:12px">Hier verwaltest du die Stimmberechtigung bestehender Bürgerkonten. Änderungen werden serverseitig geprüft.</p><form id="vote-permission-form"><div class="form-group"><label for="vote-user">Nutzer</label><select class="field" id="vote-user" name="user_id" required>'+(state.users||[]).map(function(u){return '<option value="'+esc(u.id)+'">'+esc(u.login_id||"Verwaltung")+(u.vote_eligible?" · freigegeben":" · gesperrt")+'</option>';}).join("")+'</select></div><div class="form-group"><label for="vote-permission">Stimmrecht</label><select class="field" id="vote-permission" name="enabled"><option value="true">Freigeben</option><option value="false">Sperren</option></select></div><button type="submit" class="btn dark">Berechtigung speichern</button></form><p class="field-help">Eine nachträgliche Sperre löscht keine bereits abgegebenen Stimmen.</p></section>':"";
@@ -705,18 +712,30 @@
       }
       if(form.id==="signup-form")throw Error("Eigenständige Registrierung ist deaktiviert. Bürgerkonten vergibt die Schulverwaltung.");
       if(form.id==="password-login-form"){
-        var response=await api.auth.signInWithPassword({
-          email:(function(){
-            var raw=String(data.get("email")||"").trim();
-            if(/^SAS-[A-Z0-9]{10}$/i.test(raw))return raw.slice(4).toLowerCase()+"@accounts.schule-als-staat.invalid";
-            if(raw.indexOf("@")<0)throw Error("Bitte die vollständige Bürgerkennung SAS-XXXXXXXXXX eingeben.");
-            return raw;
-          })(),
-          password:String(data.get("password")||"")
-        });
-        if(response.error)throw response.error;
-      }
-      if(form.id==="login-form"){
+         var rawLogin=String(data.get("email")||"").trim().toUpperCase();
+         var inputPassword=String(data.get("password")||"");
+         if(/^SAS-[0-9]{6}$/.test(rawLogin)){
+           var loginResult=await fetch(cfg.supabaseUrl+"/functions/v1/sas-login-short",{
+             method:"POST",
+             headers:{"Content-Type":"application/json","apikey":cfg.supabaseAnonKey},
+             body:JSON.stringify({login_id:rawLogin,password:inputPassword}),
+             cache:"no-store"
+           });
+           var loginPayload=await loginResult.json().catch(function(){return {};});
+           if(!loginResult.ok)throw Error(loginPayload.error||"Kennung oder Passwort falsch.");
+           var established=await api.auth.setSession({
+             access_token:loginPayload.access_token,refresh_token:loginPayload.refresh_token
+           });
+           if(established.error)throw established.error;
+         }else{
+           var longLogin=String(data.get("email")||"").trim();
+           if(/^SAS-[A-Z0-9]{10}$/i.test(longLogin))longLogin=longLogin.slice(4).toLowerCase()+"@accounts.schule-als-staat.invalid";
+           else if(longLogin.indexOf("@")<0)throw Error("Bitte eine gültige Bürgerkennung (SAS-123456) eingeben.");
+           var response=await api.auth.signInWithPassword({email:longLogin,password:inputPassword});
+           if(response.error)throw response.error;
+         }
+       }
+       if(form.id==="login-form"){
         var result=await api.auth.signInWithOtp({email:String(data.get("email")||"").trim(),options:{emailRedirectTo:location.origin+location.pathname+location.search,shouldCreateUser:false}});
         if(result.error)throw result.error;
         showToast("Bitte E-Mail prüfen und den Anmeldelink öffnen.");
