@@ -67,7 +67,7 @@ test("admin without student roster membership sees private production order mana
 });
 test("portal links physical card shop before launch without unlocking other school modules",()=>{
  const app=read("app.js"),features=read("features.js"),index=read("index.html");
- assert.match(app,/var previewOpenPages=new Set\(\["home","apps","idcard","gallery","cardshop","votes","settings"\]\)/);
+ assert.match(app,/var previewOpenPages=new Set\(\["home","apps","idcard","gallery","cardshop","settings"\]\)/);
  assert.match(app,/if\(state\.page==="cardshop"&&window\.SAS_CARD_SHOP\)/);
  assert.match(features,/3D-Ausweis bestellen/);
  assert.match(features,/3D-Schülerausweis bestellen/);

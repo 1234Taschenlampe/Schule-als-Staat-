@@ -42,3 +42,21 @@
 .sas-password-toggle .sas-eye-closed{display:none}
 .sas-password-toggle[aria-pressed="true"] .sas-eye-closed{display:block}
 .sas-password-toggle[aria-pressed="true"] .sas-eye-open{display:none}
+
+#sas-support-slip { overflow-wrap: anywhere; }
+#sas-support-secret { display: block; font-family: ui-monospace, monospace; }
+@media print {
+  body:has(#sas-support-slip) * { visibility: hidden; }
+  body #sas-support-slip, body #sas-support-slip * { visibility: visible; }
+  body #sas-support-slip {
+    position: absolute;
+    inset: 0 auto auto 0;
+    width: 100%;
+    margin: 0;
+    padding: 12mm;
+    border: 0;
+    background: white;
+    color: black;
+    box-shadow: none;
+  }
+}

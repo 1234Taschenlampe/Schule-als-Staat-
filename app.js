@@ -24,6 +24,7 @@
     global:{fetch:sasGatewayFetch}
   }):null;
   var state={user:null,profile:null,wallet:null,ledger:[],cash:[],requests:[],users:[],polls:[],pollResults:[],schoolRoles:{operator:false,jobs:[]},page:"home",active:null,invoice:null,scanner:null,scanning:false,busy:false,editing:false,legalStatus:null,deletionStatus:null,deletionRequests:[],showDeletionForm:false,deletionStage:1,deletionReadToEnd:false,recovering:/(?:^|[&#?])type=recovery(?:&|$)/.test(location.hash)};
+  var supportAccount=null;
   var deepLink=new URLSearchParams(location.search).get("pay");
   var openPortalAfterLogin=false; // No old V3 demo portal; all live features are integrated.
   if(deepLink)state.page="pay";
@@ -139,11 +140,11 @@
     ["Schulleben",["bulletin","blog","events","lost"]],
     ["Organisation",["map","rooms","shops","shopmanage","jobs"]],
     ["Staat & Mitbestimmung",["votes","laws","parties","courts"]],
-    ["Verwaltung",["overlord","register","admincredit","attendance","roles","admin","settings"]]
+    ["Verwaltung",["overlord","register","admincredit","attendance","roles","admin","itsupport","settings"]]
   ];
-  var descriptions={cardshop:"Gedruckten Schülerausweis ansehen und vormerken",applications:"Status deiner Shop-, Raum- und Berufsanträge",updates:"Aktuelle Antragsstände und Veranstaltungen",overlord:"API-Schutz und Serverstatus (Admin)",admincredit:"Schulwährung per Ausweis-QR gutschreiben",workhours:"Arbeitszeit 12.–16. Juli 2027 per QR-Code erfassen",roles:"Schulberufe und Operatorrechte vergeben",attendance:"Anwesenheit per Schülerausweis scannen",home:"Ausweis, Kontostand und Mitteilungen",idcard:"Persönlicher Schülerausweis mit QR-Code",gallery:"Ausweisdesign auswählen",wallet:"Guthaben und Kontobewegungen",pay:"QR-Code scannen und Betrag prüfen",history:"Digitale Buchungen und Bargeld",bulletin:"Aktuelle Bekanntmachungen",blog:"Beiträge aus dem Projekt",events:"Termine und Anmeldungen",lost:"Verlorenes suchen, Gefundenes melden",map:"Schulplan: vier Shops pro Klassenzimmer",rooms:"Raumreservierungen anfragen",shops:"Geschäfte und Kassen",jobs:"Aufgaben finden und sich bewerben",votes:"Aktuelle und abgeschlossene Abstimmungen",laws:"Regeln und Verordnungen nachlesen",parties:"Mitteilungen der Parteien",courts:"Öffentliche Gerichtsbekanntmachungen",register:"Verkäufe und QR-Zahlungen erfassen",admin:"Guthaben, Rollen und Stimmrecht verwalten",settings:"Profil, Passwort und Geräte"};
+  var descriptions={itsupport:"Schülerkonten finden und Startpasswörter ausgeben",cardshop:"Gedruckten Schülerausweis ansehen und vormerken",applications:"Status deiner Shop-, Raum- und Berufsanträge",updates:"Aktuelle Antragsstände und Veranstaltungen",overlord:"API-Schutz und Serverstatus (Admin)",admincredit:"Schulwährung per Ausweis-QR gutschreiben",workhours:"Arbeitszeit 12.–16. Juli 2027 per QR-Code erfassen",roles:"Schulberufe und Operatorrechte vergeben",attendance:"Anwesenheit per Schülerausweis scannen",home:"Ausweis, Kontostand und Mitteilungen",idcard:"Persönlicher Schülerausweis mit QR-Code",gallery:"Ausweisdesign auswählen",wallet:"Guthaben und Kontobewegungen",pay:"QR-Code scannen und Betrag prüfen",history:"Digitale Buchungen und Bargeld",bulletin:"Aktuelle Bekanntmachungen",blog:"Beiträge aus dem Projekt",events:"Termine und Anmeldungen",lost:"Verlorenes suchen, Gefundenes melden",map:"Schulplan: vier Shops pro Klassenzimmer",rooms:"Raumreservierungen anfragen",shops:"Geschäfte und Kassen",jobs:"Aufgaben finden und sich bewerben",votes:"Aktuelle und abgeschlossene Abstimmungen",laws:"Regeln und Verordnungen nachlesen",parties:"Mitteilungen der Parteien",courts:"Öffentliche Gerichtsbekanntmachungen",register:"Verkäufe und QR-Zahlungen erfassen",admin:"Guthaben, Rollen und Stimmrecht verwalten",settings:"Profil, Passwort und Geräte"};
   var iconPaths={applications:'M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5',updates:'M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9 M10 20h4',overlord:'M4 4h16v16H4z M8 16l3-4 3 2 3-5',guestvisa:"M4 4h16v16H4z M8 8h8 M8 12h8 M8 16h5",admincredit:"M12 2v20 M17 6H9a4 4 0 0 0 0 8h6a4 4 0 0 1 0 8H6",myjob:'M3 7h18v14H3z M8 7V3h8v4 M3 12h18',shopmanage:'M3 7h18 M5 7V4h14v3 M5 7v14h14V7 M9 12h6 M9 16h6',workhours:'M12 3v9l4 2 M21 12a9 9 0 1 1-9-9',roles:'M4 6h16 M4 12h16 M4 18h16 M6 8h3 M6 14h3',attendance:'M3 8V4h5 M16 4h5v4 M21 16v5h-5 M8 21H3v-5 M9 12l2 2 4-4',home:'M3 10l9-7 9 7v11H3z M9 21v-8h6v8',idcard:'M3 5h18v14H3z M7 9h3v4H7z M14 9h4 M14 13h4 M7 16h11',gallery:'M4 4h16v16H4z M8 8h3v3H8z M4 16l5-4 4 3 3-2 4 3',visa:'M6 3h12v18H6z M9 7h6 M9 11h6 M9 15h3',wallet:'M3 6h17v14H3z M3 6V4h14 M15 11h6v5h-6z',pay:'M4 8V4h4 M16 4h4v4 M20 16v4h-4 M8 20H4v-4 M8 10h3v3H8z M14 10h2 M14 14h3 M8 16h3',history:'M3 11a9 9 0 1 1 2 7 M3 4v7h7 M12 7v5l3 2',bulletin:'M4 5h16v14H4z M8 9h8 M8 13h5 M8 19v3 M16 19v3',blog:'M5 3h14v18H5z M8 7h8 M8 11h8 M8 15h5',events:'M4 5h16v16H4z M8 3v4 M16 3v4 M4 10h16 M8 14h2 M14 14h2',lost:'M10 17a7 7 0 1 0 0-14 7 7 0 0 0 0 14 M15 15l6 6 M7 10h6 M10 7v6',map:'M3 5l6-2 6 2 6-2v16l-6 2-6-2-6 2z M9 3v16 M15 5v16',rooms:'M5 3h14v18H5z M9 3v18 M14 12h1',shops:'M3 9l2-6h14l2 6 M3 9v3h18V9 M5 12v9h14v-9 M9 21v-6h6v6',jobs:'M3 7h18v14H3z M8 7V3h8v4 M3 12h18 M10 12v3h4v-3',votes:'M5 4h14v17H5z M8 8l2 2 5-5 M8 14h8 M8 17h5',laws:'M4 4h7v16H4z M13 4h7v16h-7z M7 8h1 M16 8h1',parties:'M8 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8 M2 21v-3a6 6 0 0 1 12 0v3 M16 4a4 4 0 0 1 0 8 M17 15a5 5 0 0 1 5 5',courts:'M12 3v18 M5 21h14 M4 6h16 M5 6l-3 8h6z M19 6l-3 8h6z',register:'M5 3h14v18H5z M8 6h8v4H8z M8 14h2 M14 14h2 M8 17h2 M14 17h2',settings:'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8 M12 2v3 M12 19v3 M2 12h3 M19 12h3 M5 5l2 2 M17 17l2 2 M5 19l2-2 M17 7l2-2',admin:'M12 3l8 3v6c0 5-8 9-8 9S4 17 4 12V6z M9 12l2 2 4-4',apps:'M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z',lock:'M5 11h14v10H5z M8 11V7a4 4 0 0 1 8 0v4',search:'M10 17a7 7 0 1 0 0-14 7 7 0 0 0 0 14 M15 15l6 6'};
-  navs.push(["apps","Bereiche"],["admin","Administration"]);
+  navs.push(["apps","Bereiche"],["admin","Administration"],["itsupport","Konten & IT-Support"]);
   function icon(id){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+(iconPaths[id]||iconPaths.apps)+'"/></svg>';}
   // Launch preview applies to ordinary members only; existing roles keep their permissions.
   var previewOpenPages=new Set(["home","apps","idcard","gallery","cardshop","settings"]);
@@ -161,7 +162,7 @@
     // ViSA is paused for all roles, including admins. Keep the implementation for later reuse.
     if(id==="visa"||id==="guestvisa")return false;
     if(id==="votes"&&!administrator)return false;
-    if(id==="overlord"||id==="admincredit"||id==="admin")return administrator;
+    if(id==="overlord"||id==="admincredit"||id==="admin"||id==="itsupport")return administrator;
     if(id==="register")return adminOrCashier();
     if(id==="roles")return administrator||operator;
     if(id==="attendance")return administrator||operator||Boolean(state.schoolRoles?.can_check_attendance);
@@ -216,7 +217,7 @@
       '<a class="btn primary full" href="/">Erneut versuchen</a></div></section></div>';
   }
   function login(){
-    root.innerHTML='<div class="welcome"><section class="welcome-left"><div class="brand" style="padding:0"><div class="brand-mark">S/S</div><div><div class="brand-name" >Schule als Staat</div><div class="brand-sub" >RNG Wangen</div></div></div><div><div class="eyebrow" >PROJEKTWOCHE 2027</div><div class="welcome-hero">Das Schulportal.</div><p class="welcome-sub">Schülerausweis und organisatorische Informationen zur Projektwoche.</p></div><div class="small" >12.–16. Juli 2027 · RNG Wangen</div><a href="https://www.instagram.com/schule.als.staat_rng/" class="project-social" target="_blank" rel="noopener noreferrer" aria-label="Schule als Staat auf Instagram öffnen">Instagram · @schule.als.staat_rng ↗</a></section><section class="welcome-side"><div class="login-box">'+header("ZUGANG","Anmelden","")+'<form id="password-login-form"><div class="form-group"><label for="account-email">Bürgerkennung oder Verwaltungs-E-Mail</label><input class="field" type="text" autocomplete="username" name="email" id="account-email" placeholder="SAS-123456" maxlength="160" required></div><div class="form-group"><label for="account-password">Passwort</label><span class="sas-password-input"><input class="field" type="password" autocomplete="current-password" name="password" id="account-password" minlength="6" required><button type="button" class="sas-password-toggle" data-password-toggle="account-password" aria-controls="account-password" aria-label="Passwort anzeigen" title="Passwort anzeigen" aria-pressed="false"><svg class="sas-eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg><svg class="sas-eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 3 18 18M10.58 5.15A11.8 11.8 0 0 1 12 5c6.5 0 10 7 10 7a15 15 0 0 1-3.03 3.8M6.7 6.7C3.6 8.6 2 12 2 12s3.5 7 10 7a10.8 10.8 0 0 0 4.37-.9"/><path d="M10 10a3 3 0 0 0 4 4"/></svg></button></span></div><button type="submit" class="btn primary full">Mit Passwort anmelden</button></form><p class="field-help">Ein Schülerkonto wird ausschließlich anhand der offiziellen Schulliste ausgegeben. Deine Bürgerkennung und dein Startpasswort erhältst du persönlich. Auch die bisherige längere Kennung funktioniert weiterhin. Beim ersten Login musst du das Startpasswort ändern.</p><details class="alternate-auth"><summary>Passwort vergessen? (Verwaltung)</summary><p class="field-help">Wenn du dein Passwort vergessen hast, wende dich mit deiner Bürgerkennung an den IT-Support der Schule. Eine E-Mail-Rücksetzung ist für Bürgerkonten nicht verfügbar. Nur vorhandene Verwaltungskonten mit echter E-Mail können hier einen Rücksetzlink anfordern.</p><form id="password-reset-request-form"><div class="form-group"><label for="password-reset-email">E-Mail-Adresse</label><input class="field" type="email" autocomplete="email" name="email" id="password-reset-email" placeholder="name@schule.de" required></div><button type="submit" class="btn dark full">Passwort-Link anfordern</button></form></details><p class="login-footer">Nur für gelistete Bürger und berechtigte Verwaltung. Gib deine Zugangsdaten niemals weiter. Schulwährung kann gegen Euro erworben werden; Guthaben hat damit einen realen finanziellen Bezug.</p></div></section></div>';
+    root.innerHTML='<div class="welcome"><section class="welcome-left"><div class="brand" style="padding:0"><div class="brand-mark">S/S</div><div><div class="brand-name" >Schule als Staat</div><div class="brand-sub" >RNG Wangen</div></div></div><div><div class="eyebrow" >PROJEKTWOCHE 2027</div><div class="welcome-hero">Das Schulportal.</div><p class="welcome-sub">Schülerausweis und organisatorische Informationen zur Projektwoche.</p></div><div class="small" >12.–16. Juli 2027 · RNG Wangen</div><a href="https://www.instagram.com/schule.als.staat_rng/" class="project-social" target="_blank" rel="noopener noreferrer" aria-label="Schule als Staat auf Instagram öffnen">Instagram · @schule.als.staat_rng ↗</a></section><section class="welcome-side"><div class="login-box">'+header("ZUGANG","Anmelden","")+'<form id="password-login-form"><div class="form-group"><label for="account-email">Bürgerkennung <small>(Verwaltung: E-Mail)</small></label><input class="field" type="text" autocomplete="username" name="email" id="account-email" autocapitalize="none" spellcheck="false" placeholder="SAS-123456" maxlength="160" required></div><div class="form-group"><label for="account-password">Passwort</label><span class="sas-password-input"><input class="field" type="password" autocomplete="current-password" name="password" id="account-password" maxlength="200" required><button type="button" class="sas-password-toggle" data-password-toggle="account-password" aria-controls="account-password" aria-label="Passwort anzeigen" title="Passwort anzeigen" aria-pressed="false"><svg class="sas-eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg><svg class="sas-eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 3 18 18M10.58 5.15A11.8 11.8 0 0 1 12 5c6.5 0 10 7 10 7a15 15 0 0 1-3.03 3.8M6.7 6.7C3.6 8.6 2 12 2 12s3.5 7 10 7a10.8 10.8 0 0 0 4.37-.9"/><path d="M10 10a3 3 0 0 0 4 4"/></svg></button></span></div><button type="submit" class="btn primary full">Mit Passwort anmelden</button></form><p class="field-help">Ein Schülerkonto wird ausschließlich anhand der offiziellen Schulliste ausgegeben. Deine Bürgerkennung und dein Startpasswort erhältst du persönlich. Auch die bisherige längere Kennung funktioniert weiterhin. Bei der ersten Anmeldung oder nach einem Reset legst du ein eigenes Passwort fest.</p><details class="alternate-auth"><summary>Bürgerkennung oder Passwort vergessen?</summary><p class="field-help">Geh persönlich zum IT-Support der Schule. Bring deinen Schülerausweis mit, falls du ihn hast. Das Team prüft deine Identität und kann deine Bürgerkennung nachschlagen oder dir ein vorläufiges Passwort geben.</p><details><summary>Passwort-Link für Verwaltungskonten</summary><form id="password-reset-request-form"><div class="form-group"><label for="password-reset-email">E-Mail-Adresse</label><input class="field" type="email" autocomplete="email" name="email" id="password-reset-email" placeholder="name@schule.de" required></div><button type="submit" class="btn dark full">Passwort-Link anfordern</button></form></details></details><p class="login-footer">Nur für gelistete Bürger und berechtigte Verwaltung. Gib deine Zugangsdaten niemals weiter. Schulwährung kann gegen Euro erworben werden; Guthaben hat damit einen realen finanziellen Bezug.</p></div></section></div>';
   }
   function legalReceiptFields(){
     return '<fieldset class="sas-legal-fieldset" aria-describedby="school-legal-help"><legend>Pflichtbestätigungen vor der Nutzung</legend>'+
@@ -322,8 +323,6 @@
   }
   function dashboard(){
     if(isPreviewMember()){
-      var pollsEnded=previewVotingClosed();
-      var active=pollsEnded?0:(state.polls||[]).filter(function(p){return p.status==="open"&&!p.has_voted;}).length;
       return '<div class="dashboard-intro">'+header("VORSCHAU","Dein Zugang ist eingerichtet","Dein Schülerausweis ist verfügbar. Weitere Bereiche sind bis zur Freigabe gesperrt.")+'</div>'+
         '<div class="overview-grid sas-preview-cards">'+
         '<section class="card overview-card"><div class="card-header"><span class="module-icon">'+icon("idcard")+'</span><span class="pill blue">Freigeschaltet</span></div><h2>Dein Schülerausweis</h2><p class="details">Öffne deine persönliche Projektkarte.</p><button class="btn" data-nav="idcard">Ausweis öffnen</button></section></div>'+
@@ -430,17 +429,46 @@
         " · Fehler: "+(counters.errors||0)+" · Gleichzeitig: "+(data.active||0);
     }catch(e){target.textContent="Diagnose nicht verfügbar: "+(e?.message||"Unbekannter Fehler");}
   }
+  function supportPage(){
+    var statuses={active:"Aktiv",temporary:"Startpasswort muss geändert werden",inactive:"Gesperrt oder inaktiv"};
+    var account=supportAccount;
+    return header("ADMINISTRATION","Konten & IT-Support","Schülerkonten anhand der Bürgerkennung finden und bei Bedarf ein vorläufiges Passwort ausgeben.")+
+      '<section class="card"><form id="sas-support-lookup"><div class="form-group"><label for="sas-support-id">Bürgerkennung</label><input class="field" id="sas-support-id" name="login_id" placeholder="SAS-123456" maxlength="14" autocapitalize="none" autocomplete="off" spellcheck="false" required></div><button type="submit" class="btn primary">Konto suchen</button></form></section>'+
+      (account?'<section class="card"><h2>'+esc(account.login_id)+'</h2><p>'+esc(statuses[account.status])+'</p>'+
+      (account.status==="inactive"?"":'<form id="sas-support-reset"><fieldset class="sas-legal-fieldset"><legend>Persönliche Identitätsprüfung</legend><label class="sas-legal-check"><input type="checkbox" name="identity_checked" required> <span>Ich habe die Identität der Person vor Ort anhand der geschützten Ausgabeliste der Schule geprüft. Kennung und QR-Code allein reichen dafür nicht aus.</span></label></fieldset><p class="field-help">Nach dem Zurücksetzen muss sich die Person erneut anmelden und ein eigenes Passwort festlegen.</p><button type="submit" class="btn primary">Vorläufiges Passwort erzeugen</button></form>')+'</section>':'');
+  }
+
+  async function supportRequest(action, login, verified){
+    if(state.profile?.role!=="admin"||state.page!=="itsupport")throw Error("Keine Administratorberechtigung.");
+    var response=await api.auth.getSession();
+    var access=response.data?.session?.access_token;
+    if(response.error||!access)throw Error("Bitte melde dich erneut an.");
+    var result=await fetch(cfg.supabaseUrl+"/functions/v1/sas-account-support",{
+      method:"POST",headers:{"Content-Type":"application/json","apikey":cfg.supabaseAnonKey,"Authorization":"Bearer "+access},
+      body:JSON.stringify({action:action,login_id:login,identity_checked:verified}),cache:"no-store"
+    });
+    var body=await result.json().catch(function(){return {};});
+    if(!result.ok||!body.login_id)throw Error(body.error||"Die Kontenhilfe ist gerade nicht verfügbar.");
+    return body;
+  }
+
+  function showSupportSlip(result){
+    mount(header("ADMINISTRATION","Passwort zurückgesetzt","Übergib das vorläufige Passwort direkt an die geprüfte Person. Nach dem Schließen kannst du es nicht erneut abrufen.")+
+      '<section class="card" id="sas-support-slip"><h2>Schule als Staat · Zugangsdaten</h2><p>Bürgerkennung <strong>'+esc(result.login_id)+'</strong></p><p>Vorläufiges Passwort <strong id="sas-support-secret">'+esc(result.temporary_password)+'</strong></p><p>Melde dich im Schulportal an und lege anschließend dein eigenes Passwort fest.</p><p>'+esc(location.origin)+'</p></section>'+
+      '<div class="button-row">'+btn("Passwort kopieren","support-copy")+btn("Übergabezettel drucken","support-print","dark")+btn("Schließen","support-close","dark")+'</div>');
+  }
+
   function settingsPage(){
     var account={label:state.profile.role==="admin"?"Konto":"Bürgerkennung",value:state.profile.display_name};
     var memberOptions=(state.users||[]).map(function(u){return '<option value="'+esc(u.id)+'">'+esc(u.login_id||"Verwaltung")+' ('+esc(u.role)+')</option>';}).join("");
-    var adminPanel=state.profile.role!=="admin"?"":'<h2 class="section-title">Administration</h2><div class="grid two"><section class="card"><div class="card-header"><h2>Guthaben ausgeben</h2><span class="pill blue">Nur Admin</span></div><form id="credit-form"><div class="form-group"><label for="credit-user">Mitglied</label><select id="credit-user" name="user_id" class="field" required>'+memberOptions+'</select></div><div class="form-group"><label for="credit-amount">Betrag in '+esc(units)+'</label><input id="credit-amount" name="amount" class="field" type="number" min=".01" max="10000" step=".01" required></div><div class="form-group"><label for="credit-note">Grund</label><input class="field" id="credit-note" name="note" maxlength="140" placeholder="z. B. Startguthaben"></div><button class="btn primary full" type="submit">Guthaben zuweisen</button></form><p class="field-help">Jede Ausgabe wird im digitalen Buchungsverlauf dokumentiert.</p></section><section class="card"><div class="card-header"><h2>Kassenberechtigung</h2><span class="pill">Rollen</span></div><form id="permission-form"><div class="form-group"><label for="permission-user">Mitglied</label><select class="field" id="permission-user" name="user_id" required>'+memberOptions+'</select></div><div class="form-group"><label for="permission-role">Berechtigung</label><select class="field" id="permission-role" name="enabled"><option value="true">Kassenpersonal</option><option value="false">Normales Mitglied</option></select></div><button class="btn dark full" type="submit">Berechtigung speichern</button></form><p class="field-help">Administratorrollen können hier nicht vergeben oder entfernt werden.</p></section></div>';
+    var adminPanel=state.profile.role!=="admin"?"":'<h2 class="section-title">Administration</h2>'+btn("Konten & IT-Support","to-itsupport","dark")+'<div class="grid two"><section class="card"><div class="card-header"><h2>Guthaben ausgeben</h2><span class="pill blue">Nur Admin</span></div><form id="credit-form"><div class="form-group"><label for="credit-user">Mitglied</label><select id="credit-user" name="user_id" class="field" required>'+memberOptions+'</select></div><div class="form-group"><label for="credit-amount">Betrag in '+esc(units)+'</label><input id="credit-amount" name="amount" class="field" type="number" min=".01" max="10000" step=".01" required></div><div class="form-group"><label for="credit-note">Grund</label><input class="field" id="credit-note" name="note" maxlength="140" placeholder="z. B. Startguthaben"></div><button class="btn primary full" type="submit">Guthaben zuweisen</button></form><p class="field-help">Jede Ausgabe wird im digitalen Buchungsverlauf dokumentiert.</p></section><section class="card"><div class="card-header"><h2>Kassenberechtigung</h2><span class="pill">Rollen</span></div><form id="permission-form"><div class="form-group"><label for="permission-user">Mitglied</label><select class="field" id="permission-user" name="user_id" required>'+memberOptions+'</select></div><div class="form-group"><label for="permission-role">Berechtigung</label><select class="field" id="permission-role" name="enabled"><option value="true">Kassenpersonal</option><option value="false">Normales Mitglied</option></select></div><button class="btn dark full" type="submit">Berechtigung speichern</button></form><p class="field-help">Administratorrollen können hier nicht vergeben oder entfernt werden.</p></section></div>';
     var approvePanel=state.profile.role==="admin"?'<h2 class="section-title">Stimmberechtigungen</h2><section class="card"><h2>Teilnahme freischalten</h2><p class="details" style="margin-top:12px">Hier verwaltest du die Stimmberechtigung bestehender Bürgerkonten. Änderungen werden serverseitig geprüft.</p><form id="vote-permission-form"><div class="form-group"><label for="vote-user">Nutzer</label><select class="field" id="vote-user" name="user_id" required>'+(state.users||[]).map(function(u){return '<option value="'+esc(u.id)+'">'+esc(u.login_id||"Verwaltung")+(u.vote_eligible?" · freigegeben":" · gesperrt")+'</option>';}).join("")+'</select></div><div class="form-group"><label for="vote-permission">Stimmrecht</label><select class="field" id="vote-permission" name="enabled"><option value="true">Freigeben</option><option value="false">Sperren</option></select></div><button type="submit" class="btn dark">Berechtigung speichern</button></form><p class="field-help">Eine nachträgliche Sperre löscht keine bereits abgegebenen Stimmen.</p></section>':"";
     var deletionPanel=state.profile.role!=="admin"?"":'<section class="card" style="margin-top:20px"><h2>Offene Datenlöschanträge</h2><p class="field-help">Nur Kennungen, keine Klarnamen. Nach Prüfung Daten in allen Projekttabellen und Backups löschen oder rechtlich notwendige Nachweise dokumentieren. Das Markieren als geprüft löscht noch nichts.</p>'+
       ((state.deletionRequests||[]).length?(state.deletionRequests||[]).map(function(q){return '<div class="settings-row"><div><strong>'+esc(q.login_id)+'</strong><p>Beantragt am '+esc(time(q.requested_at))+' · '+esc(q.status)+' · Grund: '+esc(({keine_angabe:"Keine Angabe",datenschutz:"Datenschutzbedenken",nicht_mehr_nutzen:"Nicht mehr nutzen",sonstiges:"Anderer Grund"})[q.reason_code]||"Keine Angabe")+'</p></div>'+(q.status==="beantragt"?'<form data-action="review-data-deletion"><input type="hidden" name="user_id" value="'+esc(q.user_id)+'"><button class="btn dark" type="submit">Prüfung beginnen</button></form>':'')+'</div>';}).join(""):'<p class="field-help">Keine offenen Anträge.</p>')+'</section>';
     if(state.page==="admin")return header("VERWALTUNG","Administration.","Guthaben, Rollen und Stimmrecht für unseren Schulstaat verwalten.")+adminPanel+approvePanel+deletionPanel;
     return header(state.page==="admin"?"VERWALTUNG":"MEIN BEREICH",state.page==="admin"?"Administration":"Einstellungen",state.page==="admin"?"Berechtigungen und Guthaben für unseren Schulstaat verwalten.":"Dein Profil, dein Passwort und deine Geräte.")+
       '<section class="card"><div class="card-header"><h2>Einführung in das Portal</h2><span class="pill blue">Interaktiv</span></div><p class="details">Der Rundgang erklärt die wichtigsten Bereiche. Er führt keine Zahlungen oder Anträge aus.</p><button class="btn" type="button" data-action="restart-tutorial">Einführung starten oder wiederholen</button></section>'+ 
-      '<div class="grid two"><section class="card"><h2>Benutzerkonto</h2><div class="divider"></div><div class="settings-row"><div><strong>Kontokennung</strong><p>'+esc(state.profile.display_name)+'</p></div></div><div class="settings-row"><div><strong>'+account.label+'</strong><p>'+esc(account.value)+'</p></div></div><div class="settings-row"><div><strong>Rolle</strong><p>'+roleLabel()+'</p></div></div><div class="divider"></div>'+btn("Abmelden","logout","")+'</section><section class="card"><h2>Kameraberechtigung</h2><div class="divider"></div><p class="details">HTTPS-Status: '+(window.isSecureContext?"Sicherer Kontext":"Unsicherer Kontext")+'. Kamera wird nur auf deinen Wunsch aktiviert und niemals aufgezeichnet.</p>'+btn("Kamerazugriff testen","camera-test")+'<div class="divider"></div><p class="details">Kontoeinheit: '+esc(units)+'. Keine Euro-Bankgutschrift; die Schulwährung kann jedoch mit echten Euro erworben werden.</p></section></div>'+'<section class="card" style="margin-top:20px"><h2>Passwort ändern</h2><p class="field-help">Wähle ein individuelles, mindestens 12 Zeichen langes Passwort. Deine aktuelle Anmeldung muss gültig sein.</p><form id="password-change-form"><div class="form-group"><label for="change-pw">Neues Passwort</label><span class="sas-password-input"><input class="field" type="password" autocomplete="new-password" id="change-pw" name="password" minlength="12" required><button type="button" class="sas-password-toggle" data-password-toggle="change-pw" aria-controls="change-pw" aria-label="Passwort anzeigen" title="Passwort anzeigen" aria-pressed="false"><svg class="sas-eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg><svg class="sas-eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 3 18 18M10.58 5.15A11.8 11.8 0 0 1 12 5c6.5 0 10 7 10 7a15 15 0 0 1-3.03 3.8M6.7 6.7C3.6 8.6 2 12 2 12s3.5 7 10 7a10.8 10.8 0 0 0 4.37-.9"/><path d="M10 10a3 3 0 0 0 4 4"/></svg></button></span></div><div class="form-group"><label for="change-pw-repeat">Passwort wiederholen</label><span class="sas-password-input"><input class="field" type="password" autocomplete="new-password" id="change-pw-repeat" name="repeat" minlength="12" required><button type="button" class="sas-password-toggle" data-password-toggle="change-pw-repeat" aria-controls="change-pw-repeat" aria-label="Passwort anzeigen" title="Passwort anzeigen" aria-pressed="false"><svg class="sas-eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg><svg class="sas-eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 3 18 18M10.58 5.15A11.8 11.8 0 0 1 12 5c6.5 0 10 7 10 7a15 15 0 0 1-3.03 3.8M6.7 6.7C3.6 8.6 2 12 2 12s3.5 7 10 7a10.8 10.8 0 0 0 4.37-.9"/><path d="M10 10a3 3 0 0 0 4 4"/></svg></button></span></div><button type="submit" class="btn dark">Passwort aktualisieren</button></form></section>'+'<section class="card" style="margin-top:20px"><h2>Datenschutz und Datenlöschung</h2><p class="field-help">Du kannst kostenlos und ohne Begründung die Löschung deiner Projektdaten beantragen.</p><p><a href="/datenschutz.html" target="_blank" rel="noopener noreferrer">Datenschutz</a> · <a href="/nutzungsregeln.html" target="_blank" rel="noopener noreferrer">Nutzungsregeln</a></p><button class="btn dark" type="button" data-action="open-deletion">Datenlöschung beantragen</button></section>'+(state.page==="admin"?adminPanel+approvePanel+deletionPanel:"");
+      '<div class="grid two"><section class="card"><h2>Benutzerkonto</h2><div class="divider"></div><div class="settings-row"><div><strong>Kontokennung</strong><p>'+esc(state.profile.display_name)+'</p></div>'+(/^SAS-/.test(state.profile.display_name)?btn("Kennung kopieren","copy-citizen","dark"):'')+'</div><div class="settings-row"><div><strong>'+account.label+'</strong><p>'+esc(account.value)+'</p></div></div><div class="settings-row"><div><strong>Rolle</strong><p>'+roleLabel()+'</p></div></div><div class="divider"></div>'+btn("Abmelden","logout","")+'</section><section class="card"><h2>Kameraberechtigung</h2><div class="divider"></div><p class="details">HTTPS-Status: '+(window.isSecureContext?"Sicherer Kontext":"Unsicherer Kontext")+'. Kamera wird nur auf deinen Wunsch aktiviert und niemals aufgezeichnet.</p>'+btn("Kamerazugriff testen","camera-test")+'<div class="divider"></div><p class="details">Kontoeinheit: '+esc(units)+'. Keine Euro-Bankgutschrift; die Schulwährung kann jedoch mit echten Euro erworben werden.</p></section></div>'+'<section class="card" style="margin-top:20px"><h2>Passwort ändern</h2><p class="field-help">Wähle ein individuelles, mindestens 12 Zeichen langes Passwort. Deine aktuelle Anmeldung muss gültig sein.</p><form id="password-change-form"><div class="form-group"><label for="change-pw">Neues Passwort</label><span class="sas-password-input"><input class="field" type="password" autocomplete="new-password" id="change-pw" name="password" minlength="12" required><button type="button" class="sas-password-toggle" data-password-toggle="change-pw" aria-controls="change-pw" aria-label="Passwort anzeigen" title="Passwort anzeigen" aria-pressed="false"><svg class="sas-eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg><svg class="sas-eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 3 18 18M10.58 5.15A11.8 11.8 0 0 1 12 5c6.5 0 10 7 10 7a15 15 0 0 1-3.03 3.8M6.7 6.7C3.6 8.6 2 12 2 12s3.5 7 10 7a10.8 10.8 0 0 0 4.37-.9"/><path d="M10 10a3 3 0 0 0 4 4"/></svg></button></span></div><div class="form-group"><label for="change-pw-repeat">Passwort wiederholen</label><span class="sas-password-input"><input class="field" type="password" autocomplete="new-password" id="change-pw-repeat" name="repeat" minlength="12" required><button type="button" class="sas-password-toggle" data-password-toggle="change-pw-repeat" aria-controls="change-pw-repeat" aria-label="Passwort anzeigen" title="Passwort anzeigen" aria-pressed="false"><svg class="sas-eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg><svg class="sas-eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 3 18 18M10.58 5.15A11.8 11.8 0 0 1 12 5c6.5 0 10 7 10 7a15 15 0 0 1-3.03 3.8M6.7 6.7C3.6 8.6 2 12 2 12s3.5 7 10 7a10.8 10.8 0 0 0 4.37-.9"/><path d="M10 10a3 3 0 0 0 4 4"/></svg></button></span></div><button type="submit" class="btn dark">Passwort aktualisieren</button></form></section>'+'<section class="card" style="margin-top:20px"><h2>Datenschutz und Datenlöschung</h2><p class="field-help">Du kannst kostenlos und ohne Begründung die Löschung deiner Projektdaten beantragen.</p><p><a href="/datenschutz.html" target="_blank" rel="noopener noreferrer">Datenschutz</a> · <a href="/nutzungsregeln.html" target="_blank" rel="noopener noreferrer">Nutzungsregeln</a></p><button class="btn dark" type="button" data-action="open-deletion">Datenlöschung beantragen</button></section>'+(state.page==="admin"?adminPanel+approvePanel+deletionPanel:"");
   }
   function passwordRecoveryView(){
     return '<section class="welcome-side" style="max-width:560px;margin:48px auto"><div class="login-box">'+header("KONTO SICHERN","Neues Passwort festlegen.","Du hast einen Wiederherstellungslink geöffnet. Wähle jetzt ein eigenes Passwort.")+'<form id="password-recovery-form"><div class="form-group"><label for="recovery-pw">Neues Passwort (mindestens 12 Zeichen)</label><span class="sas-password-input"><input class="field" type="password" autocomplete="new-password" id="recovery-pw" name="password" minlength="12" required><button type="button" class="sas-password-toggle" data-password-toggle="recovery-pw" aria-controls="recovery-pw" aria-label="Passwort anzeigen" title="Passwort anzeigen" aria-pressed="false"><svg class="sas-eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg><svg class="sas-eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 3 18 18M10.58 5.15A11.8 11.8 0 0 1 12 5c6.5 0 10 7 10 7a15 15 0 0 1-3.03 3.8M6.7 6.7C3.6 8.6 2 12 2 12s3.5 7 10 7a10.8 10.8 0 0 0 4.37-.9"/><path d="M10 10a3 3 0 0 0 4 4"/></svg></button></span></div><div class="form-group"><label for="recovery-pw-repeat">Passwort wiederholen</label><span class="sas-password-input"><input class="field" type="password" autocomplete="new-password" id="recovery-pw-repeat" name="repeat" minlength="12" required><button type="button" class="sas-password-toggle" data-password-toggle="recovery-pw-repeat" aria-controls="recovery-pw-repeat" aria-label="Passwort anzeigen" title="Passwort anzeigen" aria-pressed="false"><svg class="sas-eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg><svg class="sas-eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 3 18 18M10.58 5.15A11.8 11.8 0 0 1 12 5c6.5 0 10 7 10 7a15 15 0 0 1-3.03 3.8M6.7 6.7C3.6 8.6 2 12 2 12s3.5 7 10 7a10.8 10.8 0 0 0 4.37-.9"/><path d="M10 10a3 3 0 0 0 4 4"/></svg></button></span></div><button type="submit" class="btn primary full">Neues Passwort speichern</button></form></div></section>';
@@ -455,7 +483,7 @@
     if(state.user&&state.legalStatus?.needs_acknowledgement){schoolLegalView();return;}
     if(!state.user){document.title="Anmelden · Schule als Staat";return login();}
     if(!state.profile||!state.wallet){root.textContent="Profil oder Guthaben konnte nicht geladen werden. Bitte Zugang und Datenbankkonfiguration prüfen.";return;}
-    var views={home:dashboard,wallet:wallet,pay:pay,register:register,history:history,votes:votesPage,settings:settingsPage,apps:appDirectory,admin:settingsPage,overlord:overlordPage};
+    var views={home:dashboard,wallet:wallet,pay:pay,register:register,history:history,votes:votesPage,settings:settingsPage,apps:appDirectory,admin:settingsPage,itsupport:supportPage,overlord:overlordPage};
     if(!allowed(state.page)){state.page="home";}
     document.title=label(state.page)+" · Schule als Staat";
     if(state.page==="home"&&isPreviewMember()){mount(dashboard());return;}
@@ -605,7 +633,7 @@
       if(saved && allowed(saved))state.page=saved;
     }catch(_){}
   }
-  async function navigate(id){if(state.busy||(window.SAS_FEATURES&&window.SAS_FEATURES.isBusy())){showToast("Bitte warte, bis die Änderung gespeichert ist.");return;}if(!allowed(id))return;await stopScanner();if(window.SAS_ATTENDANCE)await window.SAS_ATTENDANCE.stop();if(window.SAS_WORK_HOURS)await window.SAS_WORK_HOURS.stop();state.page=id;rememberPage(id);state.editing=false;render();if(["home","wallet","history","votes"].includes(id))void refresh(true);window.scrollTo(0,0);var main=document.getElementById("main-content");if(main)main.focus({preventScroll:true});}
+  async function navigate(id){if(state.busy||(window.SAS_FEATURES&&window.SAS_FEATURES.isBusy())){showToast("Bitte warte, bis die Änderung gespeichert ist.");return;}if(!allowed(id))return;await stopScanner();if(window.SAS_ATTENDANCE)await window.SAS_ATTENDANCE.stop();if(window.SAS_WORK_HOURS)await window.SAS_WORK_HOURS.stop();supportAccount=null;state.page=id;rememberPage(id);state.editing=false;render();if(["home","wallet","history","votes"].includes(id))void refresh(true);window.scrollTo(0,0);var main=document.getElementById("main-content");if(main)main.focus({preventScroll:true});}
   window.SAS_TUTORIAL_NAV=function(page){if(allowed(page))void navigate(page);};
   async function action(id,pollId){
     if(state.busy)return;
@@ -613,10 +641,19 @@
       if(id==="open-search"){document.getElementById("portal-search").showModal();return;}
       if(id==="close-search"){document.getElementById("portal-search").close();return;}
       if(id.indexOf("to-")===0)return await navigate(id.slice(3));
+      if(id==="copy-citizen"){
+        await navigator.clipboard.writeText(state.profile.display_name);showToast("Bürgerkennung kopiert.");return;
+      }
+      if(state.page==="itsupport"&&state.profile?.role==="admin"){
+        var secret=document.getElementById("sas-support-secret");
+        if(id==="support-copy"&&secret){await navigator.clipboard.writeText(secret.textContent);showToast("Vorläufiges Passwort kopiert.");return;}
+        if(id==="support-print"&&secret){window.print();return;}
+        if(id==="support-close"){supportAccount=null;render();return;}
+      }
       if(id==="camera-test")return await cameraTest();
       if(id==="restart-tutorial"&&window.SAS_TUTORIAL)return await window.SAS_TUTORIAL.reopen(api,state.user.id,{previewOnly:isPreviewMember(),pollsOpen:!previewVotingClosed(),pollsVisible:state.profile?.role==="admin"});
       if(id==="close-poll"){
-        if(!state.profile||(state.profile.role!=="admin"&&!state.schoolRoles?.operator))throw Error("Keine Verwaltungsberechtigung");
+        if(!state.profile||(state.profile.role!=="admin"))throw Error("Keine Verwaltungsberechtigung");
         if(!window.confirm("Diese Abstimmung wirklich schließen? Danach sind keine Stimmen mehr möglich."))return;
         state.busy=true;
         await rpc("admin_close_poll",{p_poll_id:pollId});
@@ -647,6 +684,24 @@
     var data=new FormData(form), submit=form.querySelector('[type="submit"]');
     if(submit)submit.disabled=true;
     try{
+      if(form.id==="sas-support-lookup"){
+        supportAccount=null;
+        try{supportAccount=await supportRequest("lookup",String(data.get("login_id")||"").trim().toUpperCase(),false);}
+        finally{render();}
+        return;
+      }
+      if(form.id==="sas-support-reset"){
+        var verified=data.get("identity_checked")==="on";
+        if(!supportAccount||!verified)throw Error("Bitte prüfe und bestätige zuerst die Identität.");
+        var target=supportAccount.login_id;
+        supportAccount=null;
+        var result;
+        try{result=await supportRequest("reset",target,verified);}
+        catch(error){render();throw error;}
+        if(!result.temporary_password){render();throw Error("Das vorläufige Passwort konnte nicht angezeigt werden.");}
+        if(state.profile?.role==="admin"&&state.page==="itsupport")showSupportSlip(result);
+        return;
+      }
       if(form.dataset?.action==="review-data-deletion"){
         await rpc("admin_review_school_deletion_request",{p_user_id:String(data.get("user_id")||"")});
         await fetchData();render();showToast("Löschantrag in Prüfung.");return;
@@ -695,8 +750,8 @@
          if(/@accounts\.schule-als-staat\.invalid$/i.test(resetEmail))
           throw Error("Bürgerkennungen besitzen kein E-Mail-Postfach. Bitte einen neuen Zugangscode über die Schulverwaltung anfordern.");
         var reset=await api.auth.resetPasswordForEmail(resetEmail,{redirectTo:location.origin+location.pathname});
-        if(reset.error)throw reset.error;
-        showToast("Wenn diese Adresse registriert ist und der E-Mail-Versand verfügbar ist, erhältst du einen Passwort-Link.");
+        if(reset.error&&reset.error.status>=500)throw Error("Der Passwort-Link ist vorübergehend nicht verfügbar.");
+        showToast("Wenn diese Adresse registriert ist, erhältst du einen Passwort-Link.");
       }
       if(form.id==="password-recovery-form"||form.id==="password-change-form"){
         var replacement=String(data.get("password")||"");
@@ -732,7 +787,11 @@
            if(/^SAS-[A-Z0-9]{10}$/i.test(longLogin))longLogin=longLogin.slice(4).toLowerCase()+"@accounts.schule-als-staat.invalid";
            else if(longLogin.indexOf("@")<0)throw Error("Bitte eine gültige Bürgerkennung (SAS-123456) eingeben.");
            var response=await api.auth.signInWithPassword({email:longLogin,password:inputPassword});
-           if(response.error)throw response.error;
+           if(response.error){
+             if(response.error.status===429)throw Error("Zu viele Anmeldeversuche. Bitte warte kurz.");
+             if(response.error.status>=500)throw Error("Anmeldung vorübergehend nicht verfügbar.");
+             throw Error("Kennung oder Passwort ist falsch.");
+           }
          }
        }
        if(form.id==="login-form"){
@@ -742,7 +801,7 @@
       }
       if(form.id==="manual-form")await openInvoice(data.get("code"));
       if(form.id==="vote-form"||form.id==="flag-vote-form"){
-        if(!state.profile.vote_eligible)throw Error("Zur Abstimmung muss dein Konto von der Schule freigeschaltet sein.");
+        if(state.profile?.role!=="admin"||!state.profile.vote_eligible)throw Error("Keine Abstimmungsberechtigung.");
         var pollId=form.dataset.pollId;
         var selected=data.get("choice");
         if(!selected)throw Error("Wähle zuerst eine Antwort aus.");
@@ -750,7 +809,7 @@
         await fetchData();render();showToast("Deine Stimme wurde gezählt.");
       }
       if(form.id==="poll-create"){
-        if(state.profile.role!=="admin"&&!state.schoolRoles?.operator)throw Error("Keine Verwaltungsberechtigung.");
+        if(state.profile.role!=="admin")throw Error("Keine Verwaltungsberechtigung.");
         var choices=String(data.get("options")||"").split(/\r?\n/).map(function(x){return x.trim();}).filter(Boolean);
         await rpc("admin_create_poll",{p_title:String(data.get("title")||"").trim(),p_description:String(data.get("description")||"").trim(),p_options:choices});
         await fetchData();render();showToast("Abstimmung veröffentlicht.");
@@ -836,6 +895,11 @@
     var hash=location.hash;
     // The former guest ViSA hash routes no longer open a public page.
     if(!state.user)render();
+    else if(hash==="#votes"||hash==="#itsupport"){
+      var page=hash.slice(1);
+      if(allowed(page))void navigate(page);
+      else history.replaceState(null,"",location.pathname+location.search);
+    }
   });
   document.addEventListener("keydown",function(e){if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="k"&&state.user){e.preventDefault();var d=document.getElementById("portal-search");if(d){if(d.open)d.close();else d.showModal();}}});
   // No continuously scheduled database reads: Workers Free has a daily
@@ -852,17 +916,40 @@
       void refresh(true);
     }
   });
-  window.addEventListener("pagehide",function(){void stopScanner();});
+  window.addEventListener("pagehide",function(){
+    void stopScanner();
+    if(document.getElementById("sas-support-secret")){supportAccount=null;render();}
+  });
+  async function loadSessionData(){
+    try{
+      if(state.user.app_metadata?.sas_initial_password===true){
+        state.deletionStatus=await rpc("my_school_deletion_status",{});
+        return;
+      }
+      await claimDesignatedAdmin();await fetchData();
+    }catch(error){
+      if(error?.code!=="PT401")throw error;
+      await api.auth.signOut({scope:"local"});
+      state.user=null;state.profile=null;state.wallet=null;
+    }
+  }
   async function start(){
     if(!api)return render();
     var session=await api.auth.getSession();
     if(session.error)throw session.error;
     state.user=session.data.session&&session.data.session.user||null;
-    if(state.user){await claimDesignatedAdmin();await fetchData();restorePage();}
+    if(state.user){
+      await loadSessionData();restorePage();
+      if(location.hash==="#votes"||location.hash==="#itsupport"){
+        var requested=location.hash.slice(1);
+        if(allowed(requested))state.page=requested;
+        else history.replaceState(null,"",location.pathname+location.search);
+      }
+    }
 
     render();
-    if(state.user&&!state.legalStatus?.needs_acknowledgement&&!state.deletionStatus?.requested&&window.SAS_TUTORIAL)void window.SAS_TUTORIAL.start(api,state.user.id,{previewOnly:isPreviewMember(),pollsOpen:!previewVotingClosed(),pollsVisible:state.profile?.role==="admin"});
-    if(deepLink&&state.user&&!state.legalStatus?.needs_acknowledgement&&!state.deletionStatus?.requested&&!isPreviewMember()){try{await openInvoice(deepLink);}catch(e){fail(e);}}
+    if(state.profile&&!state.legalStatus?.needs_acknowledgement&&!state.deletionStatus?.requested&&window.SAS_TUTORIAL)void window.SAS_TUTORIAL.start(api,state.user.id,{previewOnly:isPreviewMember(),pollsOpen:!previewVotingClosed(),pollsVisible:state.profile?.role==="admin"});
+    if(deepLink&&state.profile&&!state.legalStatus?.needs_acknowledgement&&!state.deletionStatus?.requested&&!isPreviewMember()){try{await openInvoice(deepLink);}catch(e){fail(e);}}
     api.auth.onAuthStateChange(function(event,session){
       var next=session&&session.user||null;
       if(event==="PASSWORD_RECOVERY"){
@@ -872,10 +959,10 @@
         return;
       }
       if(next&&state.user&&next.id===state.user.id)return;
-      state.user=next;state.profile=null;state.legalStatus=null;state.deletionStatus=null;state.deletionRequests=[];state.showDeletionForm=false;state.deletionStage=1;state.deletionReadToEnd=false;state.wallet=null;state.ledger=[];state.cash=[];state.requests=[];state.users=[];state.polls=[];state.pollResults=[];state.schoolRoles={operator:false,jobs:[]};state.active=null;state.invoice=null;
+      supportAccount=null;state.user=next;state.profile=null;state.legalStatus=null;state.deletionStatus=null;state.deletionRequests=[];state.showDeletionForm=false;state.deletionStage=1;state.deletionReadToEnd=false;state.wallet=null;state.ledger=[];state.cash=[];state.requests=[];state.users=[];state.polls=[];state.pollResults=[];state.schoolRoles={operator:false,jobs:[]};state.active=null;state.invoice=null;
       if(window.SAS_TUTORIAL)window.SAS_TUTORIAL.logout();
       void stopScanner().then(async function(){
-        try{if(state.user){await claimDesignatedAdmin();await fetchData();}render();if(state.user&&!state.legalStatus?.needs_acknowledgement&&!state.deletionStatus?.requested&&window.SAS_TUTORIAL)void window.SAS_TUTORIAL.start(api,state.user.id,{previewOnly:isPreviewMember(),pollsOpen:!previewVotingClosed(),pollsVisible:state.profile?.role==="admin"});if(deepLink&&state.user&&!isPreviewMember())await openInvoice(deepLink);}
+        try{if(state.user)await loadSessionData();render();if(state.profile&&!state.legalStatus?.needs_acknowledgement&&!state.deletionStatus?.requested&&window.SAS_TUTORIAL)void window.SAS_TUTORIAL.start(api,state.user.id,{previewOnly:isPreviewMember(),pollsOpen:!previewVotingClosed(),pollsVisible:state.profile?.role==="admin"});if(deepLink&&state.profile&&!isPreviewMember())await openInvoice(deepLink);}
         catch(e){fail(e);render();}
       });
     });
