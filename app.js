@@ -483,7 +483,7 @@
     if(state.user&&state.legalStatus?.needs_acknowledgement){schoolLegalView();return;}
     if(!state.user){document.title="Anmelden · Schule als Staat";return login();}
     if(!state.profile||!state.wallet){root.textContent="Profil oder Guthaben konnte nicht geladen werden. Bitte Zugang und Datenbankkonfiguration prüfen.";return;}
-    var views={home:dashboard,wallet:wallet,pay:pay,register:register,history:history,votes:votesPage,settings:settingsPage,apps:appDirectory,admin:settingsPage,itsupport:supportPage,overlord:overlordPage};
+    var views={home:dashboard,wallet:wallet,pay:pay,register:register,history:historyPage,votes:votesPage,settings:settingsPage,apps:appDirectory,admin:settingsPage,itsupport:supportPage,overlord:overlordPage};
     if(!allowed(state.page)){state.page="home";}
     document.title=label(state.page)+" · Schule als Staat";
     if(state.page==="home"&&isPreviewMember()){mount(dashboard());return;}
@@ -628,6 +628,13 @@
   }
   function restorePage(){
     if(!state.user || deepLink)return;
+    if(location.hash==="#votes"||location.hash==="#itsupport"){
+      if(!state.profile)return;
+      var requested=location.hash.slice(1);
+      if(allowed(requested)){state.page=requested;rememberPage(requested);}
+      history.replaceState(null,"",location.pathname+location.search);
+      return;
+    }
     try{
       var saved=window.sessionStorage.getItem("sas-current-section:"+state.user.id);
       if(saved && allowed(saved))state.page=saved;
@@ -938,17 +945,10 @@
     var session=await api.auth.getSession();
     if(session.error)throw session.error;
     state.user=session.data.session&&session.data.session.user||null;
-    if(state.user){
-      await loadSessionData();restorePage();
-      if(location.hash==="#votes"||location.hash==="#itsupport"){
-        var requested=location.hash.slice(1);
-        if(allowed(requested))state.page=requested;
-        else history.replaceState(null,"",location.pathname+location.search);
-      }
-    }
+    if(state.user){await loadSessionData();restorePage();}
 
     render();
-    if(state.profile&&!state.legalStatus?.needs_acknowledgement&&!state.deletionStatus?.requested&&window.SAS_TUTORIAL)void window.SAS_TUTORIAL.start(api,state.user.id,{previewOnly:isPreviewMember(),pollsOpen:!previewVotingClosed(),pollsVisible:state.profile?.role==="admin"});
+    if(state.profile&&!state.legalStatus?.needs_acknowledgement&&!state.deletionStatus?.requested&&window.SAS_TUTORIAL)void window.SAS_TUTORIAL.start(api,state.user.id,{auto:state.page!=="itsupport"&&state.page!=="votes",previewOnly:isPreviewMember(),pollsOpen:!previewVotingClosed(),pollsVisible:state.profile?.role==="admin"});
     if(deepLink&&state.profile&&!state.legalStatus?.needs_acknowledgement&&!state.deletionStatus?.requested&&!isPreviewMember()){try{await openInvoice(deepLink);}catch(e){fail(e);}}
     api.auth.onAuthStateChange(function(event,session){
       var next=session&&session.user||null;
@@ -962,7 +962,7 @@
       supportAccount=null;state.user=next;state.profile=null;state.legalStatus=null;state.deletionStatus=null;state.deletionRequests=[];state.showDeletionForm=false;state.deletionStage=1;state.deletionReadToEnd=false;state.wallet=null;state.ledger=[];state.cash=[];state.requests=[];state.users=[];state.polls=[];state.pollResults=[];state.schoolRoles={operator:false,jobs:[]};state.active=null;state.invoice=null;
       if(window.SAS_TUTORIAL)window.SAS_TUTORIAL.logout();
       void stopScanner().then(async function(){
-        try{if(state.user)await loadSessionData();render();if(state.profile&&!state.legalStatus?.needs_acknowledgement&&!state.deletionStatus?.requested&&window.SAS_TUTORIAL)void window.SAS_TUTORIAL.start(api,state.user.id,{previewOnly:isPreviewMember(),pollsOpen:!previewVotingClosed(),pollsVisible:state.profile?.role==="admin"});if(deepLink&&state.profile&&!isPreviewMember())await openInvoice(deepLink);}
+        try{if(state.user){await loadSessionData();restorePage();}render();if(state.profile&&!state.legalStatus?.needs_acknowledgement&&!state.deletionStatus?.requested&&window.SAS_TUTORIAL)void window.SAS_TUTORIAL.start(api,state.user.id,{auto:state.page!=="itsupport"&&state.page!=="votes",previewOnly:isPreviewMember(),pollsOpen:!previewVotingClosed(),pollsVisible:state.profile?.role==="admin"});if(deepLink&&state.profile&&!isPreviewMember())await openInvoice(deepLink);}
         catch(e){fail(e);render();}
       });
     });

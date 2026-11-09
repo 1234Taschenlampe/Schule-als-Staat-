@@ -1,7 +1,7 @@
 /* Interactive first-use tour: visits real portal pages; no typing or test payments. */
 (function(){"use strict";
 const fullSteps=[
- {page:"home",title:"Rundgang durch das Portal",desc:"Hier findest du einen Überblick über Ausweis, Guthaben, Abstimmungen und Mitteilungen."},
+ {page:"home",title:"Rundgang durch das Portal",desc:"Hier findest du einen Überblick über Ausweis, Guthaben und Mitteilungen."},
  {page:"idcard",title:"Dein Schülerausweis",desc:"Dein digitaler Ausweis enthält einen festen QR-Code zur Identifikation im Projekt."},
  {page:"wallet",title:"Dein Guthaben",desc:"Hier siehst du deine Schulwährung und Buchungen. Nur die Verwaltung kann neues Guthaben ausgeben."},
  {page:"pay",title:"QR-Zahlungen",desc:"An der Kasse kannst du einen Zahlungs-QR-Code scannen. Eine Zahlung erfolgt erst nach deiner Bestätigung. In diesem Rundgang wird nichts bezahlt."},

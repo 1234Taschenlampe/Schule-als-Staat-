@@ -157,3 +157,10 @@ test('paused ViSA is hidden from login, administration and direct hash routes',a
  assert.doesNotMatch(member.root.innerHTML,/sas-public-visa-page|guest-visa-form/);
  assert.equal(member.visaRoot.innerHTML,'');
 });
+
+test('transaction history opens for authorized accounts',async()=>{
+ const x=await launch('cashier');
+ await x.click('history');
+ assert.match(x.document.title,/Verlauf/);
+ assert.match(x.root.innerHTML,/Noch keine digitalen Buchungen/);
+});
