@@ -4,7 +4,7 @@
 
 **Aktueller Datenbankstand:** 991 offizielle Bürgerkonten und ein Administratorkonto. Alle 991 Mitglieder sind mit Supabase Auth, ihrem Mitgliedsprofil und einem verschlüsselten Namensdatensatz verbunden. `school_access_settings.roster_enforced=true` ist in der Produktionsdatenbank aktiviert. Der aktive `auth.users`-Trigger `sas_roster_registration_guard` verhindert öffentliche Registrierungen auf Serverebene; das Frontend bietet keine neue Kontoerstellung.
 
-**Anmeldung:** Bürger nutzen die zugewiesene Kennung `SAS-XXXXXXXXXX` und ihr persönliches Passwort beziehungsweise ein einmaliges Startpasswort mit verpflichtendem Passwortwechsel. Ein Wiederherstellungslink für interne Pseudo-E-Mail-Adressen ist nicht möglich; die Schulverwaltung übernimmt die sichere Wiederherstellung.
+**Anmeldung:** Bürger haben zusätzlich zur bisherigen Kennung `SAS-XXXXXXXXXX` eine zufällig zugeteilte, kurze Kennung `SAS-123456` (sechs Ziffern, Beispiel). Beide gehören weiterhin zum selben Supabase-Auth-Konto. Bei erstmaligem Login gilt der verpflichtende Passwortwechsel. Ein Wiederherstellungslink für interne Pseudo-E-Mail-Adressen ist nicht möglich; die Schulverwaltung übernimmt die sichere Wiederherstellung.
 
 **Schulische Verifizierung:** Die Eintragung auf der offiziellen Liste ist **nicht** identisch mit einer persönlichen Identitätskontrolle. `school_verified_at` wurde nicht künstlich befüllt. Anwesenheits-/Arbeitszeitfunktionen können daher bis zur individuellen Bestätigung eingeschränkt sein.
 
