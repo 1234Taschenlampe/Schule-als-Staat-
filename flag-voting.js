@@ -47,7 +47,7 @@ async function enhance({api,polls=[],target}){
   }).join("");
   const status=!active?"Abstimmung noch nicht freigeschaltet":voted?"Deine Stimme wurde bereits abgegeben":!enabled?"Stimmrecht noch nicht freigeschaltet":"Wähle einen Entwurf. Deine Stimme zählt erst nach der Bestätigung.";
   target.innerHTML='<p class="sas-flag-overview-note">Jeder Entwurf erscheint anonym. Weitere Vorschläge und Bedeutungen folgen. Rückseite durch Antippen öffnen.</p>'+
-    '<form id="flag-vote-form" data-poll-id="'+escapeText(competition?.poll_id||"")+'"><fieldset class="poll-fieldset" '+(selectable?'':'disabled')+'><legend class="sr-only">Wähle einen Flaggenentwurf</legend><div class="sas-flag-grid">'+cards+'</div></fieldset>'+
+    '<form id="flag-vote-form" data-poll-id="'+escapeText(competition?.poll_id||"")+'"><fieldset class="poll-fieldset"><legend class="sr-only">Wähle einen Flaggenentwurf</legend><div class="sas-flag-grid">'+cards+'</div></fieldset>'+
     '<div class="sas-flag-vote-footer"><span class="details">'+escapeText(status)+'</span>'+
     (selectable?'<button type="submit" class="btn primary">Verbindlich abstimmen</button>':'')+
     '</div></form>';
