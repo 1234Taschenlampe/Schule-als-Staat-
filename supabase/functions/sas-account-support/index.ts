@@ -1,5 +1,6 @@
 // Recovery is only available to an active SAS administrator session.
 import { createClient } from "npm:@supabase/supabase-js@2.118.0";
+import { readInput } from "../_shared/sas-http.ts";
 
 const url = Deno.env.get("SUPABASE_URL")!;
 const service = createClient(url, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
@@ -10,8 +11,10 @@ const unavailable = "Die Kontenhilfe ist gerade nicht verfügbar. Bitte erneut v
 const denied = "Für die Kontenhilfe ist eine gültige Administrator-Anmeldung erforderlich.";
 
 function temporaryPassword() {
-  const bytes = crypto.getRandomValues(new Uint8Array(18));
-  return "Sas-" + btoa(String.fromCharCode(...bytes)).replaceAll("+", "-").replaceAll("/", "_") + "7";
+  // 80 random bits, using an alphabet without look-alike characters.
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  return "Sa!" + Array.from(bytes, byte => alphabet[byte & 31]).join("");
 }
 
 Deno.serve(async (request) => {
@@ -41,9 +44,8 @@ Deno.serve(async (request) => {
     const encoded = token.split(".")[1].replaceAll("-", "+").replaceAll("_", "/");
     const sessionId = JSON.parse(atob(encoded)).session_id;
     if (typeof sessionId !== "string") return reply(401, { error: denied });
-    const raw = await request.text();
-    if (raw.length > 1024) return reply(400, { error: "Ungültige Anfrage." });
-    const input = JSON.parse(raw);
+    const input = await readInput(request);
+    if (!input) return reply(400, { error: "Ungültige Anfrage." });
     const login = typeof input?.login_id === "string" ? input.login_id.trim().toUpperCase() : "";
     const reset = input?.action === "reset";
     if ((!reset && input?.action !== "lookup") || !/^SAS-(?:[0-9]{6}|[A-Z2-9]{10})$/.test(login)) {

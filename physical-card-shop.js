@@ -99,7 +99,7 @@ async function export3MF(){
  zip.file("_rels/.rels",'<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="r0" Target="/3D/3dmodel.model" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/></Relationships>');
  zip.file("3D/3dmodel.model",model);
  const blob=await zip.generateAsync({type:"blob",compression:"DEFLATE"});
- const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="SaS-"+info.login_id+"-3-Schichten.3mf";document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);
+ const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=info.login_id+"-3-Schichten.3mf";document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),10000);
  message("Druckdatei erstellt. Im Slicer 0,2-mm-Schichten, Materialfarben und Drucklage kontrollieren. Vor Serienproduktion reale Scanprobe durchführen.");
 }
 async function verify(){

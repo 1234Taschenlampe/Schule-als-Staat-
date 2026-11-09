@@ -25,11 +25,13 @@ $$;
 revoke all on function sas_private.sas_assign_short_login_id() from public,anon,authenticated;
 create trigger sas_assign_short_login_id before insert on public.school_roster_members
 for each row execute function sas_private.sas_assign_short_login_id();
+alter table public.school_roster_members alter column short_login_id set not null;
 
 -- Complete the existing rollout without rerunning the alias backfill.
 alter table public.school_password_reset_audit
   add column status text not null default 'completed' check (status in ('reserved','completed'));
-revoke all on public.school_password_reset_audit from public, anon, authenticated;
+revoke all on public.school_password_reset_audit from public, anon, authenticated, service_role;
+grant select (id,status) on public.school_password_reset_audit to service_role;
 
 create function public.sas_account_support(p_actor uuid, p_session uuid, p_login text, p_reset boolean)
 returns jsonb language plpgsql security definer set search_path = ''
@@ -41,7 +43,10 @@ begin
   if not exists (
     select 1 from public.profiles p
     join auth.sessions s on s.user_id = p.id and s.id = p_session
+    join auth.users u on u.id = p.id and u.deleted_at is null
     where p.id = p_actor and p.role = 'admin' and coalesce(s.not_after > now(), true)
+      and coalesce(u.banned_until <= now(),true)
+      and u.raw_app_meta_data->>'sas_initial_password' is distinct from 'true'
   ) then
     return jsonb_build_object('status','forbidden');
   end if;
@@ -51,7 +56,9 @@ begin
 
   select r.user_id, coalesce(r.short_login_id,r.login_id) as login_id,
     r.active, p.role, coalesce(u.banned_until > now(),false) as banned,
-    u.raw_app_meta_data->>'sas_initial_password' = 'true' as temporary
+    u.raw_app_meta_data->>'sas_initial_password' = 'true' as temporary,
+    exists(select from sas_private.school_deletion_requests d where d.user_id=r.user_id
+      and d.status in ('beantragt','in_pruefung')) as deleting
   into account
   from public.school_roster_members r
   join public.profiles p on p.id = r.user_id
@@ -64,10 +71,11 @@ begin
   if not p_reset then
     return jsonb_build_object('login_id',account.login_id,'status',case
       when not account.active or account.banned then 'inactive'
+      when account.deleting then 'deletion'
       when account.temporary then 'temporary'
       else 'active' end);
   end if;
-  if not account.active or account.banned then
+  if not account.active or account.banned or account.deleting then
     return jsonb_build_object('status','blocked');
   end if;
 
@@ -76,6 +84,8 @@ begin
   perform pg_advisory_xact_lock(hashtextextended(account.user_id::text,82902));
   if (select count(*) from public.school_password_reset_audit
       where performed_by = p_actor and reset_at > clock_timestamp() - interval '10 minutes') >= 10
+    or (select count(*) from public.school_password_reset_audit
+      where target_user_id = account.user_id and reset_at > clock_timestamp() - interval '24 hours') >= 3
     or exists (select 1 from public.school_password_reset_audit
       where target_user_id = account.user_id and reset_at > clock_timestamp() - interval '2 minutes') then
     return jsonb_build_object('status','limited');
@@ -105,7 +115,10 @@ begin
     and a.reset_at > clock_timestamp() - interval '90 seconds'
     and exists (select 1 from public.profiles p where p.id = a.performed_by and p.role = 'admin')
     and exists (select 1 from public.profiles p where p.id = new.id and p.role <> 'admin')
-    and exists (select 1 from public.school_roster_members r where r.user_id = new.id and r.active);
+    and exists (select 1 from public.school_roster_members r where r.user_id = new.id and r.active)
+    and new.deleted_at is null and coalesce(new.banned_until <= now(),true)
+    and not exists (select from sas_private.school_deletion_requests d where d.user_id=new.id
+      and d.status in ('beantragt','in_pruefung'));
   if not found then raise exception 'Invalid account reset reservation' using errcode = '42501'; end if;
   new.raw_app_meta_data := (new.raw_app_meta_data - 'sas_support_attempt')
     || '{"sas_initial_password":true}'::jsonb;
@@ -134,7 +147,7 @@ begin
   if latest_reset is null then return; end if;
   if session_id is null or not exists (
     select 1 from auth.sessions s
-    where s.id = session_id::uuid and s.user_id = viewer and s.created_at >= latest_reset
+    where s.id::text = session_id and s.user_id = viewer and s.created_at >= latest_reset
       and coalesce(s.not_after > now(),true)
   ) then
     raise sqlstate 'PT401' using message = 'Bitte melde dich erneut an.';
@@ -149,6 +162,15 @@ end;
 $$;
 revoke all on function public.sas_check_reset_session() from public;
 grant execute on function public.sas_check_reset_session() to anon,authenticated,service_role;
+-- A pre-existing hook needs explicit composition before enabling recovery.
+do $$
+begin
+  if exists(select from pg_catalog.pg_db_role_setting s cross join lateral unnest(s.setconfig) c(setting)
+    where c.setting like 'pgrst.db_pre_request=%' and
+      (s.setrole=0 or s.setrole=(select oid from pg_catalog.pg_roles where rolname='authenticator'))) then
+    raise exception 'An existing PostgREST pre-request hook must be composed before rollout.';
+  end if;
+end $$;
 alter role authenticator set pgrst.db_pre_request = 'public.sas_check_reset_session';
 notify pgrst, 'reload config';
 

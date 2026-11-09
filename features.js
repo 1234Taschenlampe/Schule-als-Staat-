@@ -47,11 +47,12 @@ function futureISO(value){const t=new Date(value);if(!Number.isFinite(t.getTime(
 function iso(value){const t=new Date(value);if(!Number.isFinite(t.getTime()))throw Error("Datum nicht gültig.");return t.toISOString();}
 function topLink(){return headerActions((ctx?.profile?.role==="admin"?linkPage("Abstimmungen","votes"):"")+linkPage("Konto und Zahlungen","wallet"));}
 function cardTheme(d){const m=/^custom:(#[0-9a-fA-F]{6})$/.exec(d||"");if(!m)return {cls:"sas-id-"+escapeAttr(d||"classic"),style:""};const rgb=[1,3,5].map(i=>parseInt(m[1].slice(i,i+2),16));const bright=(rgb[0]*299+rgb[1]*587+rgb[2]*114)/1000;return {cls:"sas-id-custom",style:' style="--sas-card-bg:'+m[1]+';--sas-card-ink:'+(bright>145?"#14231c":"#ffffff")+';"'};}
-function citizenLabel(user){const chosen=String(ctx?.profile?.display_name||"");if(/^SAS-[0-9]{6}$/.test(chosen))return chosen;const m=/^([a-z0-9]{10})@accounts\.schule-als-staat\.invalid$/i.exec(String(user?.email||""));return m?"SAS-"+m[1].toUpperCase():"Verwaltung";}
+function citizenLabel(user){const chosen=String(ctx?.profile?.display_name||"");if(/^SAS-[0-9]{6}$/.test(chosen))return chosen;const m=/^([a-z0-9]{10})@accounts\.schule-als-staat\.invalid$/i.exec(String(user?.email||""));return m?"Bürgerkonto":"Verwaltung";}
 function renderId(){
 const c=data[0],design=c?.design||"classic",theme=cardTheme(design),citizen=citizenLabel(ctx.user);
 return wrap(current,
  box("Mein digitaler Schülerausweis",'<div class="sas-id '+theme.cls+'"'+theme.style+'><div class="sas-id-top"><strong>Schule als Staat</strong><span>SCHÜLERAUSWEIS</span></div><div><small>BÜRGERKENNUNG</small><h2>'+escapeHtml(citizen)+'</h2></div><span class="sas-id-bottom">PROJEKT 12.–16.07.2027</span><div class="sas-id-inline-qr" id="sas-permanent-card-qr" aria-label="Persönlicher Schülerausweis-QR-Code"><span class="sas-note">QR-Code wird geladen …</span></div></div>'
+ +(/^SAS-[0-9]{6}$/.test(citizen)?'<button type="button" class="sas-btn soft" data-action="copy-citizen">Bürgerkennung kopieren</button>':"")
  +msg("Dieser Ausweis zeigt ausschließlich deine Bürgerkennung. Der QR-Code identifiziert das Konto im Projekt; er ist allein kein Nachweis der Identität einer Person.")
  +'<div class="sas-role-chips"><strong>Deine Berufe:</strong> '+((ctx.schoolRoles?.jobs||[]).length?
    (ctx.schoolRoles.jobs||[]).map(j=>badge(j.label)).join(""):'<span class="sas-note">Noch keine Berufe zugewiesen</span>')+'</div>'

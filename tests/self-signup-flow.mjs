@@ -34,7 +34,7 @@ async function scenario(loginInput){
   };
   vm.runInNewContext(src,sandbox);
   for(let i=0;i<20;i++)await Promise.resolve();
-  assert.match(root.innerHTML,/Bürgerkennung oder Verwaltungs-E-Mail/);
+  assert.match(root.innerHTML,/<label for="account-email">Bürgerkennung<\/label>/);
   assert.doesNotMatch(root.innerHTML,/<form id="signup-form"/);
   const button={disabled:false,isConnected:true};
   handlers.submit({preventDefault(){},target:{

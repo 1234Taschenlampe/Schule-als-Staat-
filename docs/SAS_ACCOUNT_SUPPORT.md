@@ -15,7 +15,8 @@
 
 A reset targets the existing Auth UUID. It does not replace the account, roles,
 wallet, payment history, attendance, or card QR. The system allows one reset
-attempt per target every two minutes and ten per administrator every ten minutes.
+attempt per target every two minutes, three per target in 24 hours, and ten
+per administrator every ten minutes.
 If delivery was interrupted, wait for the cooldown and perform a new reset after
 confirming identity again. The audit records the actor, target, time and outcome
 without password material. Review audit retention alongside account deletion.
@@ -29,6 +30,8 @@ without password material. Review audit retention alongside account deletion.
   traffic. The account support Edge Function can also use manual JWT verification.
   It verifies the token through Supabase Auth and checks the live admin session
   and profile role in the database. Both functions use server-managed credentials.
+- Run `tests/citizen-support-rollback.sql` inside a test transaction against a
+  fixture with an admin, an operator and an existing card. Roll back after the test.
 - Check that the API cache loaded the account-support RPC and the PostgREST
   pre-request check. Verify ordinary and stale sessions using a disposable
   test account. The hosted Auth password update must revoke previous sessions.
