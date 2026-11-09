@@ -109,7 +109,7 @@
     state.schoolRoles=await rpc("my_school_roles",{})||{operator:false,jobs:[]};
     state.users=state.profile.role==="admin"?await rpc("admin_list_users",{}):[];
     state.deletionRequests=state.profile.role==="admin"?await rpc("admin_list_school_deletion_requests",{}):[];
-    state.polls=await rpc("poll_catalog",{});
+    state.polls=roleAllowed("votes")?await rpc("poll_catalog",{}):[];
     state.pollResults=(state.profile.role==="admin"||state.schoolRoles?.operator)?await rpc("admin_poll_results",{}):[];
   }
   var refreshPending=false;
@@ -139,7 +139,7 @@
   navs.push(["apps","Bereiche"],["admin","Administration"]);
   function icon(id){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+(iconPaths[id]||iconPaths.apps)+'"/></svg>';}
   // Launch preview applies to ordinary members only; existing roles keep their permissions.
-  var previewOpenPages=new Set(["home","apps","idcard","gallery","cardshop","votes","settings"]);
+  var previewOpenPages=new Set(["home","apps","idcard","gallery","cardshop","settings"]);
   var previewTeaserPages=new Set(["wallet","pay","history","map","rooms","shops","lost",
     "workhours","myjob","applications","updates","bulletin","blog","events","jobs",
     "laws","parties","courts"]);
@@ -153,6 +153,8 @@
     var pupilPages=["home","apps","idcard","gallery","cardshop","wallet","pay","history","map","rooms","shops","votes","lost","settings","workhours","myjob","applications","updates"];
     // ViSA is paused for all roles, including admins. Keep the implementation for later reuse.
     if(id==="visa"||id==="guestvisa")return false;
+    // Voting runs elsewhere. Keep existing modules for admin/operator use.
+    if(id==="votes")return administrator||operator;
     if(id==="overlord"||id==="admincredit"||id==="admin")return administrator;
     if(id==="register")return adminOrCashier();
     if(id==="roles")return administrator||operator;
@@ -164,7 +166,7 @@
   // 26 November 2026 00:00 CET: proposed cutoff for the Nikolausmarkt poll preview.
   // The official school-state launch does not automatically unlock other modules.
   function previewVotingClosed(){return Date.now()>=Date.parse("2026-11-25T23:00:00Z");}
-  function previewLocked(id){return isPreviewMember()&&(id==="votes"?previewVotingClosed():previewTeaserPages.has(id)&&!previewOpenPages.has(id));}
+  function previewLocked(id){return isPreviewMember()&&(previewTeaserPages.has(id)&&!previewOpenPages.has(id));}
   function visible(id){return roleAllowed(id)||previewLocked(id);}
   function allowed(id){return roleAllowed(id)&&!previewLocked(id);}
   function label(id){return (navs.find(function(n){return n[0]===id;})||[id,id])[1];}
@@ -178,7 +180,7 @@
       '</span>'+(locked?'<span class="sas-preview-lock" aria-hidden="true">'+icon("lock")+'</span>':'')+'</button>';
   }
   function nav(isMobile){
-    if(isMobile)return (isPreviewMember()?["home","apps","idcard","votes","settings"]:["home","apps","pay","votes","settings"]).map(function(id){return navButton(id,true);}).join("");
+    if(isMobile)return (isPreviewMember()?["home","apps","idcard","settings"]:(roleAllowed("votes")?["home","apps","pay","votes","settings"]:["home","apps","pay","settings"])).map(function(id){return navButton(id,true);}).join("");
     return navButton("home")+groups.map(function(g){return '<div class="nav-group"><div class="nav-kicker">'+g[0]+'</div>'+g[1].filter(visible).map(function(id){return navButton(id);}).join("")+'</div>';}).join("");
   }
   function moduleGrid(){
@@ -195,7 +197,7 @@
         }).join("")+'</div></section>';
     }).join("");
   }
-  function appDirectory(){return header("SCHULE ALS STAAT","Alle Bereiche",isPreviewMember()?(previewVotingClosed()?"Die Umfragen zum Nikolausmarkt sind beendet. Dein Ausweis bleibt verfügbar; weitere Funktionen sind noch gesperrt.":"Du kannst bereits abstimmen und deinen Schülerausweis nutzen. Alle anderen Funktionen sind als gesperrte Vorschau sichtbar."):"Alle verfügbaren Bereiche im Überblick.")+moduleGrid();}
+  function appDirectory(){return header("SCHULE ALS STAAT","Alle Bereiche",isPreviewMember()?"Dein Schülerausweis ist verfügbar. Weitere Bereiche sind noch gesperrt.":"Alle verfügbaren Bereiche im Überblick.")+moduleGrid();}
   function searchDialog(){return '<dialog id="portal-search" aria-labelledby="portal-search-title"><div class="dialog-head"><h2 id="portal-search-title">Bereich öffnen</h2><button type="button" class="icon-btn" data-action="close-search" aria-label="Suche schließen">×</button></div><label class="search-field">'+icon("search")+'<input id="module-query" type="search" placeholder="Ausweis, Raum, Veranstaltung …" autocomplete="off" aria-label="Bereiche durchsuchen"></label><div class="dialog-results"><div class="sas-global-results" id="sas-global-results" role="status" hidden></div>'+moduleGrid()+'<p class="empty search-empty" hidden>Kein passender Bereich. Versuche einen anderen Suchbegriff.</p></div></dialog>';}
   function mount(content){
     var first=(state.profile&&state.profile.display_name||"S").slice(0,2).toUpperCase();
@@ -314,17 +316,13 @@
   }
   function dashboard(){
     if(isPreviewMember()){
-      var pollsEnded=previewVotingClosed();
-      var active=pollsEnded?0:(state.polls||[]).filter(function(p){return p.status==="open"&&!p.has_voted;}).length;
-      return '<div class="dashboard-intro">'+header("VORSCHAU","Dein Zugang ist eingerichtet",pollsEnded?"Die Abstimmungsphase für den Nikolausmarkt ist beendet. Dein Schülerausweis bleibt verfügbar.":"Du kannst an freigegebenen Abstimmungen teilnehmen und deinen Schülerausweis nutzen. Weitere Bereiche sind bis zur Freigabe gesperrt.")+'</div>'+
-        '<div class="overview-grid sas-preview-cards"><section class="card overview-card"><div class="card-header"><span class="module-icon">'+icon("votes")+'</span><span class="pill '+(pollsEnded?'':'blue')+'">'+(pollsEnded?'Beendet':'Freigeschaltet')+'</span></div><h2>Umfragen & Abstimmungen</h2><p class="details">'+(pollsEnded?'Der Abstimmungszeitraum ist abgelaufen.':active+' offene Abstimmung'+(active===1?'':'en')+' für dich.')+'</p>'+(pollsEnded?'':'<button class="btn primary" data-nav="votes">Jetzt abstimmen</button>')+'</section>'+
-        '<section class="card overview-card"><div class="card-header"><span class="module-icon">'+icon("idcard")+'</span><span class="pill blue">Freigeschaltet</span></div><h2>Dein Schülerausweis</h2><p class="details">Öffne deine persönliche Projektkarte.</p><button class="btn" data-nav="idcard">Ausweis öffnen</button></section></div>'+
+      return '<div class="dashboard-intro">'+header("VORSCHAU","Dein Zugang ist eingerichtet","Dein Schülerausweis ist verfügbar. Weitere Bereiche sind bis zur Freigabe gesperrt.")+'</div>'+
+        '<div class="overview-grid sas-preview-cards"><section class="card overview-card"><div class="card-header"><span class="module-icon">'+icon("idcard")+'</span><span class="pill blue">Freigeschaltet</span></div><h2>Dein Schülerausweis</h2><p class="details">Öffne deine persönliche Projektkarte.</p><button class="btn" data-nav="idcard">Ausweis öffnen</button></section></div>'+
         '<div class="section-heading"><div><h2>Weitere Bereiche</h2><p>Diese Bereiche sind derzeit noch gesperrt.</p></div></div>'+moduleGrid();
     }
-    var open=(state.polls||[]).filter(function(p){return p.status==="open"&&!p.has_voted;}).length;
     var dateLabel=new Intl.DateTimeFormat("de-DE",{weekday:"long",day:"numeric",month:"long"}).format(new Date());
     return '<div class="dashboard-intro"><div>'+header(dateLabel,"Guten Tag, "+esc(state.profile.display_name)+".","Ausweis, Guthaben und aktuelle Vorgänge.")+'</div></div>'+
-      '<div class="overview-grid"><section class="card overview-card"><div class="card-header"><span class="module-icon">'+icon("idcard")+'</span><span class="pill">Persönlich</span></div><h2>Dein Schülerausweis</h2><p class="details">Ausweisdaten und ausgewähltes Kartendesign.</p><button class="btn" data-nav="idcard">Ausweis öffnen <span aria-hidden="true">→</span></button></section><section class="card overview-card balance-card"><div class="card-header"><span class="module-icon">'+icon("wallet")+'</span><span class="pill">Schulwährung</span></div><div class="stat-label">Dein Guthaben</div><div class="stat-value">'+cashFmt(state.wallet.balance_cents)+'</div><p class="stat-caption">Schulwährung · mit Euro erwerbbar</p><button class="btn primary" data-nav="pay">'+icon("pay")+' Bezahlen</button></section><section class="card overview-card"><div class="card-header"><span class="module-icon">'+icon("votes")+'</span><span class="pill">Abstimmungen</span></div><h2>'+open+' offene Abstimmung'+(open===1?'':'en')+'</h2><p class="details">'+(open?'Für dich sind Abstimmungen geöffnet.':'Hier findest du die Abstimmungen.')+'</p><button class="btn" data-nav="votes">Zu den Abstimmungen <span aria-hidden="true">→</span></button></section></div>'+
+      '<div class="overview-grid"><section class="card overview-card"><div class="card-header"><span class="module-icon">'+icon("idcard")+'</span><span class="pill">Persönlich</span></div><h2>Dein Schülerausweis</h2><p class="details">Ausweisdaten und ausgewähltes Kartendesign.</p><button class="btn" data-nav="idcard">Ausweis öffnen <span aria-hidden="true">→</span></button></section><section class="card overview-card balance-card"><div class="card-header"><span class="module-icon">'+icon("wallet")+'</span><span class="pill">Schulwährung</span></div><div class="stat-label">Dein Guthaben</div><div class="stat-value">'+cashFmt(state.wallet.balance_cents)+'</div><p class="stat-caption">Schulwährung · mit Euro erwerbbar</p><button class="btn primary" data-nav="pay">'+icon("pay")+' Bezahlen</button></section></div>'+
       '<section id="sas-personal-hub" aria-label="Persönliche Schnellzugriffe"><p class="sas-hub-note">Schnellzugriffe laden …</p></section><div class="section-heading"><div><h2>Weitere Bereiche</h2><p>Funktionen und Informationen zur Projektwoche.</p></div><button class="btn subtle" data-nav="apps">Alle Bereiche →</button></div><div class="home-modules">'+["bulletin","events","map","rooms","lost","blog"].map(function(id){return '<button class="module-tile" data-nav="'+id+'"><span class="module-icon">'+icon(id)+'</span><span class="module-copy"><strong>'+esc(label(id))+'</strong><span>'+esc(descriptions[id])+'</span></span><span class="module-arrow" aria-hidden="true">→</span></button>';}).join("")+'</div><div class="section-heading"><h2>Letzte Kontobewegungen</h2><button class="btn subtle" data-nav="wallet">Zum Konto →</button></div><section class="card">'+latest(4)+'</section>';
   }
   function wallet(){
@@ -607,7 +605,7 @@
       if(id==="close-search"){document.getElementById("portal-search").close();return;}
       if(id.indexOf("to-")===0)return await navigate(id.slice(3));
       if(id==="camera-test")return await cameraTest();
-      if(id==="restart-tutorial"&&window.SAS_TUTORIAL)return await window.SAS_TUTORIAL.reopen(api,state.user.id,{previewOnly:isPreviewMember(),pollsOpen:!previewVotingClosed()});
+      if(id==="restart-tutorial"&&window.SAS_TUTORIAL)return await window.SAS_TUTORIAL.reopen(api,state.user.id,{previewOnly:isPreviewMember(),pollsOpen:roleAllowed("votes")&&!previewVotingClosed()});
       if(id==="close-poll"){
         if(!state.profile||(state.profile.role!=="admin"&&!state.schoolRoles?.operator))throw Error("Keine Verwaltungsberechtigung");
         if(!window.confirm("Diese Abstimmung wirklich schließen? Danach sind keine Stimmen mehr möglich."))return;
@@ -842,7 +840,7 @@
     if(state.user){await claimDesignatedAdmin();await fetchData();restorePage();}
 
     render();
-    if(state.user&&!state.legalStatus?.needs_acknowledgement&&!state.deletionStatus?.requested&&window.SAS_TUTORIAL)void window.SAS_TUTORIAL.start(api,state.user.id,{previewOnly:isPreviewMember(),pollsOpen:!previewVotingClosed()});
+    if(state.user&&!state.legalStatus?.needs_acknowledgement&&!state.deletionStatus?.requested&&window.SAS_TUTORIAL)void window.SAS_TUTORIAL.start(api,state.user.id,{previewOnly:isPreviewMember(),pollsOpen:roleAllowed("votes")&&!previewVotingClosed()});
     if(deepLink&&state.user&&!state.legalStatus?.needs_acknowledgement&&!state.deletionStatus?.requested&&!isPreviewMember()){try{await openInvoice(deepLink);}catch(e){fail(e);}}
     api.auth.onAuthStateChange(function(event,session){
       var next=session&&session.user||null;
@@ -856,7 +854,7 @@
       state.user=next;state.profile=null;state.legalStatus=null;state.deletionStatus=null;state.deletionRequests=[];state.showDeletionForm=false;state.deletionStage=1;state.deletionReadToEnd=false;state.wallet=null;state.ledger=[];state.cash=[];state.requests=[];state.users=[];state.polls=[];state.pollResults=[];state.schoolRoles={operator:false,jobs:[]};state.active=null;state.invoice=null;
       if(window.SAS_TUTORIAL)window.SAS_TUTORIAL.logout();
       void stopScanner().then(async function(){
-        try{if(state.user){await claimDesignatedAdmin();await fetchData();}render();if(state.user&&!state.legalStatus?.needs_acknowledgement&&!state.deletionStatus?.requested&&window.SAS_TUTORIAL)void window.SAS_TUTORIAL.start(api,state.user.id,{previewOnly:isPreviewMember(),pollsOpen:!previewVotingClosed()});if(deepLink&&state.user&&!isPreviewMember())await openInvoice(deepLink);}
+        try{if(state.user){await claimDesignatedAdmin();await fetchData();}render();if(state.user&&!state.legalStatus?.needs_acknowledgement&&!state.deletionStatus?.requested&&window.SAS_TUTORIAL)void window.SAS_TUTORIAL.start(api,state.user.id,{previewOnly:isPreviewMember(),pollsOpen:roleAllowed("votes")&&!previewVotingClosed()});if(deepLink&&state.user&&!isPreviewMember())await openInvoice(deepLink);}
         catch(e){fail(e);render();}
       });
     });
