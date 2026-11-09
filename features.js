@@ -55,7 +55,7 @@ return wrap(current,
  +msg("Dieser Ausweis zeigt ausschließlich deine Bürgerkennung. Der QR-Code identifiziert das Konto im Projekt; er ist allein kein Nachweis der Identität einer Person.")
  +'<div class="sas-role-chips"><strong>Deine Berufe:</strong> '+((ctx.schoolRoles?.jobs||[]).length?
    (ctx.schoolRoles.jobs||[]).map(j=>badge(j.label)).join(""):'<span class="sas-note">Noch keine Berufe zugewiesen</span>')+'</div>'
- +form("card",
+ +form("card",''
  
   +'<label class="sas-field"><span>Ausweisdesign</span><select name="design">'+["classic","blue","forest","mono","custom"].map(v=>'<option value="'+v+'"'+((v==='custom'?design.startsWith('custom:'):v===design)?' selected':'')+'>'+({"classic":"Klassisch","blue":"Blau","forest":"Grün","mono":"Monochrom","custom":"Eigene Farbe"}[v])+'</option>').join("")+'</select></label><label class="sas-field"><span>Eigene Farbe</span><span class="sas-color-control"><input type="color" name="color" value="'+escapeAttr(/^custom:#[0-9a-fA-F]{6}$/.test(design)?design.slice(7):"#4c8c69")+'"><span>Gold- und Silber-Sonderdesigns sind für normale Bürger gesperrt.</span></span></label>',"Ausweis speichern")),
  headerActions(linkPage("Design-Galerie","gallery")+linkPage("3D-Ausweis bestellen","cardshop"))+
