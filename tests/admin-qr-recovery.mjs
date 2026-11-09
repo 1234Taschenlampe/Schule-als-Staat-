@@ -39,7 +39,8 @@ test("QR recovery never sends mail, shares admin secret or targets admin account
   assert.match(edge, /status !== "completed"/);
   assert.doesNotMatch(edge, /signInWithOtp|sendEmail|sendPasswordReset|recovery_link:.*temporary_password/);
   assert.match(edge, /recovery_link: portal \+ "\/#sas-reset="/);
-  assert.doesNotMatch(app, /id="sas-support-secret"/);
+  assert.match(app, /id="sas-support-secret"/); // guarded fallback if link issuance fails
+  assert.match(edge, /temporary_password: temporaryPassword, fallback: true/);
   assert.match(app, /sas-support-qr/);
 });
 
