@@ -81,9 +81,8 @@ Deno.serve(async (request: Request): Promise<Response> => {
 
     // Invalidate the former password first. The existing DB trigger ensures
     // the audit reservation belongs to this non-admin student and marks completion.
-    const temporaryPassword = randomTemporaryPassword();
     const { error: changeError } = await service.auth.admin.updateUserById(reservation.target, {
-      password: temporaryPassword,
+      password: randomTemporaryPassword(),
       app_metadata: { sas_support_attempt: reservation.attempt, sas_initial_password: true },
     });
     if (changeError) return reply(503, { error: unavailable });
@@ -98,10 +97,9 @@ Deno.serve(async (request: Request): Promise<Response> => {
     });
     const token = recovery?.properties?.hashed_token;
     if (recoveryError || typeof token !== "string" || !/^[A-Za-z0-9_-]{32,256}$/.test(token)) {
-      // Safe offline fallback: the old password is already invalid. Instead of
-      // stranding a student, hand the temporary password to the verified pupil.
-      // The existing first-login gate forces an immediate personal rotation.
-      return reply(200, { login_id: reservation.login_id, temporary_password: temporaryPassword, fallback: true });
+      // The password is already invalidated. Staff can issue another recovery
+      // after the existing rate limit; never reveal the unknown temporary secret.
+      return reply(503, { error: "Passwort gesperrt, aber QR konnte nicht erstellt werden. Bitte IT-Support kontaktieren." });
     }
 
     return reply(200, {
