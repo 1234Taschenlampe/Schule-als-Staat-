@@ -429,12 +429,36 @@
         " · Fehler: "+(counters.errors||0)+" · Gleichzeitig: "+(data.active||0);
     }catch(e){target.textContent="Diagnose nicht verfügbar: "+(e?.message||"Unbekannter Fehler");}
   }
+  // Suggest only genuine six-digit IDs already available through the admin-only
+  // user directory. No public endpoint, guessed IDs or additional network reads.
+  function supportIdCandidates(value,users){
+    var digits=String(value||"").trim().toUpperCase().replace(/^SAS-/,"");
+    if(!/^[0-9]{2,6}$/.test(digits))return [];
+    return (users||[]).filter(function(u){
+      return u&&u.role!=="admin"&&typeof u.login_id==="string"&&
+        /^SAS-[0-9]{6}$/.test(u.login_id)&&u.login_id.slice(4).startsWith(digits);
+    }).sort(function(a,b){return a.login_id.localeCompare(b.login_id,"de");})
+      .slice(0,10).map(function(u){return u.login_id.slice(4);});
+  }
+  function updateSupportSuggestions(){
+    var field=document.getElementById("sas-support-id");
+    var list=document.getElementById("sas-support-suggestions");
+    if(!field||!list)return;
+    var matches=state.profile?.role==="admin"&&state.page==="itsupport"?
+      supportIdCandidates(field.value,state.users):[];
+    list.hidden=!matches.length;
+    field.setAttribute("aria-expanded",String(matches.length>0));
+    list.innerHTML=matches.map(function(id){
+      return '<button type="button" class="sas-support-suggestion" data-support-suggest="'+esc(id)+'" aria-label="Bürgerkennung '+esc(id)+' auswählen und suchen">'+
+        esc(id)+'</button>';
+    }).join("");
+  }
   function supportPage(){
     var statuses={active:"Aktiv",temporary:"Passwortwechsel ausstehend",inactive:"Gesperrt oder inaktiv",deletion:"Löschung beantragt"};
     var account=supportAccount;
     return header("ADMINISTRATION","Konten & IT-Support","Schülerkonten anhand der Bürgerkennung finden und bei Bedarf ein vorläufiges Passwort ausgeben.")+
-      '<section class="card"><form id="sas-support-lookup"><div class="form-group"><label for="sas-support-id">Bürgerkennung</label><input class="field" id="sas-support-id" name="login_id" placeholder="123456" maxlength="14" inputmode="numeric" autocapitalize="none" autocomplete="off" spellcheck="false" required></div><button type="submit" class="btn primary">Konto suchen</button></form></section>'+
-      (account?'<section class="card"><h2>'+esc(account.login_id)+'</h2><p>'+esc(statuses[account.status])+'</p>'+
+      '<section class="card"><form id="sas-support-lookup"><div class="form-group"><label for="sas-support-id">Bürgerkennung</label><input class="field" id="sas-support-id" name="login_id" placeholder="123456" maxlength="14" inputmode="numeric" autocapitalize="none" autocomplete="off" spellcheck="false" aria-autocomplete="list" aria-expanded="false" aria-controls="sas-support-suggestions" required><div id="sas-support-suggestions" class="sas-support-suggestions" role="group" aria-label="Passende Bürgerkennungen" hidden></div><p class="field-help">Ab zwei Ziffern erscheinen bis zu zehn tatsächlich vorhandene Bürgerkennungen. Ein Tipp auf eine Kennung startet die Kontosuche.</p></div><button type="submit" class="btn primary">Konto suchen</button></form></section>'+
+      (account?'<section class="card" id="sas-support-result"><h2>'+esc(account.login_id)+'</h2><p>'+esc(statuses[account.status])+'</p>'+
       (!["active","temporary"].includes(account.status)?"":'<form id="sas-support-reset"><fieldset class="sas-legal-fieldset"><legend>Persönliche Identitätsprüfung</legend><label class="sas-legal-check"><input type="checkbox" name="identity_checked" required> <span>Ich habe die Identität der Person vor Ort anhand der geschützten Ausgabeliste der Schule geprüft. Kennung und QR-Code allein reichen dafür nicht aus.</span></label></fieldset><p class="field-help">Der QR-Link gilt nur einmal. Nach dem Scannen legt die Person ein eigenes Passwort fest.</p><button type="submit" class="btn primary">Einmaligen Reset-QR erzeugen</button></form>')+'</section>':'');
   }
 
@@ -868,6 +892,21 @@
       visibilityButton.title=reveal?"Passwort verbergen":"Passwort anzeigen";
       return;
     }
+    var suggestion=e.target.closest("[data-support-suggest]");
+    if(suggestion&&state.page==="itsupport"&&state.profile?.role==="admin"){
+      e.preventDefault();
+      var supportField=document.getElementById("sas-support-id");
+      var supportForm=document.getElementById("sas-support-lookup");
+      if(!supportField||!supportForm)return;
+      var suggested=suggestion.dataset.supportSuggest;
+      if(!supportIdCandidates(suggested,state.users).includes(suggested))return;
+      supportField.value=suggested;
+      var suggestions=document.getElementById("sas-support-suggestions");
+      if(suggestions)suggestions.hidden=true;
+      supportField.setAttribute("aria-expanded","false");
+      supportForm.requestSubmit();
+      return;
+    }
     var target=e.target.closest("[data-nav],[data-action]");
     if(!target)return;
     e.preventDefault();
@@ -881,6 +920,14 @@
   });
   var portalSearchSeq=0,portalSearchTimer=null;
    root.addEventListener("input",function(e){
+    if(e.target.id==="sas-support-id"){
+      state.editing=true;
+      // An earlier selection must no longer offer reset buttons after editing the ID.
+      var oldResult=document.getElementById("sas-support-result");
+      if(oldResult)oldResult.hidden=true;
+      updateSupportSuggestions();
+      return;
+    }
     if(e.target.id!=="module-query"){state.editing=true;return;}
     var q=e.target.value.trim().toLocaleLowerCase("de");
     var dialog=document.getElementById("portal-search"),count=0;
