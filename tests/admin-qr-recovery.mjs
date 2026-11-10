@@ -16,7 +16,7 @@ test("QR recovery browser flow parses and keeps secrets in fragment only", () =>
   assert.match(app, /state\.recovering=false;await fetchData\(\)/);
   assert.match(html, /meta name="referrer" content="no-referrer"/);
   // Keep the browser cache-buster current when unrelated features update app.js.
-  assert.match(html, /app\\.js\\?v=20261110-finance/);
+  assert.match(html, /app\.js\?v=20261110-finance/);
 });
 
 test("Only administrators can request recovery after identity verification", () => {
