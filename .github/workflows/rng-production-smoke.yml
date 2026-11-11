@@ -1,0 +1,32 @@
+name: RNG public Worker browser smoke (read-only)
+on:
+  pull_request:
+    branches: [main]
+    paths: [shop-plan.js, shop-plan.css, tests/rng-production-browser.mjs, .github/workflows/rng-production-smoke.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  live-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install free browser driver only
+        run: |
+          npm install --no-save --no-audit --no-fund playwright-core@1.56.1
+          command -v google-chrome
+      - name: Check public Cloudflare HTML, PDF, scripts and all floors, without accounts
+        env:
+          RNG_PRODUCTION_BASE_URL: https://schule-als-staat.schule-als-staat-jfe.workers.dev/
+        run: CHROME_PATH="$(command -v google-chrome)" node tests/rng-production-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: rng-public-production-screenshots
+          path: rng-production-*.png
+          if-no-files-found: ignore
+          retention-days: 2
