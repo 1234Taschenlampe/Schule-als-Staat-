@@ -57,7 +57,9 @@ test("admin-only UI: suggestion selects a value and invokes existing lookup, not
 
 test("all existing recovery markers and responsive controls remain",()=>{
   new vm.Script(app,{filename:"app.js"});
-  assert.match(html,/app\.js\?v=20261110-support-suggest/);
+  const scriptVersion=html.match(/<script defer src="\.\/app\.js\?v=([0-9]{8}-[a-z0-9-]+)"><\/script>/)?.[1];
+  assert.ok(scriptVersion,"Versioned app.js is required");
+  assert.ok(Number(scriptVersion.slice(0,8))>=20261110,"app.js cache version must not regress");
   assert.match(html,/styles\.css\?v=20261110-support-suggest/);
   assert.match(css,/\.sas-support-suggestions\{display:grid/);
   assert.match(css,/min-height:48px/);
