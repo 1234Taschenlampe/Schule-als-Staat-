@@ -60,3 +60,10 @@
     box-shadow: none;
   }
 }
+
+/* Admin-only six-digit citizen lookup: tap-friendly, responsive ID suggestions. */
+.sas-support-suggestions{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:9px;margin-top:10px;max-width:760px}
+.sas-support-suggestion{min-height:48px;border:1px solid #d2dbea;border-radius:11px;background:#f7f9fd;color:#17385d;font-size:16px;line-height:1.2;font-variant-numeric:tabular-nums;font-weight:650;letter-spacing:.7px;padding:12px 8px;text-align:center;touch-action:manipulation}
+.sas-support-suggestion:hover{border-color:var(--accent);background:#ecf3ff}
+.sas-support-suggestion:focus-visible{outline:3px solid #8ab7f7;outline-offset:2px}
+@media(max-width:480px){.sas-support-suggestions{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}}

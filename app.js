@@ -143,7 +143,7 @@
     ["Staat & Mitbestimmung",["votes","laws","parties","courts"]],
     ["Verwaltung",["overlord","register","admincredit","transactions","attendance","roles","admin","itsupport","settings"]]
   ];
-  var descriptions={itsupport:"Schülerkonten finden und Startpasswörter ausgeben",cardshop:"Gedruckten Schülerausweis ansehen und vormerken",applications:"Status deiner Shop-, Raum- und Berufsanträge",updates:"Aktuelle Antragsstände und Veranstaltungen",overlord:"API-Schutz und Serverstatus (Admin)",admincredit:"Schulwährung per Ausweis-QR gutschreiben",transactions:"Globales Buchungsjournal und sichere Gegenbuchungen",workhours:"Arbeitszeit 12.–16. Juli 2027 per QR-Code erfassen",roles:"Schulberufe und Operatorrechte vergeben",attendance:"Anwesenheit per Schülerausweis scannen",home:"Ausweis, Kontostand und Mitteilungen",idcard:"Persönlicher Schülerausweis mit QR-Code",gallery:"Ausweisdesign auswählen",wallet:"Guthaben und Kontobewegungen",pay:"QR-Code scannen und Betrag prüfen",history:"Digitale Buchungen und Bargeld",bulletin:"Aktuelle Bekanntmachungen",blog:"Beiträge aus dem Projekt",events:"Termine und Anmeldungen",lost:"Verlorenes suchen, Gefundenes melden",map:"Schulplan: vier Shops pro Klassenzimmer",rooms:"Raumreservierungen anfragen",shops:"Geschäfte und Kassen",jobs:"Aufgaben finden und sich bewerben",votes:"Aktuelle und abgeschlossene Abstimmungen",laws:"Regeln und Verordnungen nachlesen",parties:"Mitteilungen der Parteien",courts:"Öffentliche Gerichtsbekanntmachungen",register:"Verkäufe und QR-Zahlungen erfassen",admin:"Guthaben, Rollen und Stimmrecht verwalten",settings:"Profil, Passwort und Geräte"};
+  var descriptions={itsupport:"Schülerkonten finden und einmalige Reset-QRs ausgeben",cardshop:"Gedruckten Schülerausweis ansehen und vormerken",applications:"Status deiner Shop-, Raum- und Berufsanträge",updates:"Aktuelle Antragsstände und Veranstaltungen",overlord:"API-Schutz und Serverstatus (Admin)",admincredit:"Schulwährung per Ausweis-QR gutschreiben",transactions:"Globales Buchungsjournal und sichere Gegenbuchungen",workhours:"Arbeitszeit 12.–16. Juli 2027 per QR-Code erfassen",roles:"Schulberufe und Operatorrechte vergeben",attendance:"Anwesenheit per Schülerausweis scannen",home:"Ausweis, Kontostand und Mitteilungen",idcard:"Persönlicher Schülerausweis mit QR-Code",gallery:"Ausweisdesign auswählen",wallet:"Guthaben und Kontobewegungen",pay:"QR-Code scannen und Betrag prüfen",history:"Digitale Buchungen und Bargeld",bulletin:"Aktuelle Bekanntmachungen",blog:"Beiträge aus dem Projekt",events:"Termine und Anmeldungen",lost:"Verlorenes suchen, Gefundenes melden",map:"Schulplan: vier Shops pro Klassenzimmer",rooms:"Raumreservierungen anfragen",shops:"Geschäfte und Kassen",jobs:"Aufgaben finden und sich bewerben",votes:"Aktuelle und abgeschlossene Abstimmungen",laws:"Regeln und Verordnungen nachlesen",parties:"Mitteilungen der Parteien",courts:"Öffentliche Gerichtsbekanntmachungen",register:"Verkäufe und QR-Zahlungen erfassen",admin:"Guthaben, Rollen und Stimmrecht verwalten",settings:"Profil, Passwort und Geräte"};
   var iconPaths={applications:'M5 3h14v18H5z M8 8h8 M8 12h8 M8 16h5',updates:'M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9 M10 20h4',overlord:'M4 4h16v16H4z M8 16l3-4 3 2 3-5',guestvisa:"M4 4h16v16H4z M8 8h8 M8 12h8 M8 16h5",admincredit:"M12 2v20 M17 6H9a4 4 0 0 0 0 8h6a4 4 0 0 1 0 8H6",transactions:"M4 5h16v14H4z M7 9h10 M7 13h10 M7 17h7",myjob:'M3 7h18v14H3z M8 7V3h8v4 M3 12h18',shopmanage:'M3 7h18 M5 7V4h14v3 M5 7v14h14V7 M9 12h6 M9 16h6',workhours:'M12 3v9l4 2 M21 12a9 9 0 1 1-9-9',roles:'M4 6h16 M4 12h16 M4 18h16 M6 8h3 M6 14h3',attendance:'M3 8V4h5 M16 4h5v4 M21 16v5h-5 M8 21H3v-5 M9 12l2 2 4-4',home:'M3 10l9-7 9 7v11H3z M9 21v-8h6v8',idcard:'M3 5h18v14H3z M7 9h3v4H7z M14 9h4 M14 13h4 M7 16h11',gallery:'M4 4h16v16H4z M8 8h3v3H8z M4 16l5-4 4 3 3-2 4 3',visa:'M6 3h12v18H6z M9 7h6 M9 11h6 M9 15h3',wallet:'M3 6h17v14H3z M3 6V4h14 M15 11h6v5h-6z',pay:'M4 8V4h4 M16 4h4v4 M20 16v4h-4 M8 20H4v-4 M8 10h3v3H8z M14 10h2 M14 14h3 M8 16h3',history:'M3 11a9 9 0 1 1 2 7 M3 4v7h7 M12 7v5l3 2',bulletin:'M4 5h16v14H4z M8 9h8 M8 13h5 M8 19v3 M16 19v3',blog:'M5 3h14v18H5z M8 7h8 M8 11h8 M8 15h5',events:'M4 5h16v16H4z M8 3v4 M16 3v4 M4 10h16 M8 14h2 M14 14h2',lost:'M10 17a7 7 0 1 0 0-14 7 7 0 0 0 0 14 M15 15l6 6 M7 10h6 M10 7v6',map:'M3 5l6-2 6 2 6-2v16l-6 2-6-2-6 2z M9 3v16 M15 5v16',rooms:'M5 3h14v18H5z M9 3v18 M14 12h1',shops:'M3 9l2-6h14l2 6 M3 9v3h18V9 M5 12v9h14v-9 M9 21v-6h6v6',jobs:'M3 7h18v14H3z M8 7V3h8v4 M3 12h18 M10 12v3h4v-3',votes:'M5 4h14v17H5z M8 8l2 2 5-5 M8 14h8 M8 17h5',laws:'M4 4h7v16H4z M13 4h7v16h-7z M7 8h1 M16 8h1',parties:'M8 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8 M2 21v-3a6 6 0 0 1 12 0v3 M16 4a4 4 0 0 1 0 8 M17 15a5 5 0 0 1 5 5',courts:'M12 3v18 M5 21h14 M4 6h16 M5 6l-3 8h6z M19 6l-3 8h6z',register:'M5 3h14v18H5z M8 6h8v4H8z M8 14h2 M14 14h2 M8 17h2 M14 17h2',settings:'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8 M12 2v3 M12 19v3 M2 12h3 M19 12h3 M5 5l2 2 M17 17l2 2 M5 19l2-2 M17 7l2-2',admin:'M12 3l8 3v6c0 5-8 9-8 9S4 17 4 12V6z M9 12l2 2 4-4',apps:'M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z',lock:'M5 11h14v10H5z M8 11V7a4 4 0 0 1 8 0v4',search:'M10 17a7 7 0 1 0 0-14 7 7 0 0 0 0 14 M15 15l6 6'};
   navs.push(["apps","Bereiche"],["admin","Administration"],["itsupport","Konten & IT-Support"]);
   function icon(id){return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+(iconPaths[id]||iconPaths.apps)+'"/></svg>';}
@@ -307,7 +307,7 @@
 
   function rosterFirstLoginView(){
     root.innerHTML='<div class="welcome"><section class="welcome-side" style="margin:auto"><div class="login-box">'+
-      header("KONTO SICHERN","Eigenes Passwort festlegen.","Ersetze das zugeteilte Passwort durch ein eigenes Passwort.")+
+      header("KONTO SICHERN",state.recovering?"Kontowiederherstellung abschließen.":"Eigenes Passwort festlegen.",state.recovering?"Lege nach dem Scannen des einmaligen QR-Links ein neues Passwort fest und bestätige die Pflichtinformationen.":"Ersetze das zugeteilte Passwort durch ein eigenes Passwort.")+
       '<form id="roster-first-password-form"><div class="form-group"><label for="roster-password">Neues Passwort (mindestens 12 Zeichen)</label><span class="sas-password-input"><input class="field" type="password" autocomplete="new-password" id="roster-password" name="password" minlength="12" required><button type="button" class="sas-password-toggle" data-password-toggle="roster-password" aria-controls="roster-password" aria-label="Passwort anzeigen" title="Passwort anzeigen" aria-pressed="false"><svg class="sas-eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg><svg class="sas-eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 3 18 18M10.58 5.15A11.8 11.8 0 0 1 12 5c6.5 0 10 7 10 7a15 15 0 0 1-3.03 3.8M6.7 6.7C3.6 8.6 2 12 2 12s3.5 7 10 7a10.8 10.8 0 0 0 4.37-.9"/><path d="M10 10a3 3 0 0 0 4 4"/></svg></button></span></div>'+
       '<div class="form-group"><label for="roster-password-repeat">Passwort wiederholen</label><span class="sas-password-input"><input class="field" type="password" autocomplete="new-password" id="roster-password-repeat" name="repeat" minlength="12" required><button type="button" class="sas-password-toggle" data-password-toggle="roster-password-repeat" aria-controls="roster-password-repeat" aria-label="Passwort anzeigen" title="Passwort anzeigen" aria-pressed="false"><svg class="sas-eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg><svg class="sas-eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 3 18 18M10.58 5.15A11.8 11.8 0 0 1 12 5c6.5 0 10 7 10 7a15 15 0 0 1-3.03 3.8M6.7 6.7C3.6 8.6 2 12 2 12s3.5 7 10 7a10.8 10.8 0 0 0 4.37-.9"/><path d="M10 10a3 3 0 0 0 4 4"/></svg></button></span></div>'+
       legalReceiptFields()+'<button class="btn primary full" type="submit">Neues Passwort festlegen</button></form><p class="field-help">Verwende ein einzigartiges Passwort, das du nicht für andere Dienste nutzt.</p><button class="btn full" type="button" data-action="open-deletion">Datenlöschung beantragen</button></div></section></div>';
@@ -434,12 +434,36 @@
         " · Fehler: "+(counters.errors||0)+" · Gleichzeitig: "+(data.active||0);
     }catch(e){target.textContent="Diagnose nicht verfügbar: "+(e?.message||"Unbekannter Fehler");}
   }
+  // Suggest only genuine six-digit IDs already available through the admin-only
+  // user directory. No public endpoint, guessed IDs or additional network reads.
+  function supportIdCandidates(value,users){
+    var digits=String(value||"").trim().toUpperCase().replace(/^SAS-/,"");
+    if(!/^[0-9]{2,6}$/.test(digits))return [];
+    return (users||[]).filter(function(u){
+      return u&&u.role!=="admin"&&typeof u.login_id==="string"&&
+        /^SAS-[0-9]{6}$/.test(u.login_id)&&u.login_id.slice(4).startsWith(digits);
+    }).sort(function(a,b){return a.login_id.localeCompare(b.login_id,"de");})
+      .slice(0,10).map(function(u){return u.login_id.slice(4);});
+  }
+  function updateSupportSuggestions(){
+    var field=document.getElementById("sas-support-id");
+    var list=document.getElementById("sas-support-suggestions");
+    if(!field||!list)return;
+    var matches=state.profile?.role==="admin"&&state.page==="itsupport"?
+      supportIdCandidates(field.value,state.users):[];
+    list.hidden=!matches.length;
+    field.setAttribute("aria-expanded",String(matches.length>0));
+    list.innerHTML=matches.map(function(id){
+      return '<button type="button" class="sas-support-suggestion" data-support-suggest="'+esc(id)+'" aria-label="Bürgerkennung '+esc(id)+' auswählen und suchen">'+
+        esc(id)+'</button>';
+    }).join("");
+  }
   function supportPage(){
     var statuses={active:"Aktiv",temporary:"Passwortwechsel ausstehend",inactive:"Gesperrt oder inaktiv",deletion:"Löschung beantragt"};
     var account=supportAccount;
-    return header("ADMINISTRATION","Konten & IT-Support","Schülerkonten anhand der Bürgerkennung finden und bei Bedarf ein vorläufiges Passwort ausgeben.")+
-      '<section class="card"><form id="sas-support-lookup"><div class="form-group"><label for="sas-support-id">Bürgerkennung</label><input class="field" id="sas-support-id" name="login_id" placeholder="123456" maxlength="14" inputmode="numeric" autocapitalize="none" autocomplete="off" spellcheck="false" required></div><button type="submit" class="btn primary">Konto suchen</button></form></section>'+
-      (account?'<section class="card"><h2>'+esc(account.login_id)+'</h2><p>'+esc(statuses[account.status])+'</p>'+
+    return header("ADMINISTRATION","Konten & IT-Support","Schülerkonten anhand der Bürgerkennung finden und nach persönlicher Identitätsprüfung einen einmaligen Wiederherstellungs-QR ausgeben.")+
+      '<section class="card"><form id="sas-support-lookup"><div class="form-group"><label for="sas-support-id">Bürgerkennung</label><input class="field" id="sas-support-id" name="login_id" placeholder="123456" maxlength="14" inputmode="numeric" autocapitalize="none" autocomplete="off" spellcheck="false" aria-autocomplete="list" aria-expanded="false" aria-controls="sas-support-suggestions" required><div id="sas-support-suggestions" class="sas-support-suggestions" role="group" aria-label="Passende Bürgerkennungen" hidden></div><p class="field-help">Ab zwei Ziffern erscheinen bis zu zehn tatsächlich vorhandene Bürgerkennungen. Ein Tipp auf eine Kennung startet die Kontosuche.</p></div><button type="submit" class="btn primary">Konto suchen</button></form></section>'+
+      (account?'<section class="card" id="sas-support-result"><h2>'+esc(account.login_id)+'</h2><p>'+esc(statuses[account.status])+'</p>'+
       (!["active","temporary"].includes(account.status)?"":'<form id="sas-support-reset"><fieldset class="sas-legal-fieldset"><legend>Persönliche Identitätsprüfung</legend><label class="sas-legal-check"><input type="checkbox" name="identity_checked" required> <span>Ich habe die Identität der Person vor Ort anhand der geschützten Ausgabeliste der Schule geprüft. Kennung und QR-Code allein reichen dafür nicht aus.</span></label></fieldset><p class="field-help">Der QR-Link gilt nur einmal. Nach dem Scannen legt die Person ein eigenes Passwort fest.</p><button type="submit" class="btn primary">Einmaligen Reset-QR erzeugen</button></form>')+'</section>':'');
   }
 
@@ -879,6 +903,21 @@
       visibilityButton.title=reveal?"Passwort verbergen":"Passwort anzeigen";
       return;
     }
+    var suggestion=e.target.closest("[data-support-suggest]");
+    if(suggestion&&state.page==="itsupport"&&state.profile?.role==="admin"){
+      e.preventDefault();
+      var supportField=document.getElementById("sas-support-id");
+      var supportForm=document.getElementById("sas-support-lookup");
+      if(!supportField||!supportForm)return;
+      var suggested=suggestion.dataset.supportSuggest;
+      if(!supportIdCandidates(suggested,state.users).includes(suggested))return;
+      supportField.value=suggested;
+      var suggestions=document.getElementById("sas-support-suggestions");
+      if(suggestions)suggestions.hidden=true;
+      supportField.setAttribute("aria-expanded","false");
+      supportForm.requestSubmit();
+      return;
+    }
     var target=e.target.closest("[data-nav],[data-action]");
     if(!target)return;
     e.preventDefault();
@@ -892,6 +931,14 @@
   });
   var portalSearchSeq=0,portalSearchTimer=null;
    root.addEventListener("input",function(e){
+    if(e.target.id==="sas-support-id"){
+      state.editing=true;
+      // An earlier selection must no longer offer reset buttons after editing the ID.
+      var oldResult=document.getElementById("sas-support-result");
+      if(oldResult)oldResult.hidden=true;
+      updateSupportSuggestions();
+      return;
+    }
     if(e.target.id!=="module-query"){state.editing=true;return;}
     var q=e.target.value.trim().toLocaleLowerCase("de");
     var dialog=document.getElementById("portal-search"),count=0;

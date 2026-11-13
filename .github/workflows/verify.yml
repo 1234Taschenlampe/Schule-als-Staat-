@@ -39,6 +39,7 @@ jobs:
           node --test tests/rng-hotspots.mjs
           node --test tests/roster-lock-security.mjs
           node --test tests/admin-qr-recovery.mjs
+          node --test tests/support-id-suggestions.mjs
           node --test tests/live-readonly-identity-security-source.mjs
           node --test tests/portal-extras.mjs
           node --test tests/visa-gmail-dispatch.mjs

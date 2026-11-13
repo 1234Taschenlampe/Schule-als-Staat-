@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   android-apk:
@@ -49,3 +49,22 @@ jobs:
           path: android-app/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
           retention-days: 30
+
+      - name: Publish stable direct-download APK (admin preview)
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cp android-app/app/build/outputs/apk/debug/app-debug.apk "Schule-als-Staat-Admin-Vorschau.apk"
+          # A GitHub Release asset is directly downloadable without the ZIP/artifact UI.
+          # Never publish this debug-signed preview as a production app.
+          if gh release view "android-admin-preview" >/dev/null 2>&1; then
+            gh release upload "android-admin-preview" "Schule-als-Staat-Admin-Vorschau.apk" --clobber
+          else
+            gh release create "android-admin-preview" "Schule-als-Staat-Admin-Vorschau.apk" \
+              --target "$GITHUB_SHA" \
+              --title "Schule als Staat – Android Admin-Vorschau" \
+              --notes "Experimentelle Android-App als APK zum direkten Download. Debug-signiert, nur für interne Tests. Keine NFC-Zahlungen. Installation ausschließlich auf Android-Geräten." \
+              --prerelease --latest=false
+          fi

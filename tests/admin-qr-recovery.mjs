@@ -15,8 +15,7 @@ test("QR recovery browser flow parses and keeps secrets in fragment only", () =>
   assert.match(app, /verifyOtp\(\{token_hash:resetMatch\[1\],type:"recovery"\}\)/);
   assert.match(app, /state\.recovering=false;await fetchData\(\)/);
   assert.match(html, /meta name="referrer" content="no-referrer"/);
-  // Keep the browser cache-buster current when unrelated features update app.js.
-  assert.match(html, /app\.js\?v=20261110-finance/);
+  assert.match(html, /app\.js\?v=20261113-qr-finance/);
 });
 
 test("Only administrators can request recovery after identity verification", () => {
@@ -48,4 +47,14 @@ test("Six-digit student IDs work without SAS prefix while admin login stays sepa
   assert.match(app, /if\(\/\^\[0-9\]\{6\}\$\/\.test\(rawLogin\)\)rawLogin="SAS-"\+rawLogin/);
   assert.match(app, /if\(\/\^\[0-9\]\{6\}\$\/\.test\(lookup\)\)lookup="SAS-"\+lookup/);
   assert.match(app, /longLogin\.indexOf\("@"\)<0/);
+});
+
+
+test("QR recovery keeps mandatory school legal acknowledgement and tailored password copy", () => {
+  const firstLoginGate = 'if(state.user?.app_metadata?.sas_initial_password===true){rosterFirstLoginView();return;}';
+  const recoveryGate = 'if(state.recovering&&state.user){root.innerHTML=passwordRecoveryView();return;}';
+  assert.ok(app.indexOf(firstLoginGate) >= 0 && app.indexOf(firstLoginGate) < app.indexOf(recoveryGate));
+  assert.match(app, /state\.recovering\?"Kontowiederherstellung abschließen\."/);
+  assert.match(app, /function rosterFirstLoginView\(\)[\s\S]*?legalReceiptFields\(\)/);
+  assert.doesNotMatch(app, /bei Bedarf ein vorläufiges Passwort ausgeben/);
 });
