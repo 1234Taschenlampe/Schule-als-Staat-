@@ -12,13 +12,17 @@ Die App öffnet ausschließlich das produktive SaS-Portal in einer abgesicherten
 - Keine Klarnamen, Startpasswörter oder geheimen Schlüssel im GitHub-Repository
 - Hardware-NFC ist **optional**; Tap-to-Pay/Host Card Emulation und Buchung im Backend sind **noch nicht implementiert**.
 
-## APK erstellen und laden
-1. Die [GitHub-Actions-Pipeline](https://github.com/1234Taschenlampe/Schule-als-Staat-/actions/workflows/android-app.yml) öffnen.
-2. Den neuesten erfolgreichen Lauf **Build SaS Android APK** auswählen.
-3. Unter **Artifacts** das Archiv **Schule-als-Staat-Android-APK** herunterladen.
-4. Archiv entpacken und `app-debug.apk` auf einem Android-Gerät installieren. Android kann eine Freigabe für die Installation aus der verwendeten App verlangen.
+## APK direkt herunterladen und installieren
 
-Das Debug-APK ist ausschließlich für interne Tests bestimmt, wird mit dem Debug-Schlüssel signiert und sollte vor einer offiziellen Veröffentlichung durch ein regulär signiertes Release ersetzt werden.
+Die aktuelle Android-Admin-Vorschau ist unter [Android-APK direkt herunterladen](https://github.com/1234Taschenlampe/Schule-als-Staat-/releases/download/android-admin-preview/Schule-als-Staat-Admin-Vorschau.apk) als einzelne `.apk` ohne ZIP und ohne GitHub-Actions-Menü verfügbar, sobald der erste erfolgreiche Main-Branch-Build die Release-Datei erstellt hat.
+
+1. Auf einem **Android-Gerät** in der SaS-Webseite als Admin den Bereich **Geschäfte** öffnen und **Android-App herunterladen (.apk)** antippen.
+2. Die heruntergeladene APK öffnen und gegebenenfalls die Installation aus dem Browser erlauben.
+3. Die App installieren und mit den normalen SaS-Zugangsdaten anmelden.
+
+Die Pipeline `.github/workflows/android-app.yml` erstellt die APK bei Änderungen an der Android-App bzw. an der Workflow-Datei. Bei erfolgreichen Builds auf `main` aktualisiert sie die Datei im GitHub-Release `android-admin-preview` unter einer **dauerhaften Download-Adresse**. Die ZIP-Datei im Actions-Artefakt bleibt für technische Tests verfügbar.
+
+**Wichtig:** Es handelt sich weiterhin um ein mit einem temporären Debug-Schlüssel signiertes Test-APK. Ein späterer CI-Build kann sich deshalb nicht wie ein reguläres App-Update über die alte Installation installieren lassen; gegebenenfalls erst die Vorschau deinstallieren. Vor einer produktiven Verteilung ist eine dauerhaft signierte Release-APK erforderlich. Auf iOS/iPadOS können Android-APKs nicht installiert werden. Der öffentliche Release-Link ist kein Zugriffsschutz; die Autorisierung erfolgt weiterhin ausschließlich im Backend.
 
 ## Entwickeln
 - Android Studio mit Android SDK 36 und JDK 17
