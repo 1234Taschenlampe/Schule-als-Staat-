@@ -40,7 +40,8 @@ test("official worker publishes notice with conservative headers", () => {
   assert.match(build, /'Referrer-Policy':'no-referrer'/);
   assert.match(build, /path==='\/datenschutz\.html'/);
 });
-test("own name is read via gated database function, not the local profile alias", () => {
-  assert.match(read("app.js"), /rpc\('my_secure_school_name'/);
-  assert.match(read("features.js"), /name=ctx\.profile\.display_name\|\|c\?\.display_name/);
+test("own account label comes from the short ID RPC", () => {
+  assert.match(read("app.js"), /rpc\("my_short_login_id"/);
+  assert.doesNotMatch(read("app.js"), /my_secure_school_name/);
+  assert.doesNotMatch(read("features.js"), /c\?\.display_name/);
 });

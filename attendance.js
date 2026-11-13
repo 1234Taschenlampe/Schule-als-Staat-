@@ -36,7 +36,7 @@ function paint(){
  '<button class="sas-btn soft" type="button" data-att-action="details" data-id="'+escape(s.id)+'">Einträge: '+Number(s.scans||0)+'</button>'+(s.is_open?'<button class="sas-btn soft" type="button" data-att-action="close" data-id="'+escape(s.id)+'">Schließen</button>':'')+'</div></div>').join("")+'</div></section>'+
  '<section class="sas-panel"><h2>Schülerausweis scannen</h2>'+(active?'<p class="sas-note">Aktive Liste: <strong>'+escape(active.title)+'</strong></p>':'<p class="sas-note">Wähle oder erstelle zuerst eine offene Anwesenheitsliste.</p>')+
  '<div class="verify-camera-area" id="attendance-camera"></div><div class="verify-qr-actions"><button type="button" class="sas-btn primary" data-att-action="scan" '+(active?'':'disabled')+'>Kamera starten</button><button type="button" class="sas-btn soft" data-att-action="stop">Kamera stoppen</button></div>'+
- '<label class="sas-field"><span><input type="checkbox" id="attendance-physical-confirm"> Person vor Ort anhand der physischen Karte und Schulidentität geprüft</span></label><p class="sas-note">Bei gedruckten Ausweisen (SAS-ID:) ist die persönliche Kontrolle Pflicht. Statische QR-Codes allein beweisen keine Anwesenheit.</p><form id="attendance-manual" class="sas-form"><label class="sas-field"><span>Alternativ: QR-Code-Inhalt</span><input name="code" placeholder="SAS-ATTEND:…" autocapitalize="off" autocomplete="off" spellcheck="false" required></label><button class="sas-btn soft" '+(active?'':'disabled')+'>Code prüfen und Anwesenheit speichern</button></form>'+
+ '<label class="sas-field"><span><input type="checkbox" id="attendance-physical-confirm"> Karte persönlich geprüft (QR-Code allein genügt nicht)</span></label><p class="sas-note">Bei gedruckten Ausweisen (SAS-ID:) ist die persönliche Kontrolle Pflicht. Statische QR-Codes allein beweisen keine Anwesenheit.</p><form id="attendance-manual" class="sas-form"><label class="sas-field"><span>Alternativ: QR-Code-Inhalt</span><input name="code" placeholder="SAS-ATTEND:…" autocapitalize="off" autocomplete="off" spellcheck="false" required></label><button class="sas-btn soft" '+(active?'':'disabled')+'>Code prüfen und Anwesenheit speichern</button></form>'+
  '<div id="attendance-result" class="attendance-result"></div><p class="sas-note">Es wird nur eine Anwesenheit pro Schüler und Termin gespeichert. Ein erneuter Scan führt zu keiner zweiten Anwesenheit.</p></section></div><p class="sas-feedback" role="status" aria-live="polite" id="attendance-feedback">'+escape(status)+'</p></div>';
 }
 async function scanCode(code){
@@ -44,10 +44,10 @@ async function scanCode(code){
  const physical=/^SAS-ID:/i.test(String(code||"").trim());
  const confirm=host?.querySelector("#attendance-physical-confirm");
  if(physical&&!confirm?.checked)throw Error("Für gedruckte Karten muss die Identität vor Ort bestätigt werden.");
- const res=physical?await rpc("scan_printed_card_attendance",{p_code:code,p_session_id:selected,p_identity_checked:true}):await rpc("scan_attendance_pass",{p_code:code,p_session_id:selected});
+ const res=physical?await rpc("scan_printed_card_attendance_ids",{p_code:code,p_session_id:selected,p_identity_checked:true}):await rpc("scan_attendance_pass_ids",{p_code:code,p_session_id:selected});
  if(physical&&confirm)confirm.checked=false;
  const area=host?.querySelector("#attendance-result");
- if(area)area.innerHTML='<div class="verify-success"><div class="verify-checkmark">✓</div><h2>'+escape(res.already_present?"Bereits eingetragen":"Anwesenheit gespeichert")+'</h2><p>'+escape(res.display_name)+" · "+escape(res.class_label||"Keine Klassenangabe")+'</p></div>';
+ if(area)area.innerHTML='<div class="verify-success"><div class="verify-checkmark">✓</div><h2>'+escape(res.already_present?"Bereits eingetragen":"Anwesenheit gespeichert")+'</h2><p>'+escape(res.login_id||"Bürgerkonto")+'</p></div>';
  await refreshSessions();
  const count=sessions.find(x=>x.id===selected)?.scans??0;
  status=(res.already_present?"Kein doppelter Eintrag.":"Erfolgreich eingetragen.")+" Jetzt "+count+" anwesend.";
@@ -104,12 +104,12 @@ async function show(context){
      else if(action==="scan")await scanCamera();
      else if(action==="select"){await stop();selected=id;paint();}
      else if(action==="details"){
-       const students=await rpc("attendance_session_roster",{p_session_id:id});
+       const students=await rpc("attendance_session_roster_ids",{p_session_id:id});
        const area=host?.querySelector("#attendance-result");
        if(area){
          const list=Array.isArray(students)?students:[];
          area.innerHTML='<div class="sas-item"><h3>Anwesenheitsliste · '+list.length+' Personen</h3>'+
-           (list.length?'<div class="sas-list">'+list.map((p,i)=>'<div class="sas-item"><strong>'+(i+1)+'. '+escape(p.display_name)+'</strong> · '+escape(p.class_label||"Klasse offen")+'<p>'+escape(new Date(p.scanned_at).toLocaleString("de-DE",{dateStyle:"short",timeStyle:"short"}))+'</p></div>').join("")+'</div>':'<p>Es sind noch keine Schüler eingetragen.</p>')+'</div>';
+           (list.length?'<div class="sas-list">'+list.map((p,i)=>'<div class="sas-item"><strong>'+(i+1)+'. '+escape(p.login_id||"Bürgerkonto")+'</strong>'+'<p>'+escape(new Date(p.scanned_at).toLocaleString("de-DE",{dateStyle:"short",timeStyle:"short"}))+'</p></div>').join("")+'</div>':'<p>Es sind noch keine Schüler eingetragen.</p>')+'</div>';
          area.scrollIntoView({behavior:"smooth",block:"nearest"});
        }
        feedback("Teilnehmerliste geladen. Nur berechtigtes Schulpersonal kann sie einsehen.");

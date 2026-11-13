@@ -26,9 +26,9 @@ test("directory function checks role on the server",()=>{
  assert.match(sql,/grant execute on function public\.school_role_find_students\(text\) to authenticated/i);
  assert.match(sql,/security definer/i);
 });
-test("UI enforces meaningful name search",()=>{
- assert.match(ui,/minlength="4"/);
- assert.match(ui,/keine Platzhalter/);
+test("UI uses a complete citizen ID for lookup",()=>{
+ assert.match(ui,/school_role_find_by_login_id/);
+ assert.doesNotMatch(ui,/school_role_find_students/);
 });
 test("no service-role or secret API key in browser config",()=>{
  assert.match(client,/sb_publishable_/);

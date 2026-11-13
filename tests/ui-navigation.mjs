@@ -11,7 +11,7 @@ async function launch(role='member',email='ui@example.test',stubPublicVisa=false
  const user={id:'73abccce-04ad-49c0-a6b0-39234bc369c7',email};
  const profile={id:user.id,display_name:'Alex <Beispiel>',role,vote_eligible:true};
  const rows={profiles:profile,wallets:{balance_cents:12345},wallet_ledger:[],cash_sales:[],payment_requests:[]};
- const api={from:table=>{const q=new Proxy({},{get:(_,p)=>p==='then'?(ok)=>Promise.resolve(ok({data:rows[table]??[],error:null})):()=>q});return q;},rpc:async(name)=>({data:name==='my_school_roles'?schoolRoles:[],error:null}),auth:{getSession:async()=>({data:{session:{user}},error:null}),onAuthStateChange:()=>{}}};
+ const api={from:table=>{const q=new Proxy({},{get:(_,p)=>p==='then'?(ok)=>Promise.resolve(ok({data:rows[table]??[],error:null})):()=>q});return q;},rpc:async(name)=>({data:name==='my_school_roles'?schoolRoles:name==='my_short_login_id'?'SAS-583204':[],error:null}),auth:{getSession:async()=>({data:{session:{user}},error:null}),onAuthStateChange:()=>{}}};
  const document={getElementById:id=>id==='app'?root:id==='toast-root'?{appendChild:()=>{}}:id==='sas-visa-public-root'?visaRoot:id==='sas-live-module'?featureRoot:null,addEventListener:()=>{},querySelector:()=>null,activeElement:null,hidden:false};
  const window={NV_CONFIG:{supabaseUrl:'https://example.test',supabaseAnonKey:'public'},supabase:{createClient:()=>api},addEventListener:(key,callback)=>windowListeners[key]=callback,scrollTo:()=>{},scrollY:0};
  const sandbox={window,document,location:{search:'',hash:'',href:'https://example.test/',origin:'https://example.test',pathname:'/'},URL,URLSearchParams,Intl,Date:clock,console,setInterval:f=>intervals.push(f),setTimeout:()=>{},navigator:{},history:{replaceState:()=>{}}};
@@ -22,55 +22,66 @@ async function launch(role='member',email='ui@example.test',stubPublicVisa=false
  await new Promise(resolve=>setImmediate(resolve));
  return {root,listeners,windowListeners,visaRoot,featureRoot,intervals,document,sandbox,async click(id){listeners.click({preventDefault(){},target:{closest:()=>({dataset:{nav:id}})}});await new Promise(resolve=>setImmediate(resolve));}};
 }
-test('dashboard and portal have usable role-aware navigation; user text is escaped',async()=>{
+test('dashboard and portal use role-aware navigation and never render a profile name',async()=>{
  for(const role of ['member','cashier','admin']){
   const x=await launch(role);
-  assert.match(x.root.innerHTML,/Alex &lt;Beispiel&gt;/);
+  assert.doesNotMatch(x.root.innerHTML,/Alex|Beispiel/);
   assert.match(x.root.innerHTML,role==='member'?/Dein Zugang ist eingerichtet/:/Guten Tag,/);
   assert.doesNotMatch(x.root.innerHTML,/NaN|\.\/portal\/|V4 ·/);
   assert.equal(x.root.innerHTML.includes('data-nav="admin"'),role==='admin');
   assert.equal(x.root.innerHTML.includes('data-nav="register"'),role!=='member');
   await x.click('apps');
   assert.match(x.root.innerHTML,/Alle Bereiche/);
-  for(const id of ['idcard','gallery','map','rooms','shops','votes','lost'])assert.match(x.root.innerHTML,new RegExp('data-nav="'+id+'"'));
+  for(const id of ['idcard','gallery','map','rooms','shops','lost'])assert.match(x.root.innerHTML,new RegExp('data-nav="'+id+'"'));
   assert.doesNotMatch(x.root.innerHTML,/data-nav="(?:visa|guestvisa)"/,'paused ViSA is not listed for any role');
+  for(const page of ['votes','itsupport'])assert.equal(x.root.innerHTML.includes('data-nav="'+page+'"'),role==='admin');
   for(const id of ['bulletin','blog','events','jobs','laws','parties','courts']){
    assert.equal(x.root.innerHTML.includes('data-nav="'+id+'"'),role==='admin'||role==='member',id+' navigation preview mismatch');
   }
   if(role==='member'){await x.click('admin');assert.match(x.root.innerHTML,/Alle Bereiche/);}
  }
 });
-test('prelaunch preview locks student modules but keeps polls, ID and account settings reachable',async()=>{
+test('prelaunch preview keeps ID and settings reachable and hides polls',async()=>{
  const x=await launch('member');
  assert.match(x.root.innerHTML,/sas-preview-locked/);
  assert.match(x.root.innerHTML,/disabled aria-disabled="true"/);
- assert.match(x.root.innerHTML,/Umfragen & Abstimmungen/);
+ assert.doesNotMatch(x.root.innerHTML,/Umfragen|Abstimmungen/);
  assert.doesNotMatch(x.root.innerHTML,/Letzte Kontobewegungen/);
  await x.click('apps');
  assert.match(x.root.innerHTML,/data-nav="map"[^>]*disabled aria-disabled="true"/);
  await x.click('map'); // simulated direct click cannot bypass the route guard
  assert.match(x.root.innerHTML,/Alle Bereiche/);
  await x.click('votes');
- assert.match(x.root.innerHTML,/Abstimmungen/);
+ assert.match(x.root.innerHTML,/Alle Bereiche/);
  await x.click('idcard');
  assert.match(x.document.title,/Schülerausweis/);
  assert.match(x.featureRoot.innerHTML,/Schülerausweis/);
  await x.click('settings');
  assert.match(x.root.innerHTML,/Passwort ändern/);
 });
-test('polls close for normal pupils after 26 November but ID remains available',async()=>{
- class AfterNikolausmarkt extends Date { static now(){return Date.parse('2026-11-26T00:00:00Z');} }
- const x=await launch('member','ui@example.test',false,{operator:false,jobs:[]},AfterNikolausmarkt);
- assert.match(x.root.innerHTML,/Abstimmungsphase .* beendet/);
- assert.match(x.root.innerHTML,/data-nav="votes"[^>]*disabled aria-disabled="true"/);
- await x.click('votes');
- assert.match(x.root.innerHTML,/Dein Zugang ist eingerichtet/);
- await x.click('idcard');
- assert.match(x.document.title,/Schülerausweis/);
- const elevated=await launch('cashier','ui@example.test',false,{operator:false,jobs:[]},AfterNikolausmarkt);
- assert.doesNotMatch(elevated.root.innerHTML,/sas-preview-locked/);
- await elevated.click('votes');
- assert.match(elevated.document.title,/Abstimmungen/);
+test('poll and IT support routes reject non-admins, including operators and cashiers',async()=>{
+ for(const [role,schoolRoles] of [
+   ['member',{operator:false,jobs:[]}],
+   ['member',{operator:true,jobs:[{slug:'operator'}]}],
+   ['cashier',{operator:false,jobs:[]}]
+ ]){
+  const account=await launch(role,'ui@example.test',false,schoolRoles);
+  const initial=account.document.title;
+  for(const page of ['votes','itsupport']){
+   await account.click(page);
+   assert.equal(account.document.title,initial);
+   account.sandbox.location.hash='#'+page;
+   account.windowListeners.hashchange();
+   assert.equal(account.document.title,initial);
+   assert.doesNotMatch(account.root.innerHTML,new RegExp('data-nav="'+page+'"'));
+  }
+ }
+ const admin=await launch('admin');
+ await admin.click('votes');
+ assert.match(admin.document.title,/Abstimmungen/);
+ await admin.click('itsupport');
+ assert.match(admin.document.title,/Konten & IT-Support/);
+ assert.match(admin.root.innerHTML,/id="sas-support-lookup"/);
 });
 test('existing higher school roles retain their previously permitted modules',async()=>{
  for(const [role,roles] of [
@@ -123,14 +134,15 @@ if(process.env.SAS_UI_FIXTURES){
  writeFileSync(dir+'/login.html',shell(x.root.innerHTML));
 }
 
-test('citizen account shows real Bürgerkennung, administrative account shows real email',async()=>{
+test('account settings display the short citizen ID and a copy control',async()=>{
  const pupil=await launch('member','a1b2c3d4e5@accounts.schule-als-staat.invalid');
  await pupil.click('settings');
- assert.match(pupil.root.innerHTML,/<strong>Bürgerkennung<\/strong><p>SAS-A1B2C3D4E5<\/p>/);
+ assert.match(pupil.root.innerHTML,/<strong>Bürgerkennung<\/strong><p>SAS-583204<\/p>/);
  assert.doesNotMatch(pupil.root.innerHTML,/a1b2c3d4e5@accounts\.schule-als-staat\.invalid/);
  const admin=await launch('admin','verwaltung@example.test');
  await admin.click('settings');
- assert.match(admin.root.innerHTML,/<strong>E-Mail<\/strong><p>verwaltung@example\.test<\/p>/);
+ assert.doesNotMatch(admin.root.innerHTML,/verwaltung@example\.test/);
+ assert.match(pupil.root.innerHTML,/data-action="copy-citizen"/);
 });
 test('paused ViSA is hidden from login, administration and direct hash routes',async()=>{
  const admin=await launch('admin','verwaltung@example.test',true);
@@ -144,4 +156,11 @@ test('paused ViSA is hidden from login, administration and direct hash routes',a
  member.windowListeners.hashchange();
  assert.doesNotMatch(member.root.innerHTML,/sas-public-visa-page|guest-visa-form/);
  assert.equal(member.visaRoot.innerHTML,'');
+});
+
+test('transaction history opens for authorized accounts',async()=>{
+ const x=await launch('cashier');
+ await x.click('history');
+ assert.match(x.document.title,/Verlauf/);
+ assert.match(x.root.innerHTML,/Noch keine digitalen Buchungen/);
 });

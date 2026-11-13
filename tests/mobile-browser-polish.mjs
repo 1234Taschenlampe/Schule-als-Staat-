@@ -82,8 +82,9 @@ test("phone layouts fit without horizontal scroll or inaccessible navigation",as
     if(loggedIn){
       assert.equal(size.bottomVisible,true);
       const tabs=page.locator(".bottom-nav .bottom-button");
-      assert.equal(await tabs.count(),5);
-      for(let i=0;i<5;i++){
+      // Preview members intentionally have four tabs: Start, Bereiche, Ausweis, Profil.
+      assert.equal(await tabs.count(),4);
+      for(let i=0;i<4;i++){
         const rect=await tabs.nth(i).boundingBox();
         assert.ok(rect&&rect.width>=39&&rect.height>=44,"small touch target at "+width);
         assert.ok(rect.y+rect.height<=812,"bottom navigation out of viewport");

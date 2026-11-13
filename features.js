@@ -45,17 +45,19 @@ function sectionOptions(kind){return '<option value="'+escapeAttr(kind)+'">'+esc
 function isUuid(x){return /^[\da-f]{8}-[\da-f]{4}-[1-8][\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$/i.test(x);}
 function futureISO(value){const t=new Date(value);if(!Number.isFinite(t.getTime())||t.getTime()<=Date.now())throw Error("Bitte einen zukünftigen Zeitpunkt wählen.");return t.toISOString();}
 function iso(value){const t=new Date(value);if(!Number.isFinite(t.getTime()))throw Error("Datum nicht gültig.");return t.toISOString();}
-function topLink(){return headerActions(linkPage("Abstimmungen","votes")+linkPage("Konto und Zahlungen","wallet"));}
+function topLink(){return headerActions((ctx?.profile?.role==="admin"?linkPage("Abstimmungen","votes"):"")+linkPage("Konto und Zahlungen","wallet"));}
 function cardTheme(d){const m=/^custom:(#[0-9a-fA-F]{6})$/.exec(d||"");if(!m)return {cls:"sas-id-"+escapeAttr(d||"classic"),style:""};const rgb=[1,3,5].map(i=>parseInt(m[1].slice(i,i+2),16));const bright=(rgb[0]*299+rgb[1]*587+rgb[2]*114)/1000;return {cls:"sas-id-custom",style:' style="--sas-card-bg:'+m[1]+';--sas-card-ink:'+(bright>145?"#14231c":"#ffffff")+';"'};}
+function citizenLabel(user){const chosen=String(ctx?.profile?.display_name||"");if(/^SAS-[0-9]{6}$/.test(chosen))return chosen;const m=/^([a-z0-9]{10})@accounts\.schule-als-staat\.invalid$/i.exec(String(user?.email||""));return m?"Bürgerkonto":"Verwaltung";}
 function renderId(){
-const c=data[0],design=c?.design||"classic",theme=cardTheme(design),name=ctx.profile.display_name||c?.display_name||'Name nicht verfügbar',identityLocked=ctx.profile.role!=="admin"; // Offizielle Schulidentitaet ist fuer Buerger schreibgeschuetzt.
+const c=data[0],design=c?.design||"classic",theme=cardTheme(design),citizen=citizenLabel(ctx.user);
 return wrap(current,
- box("Mein digitaler Schülerausweis",'<div class="sas-id '+theme.cls+'"'+theme.style+'><div class="sas-id-top"><strong>Schule als Staat</strong><span>SCHÜLERAUSWEIS</span></div><div><small>Mitglied · Schulzuordnung</small><h2>'+escapeHtml(name)+'</h2><p>Klasse '+escapeHtml(c?.class_label||"nicht angegeben")+'</p></div><span class="sas-id-bottom">ID · '+escapeHtml(ctx.user.id.slice(0,8).toUpperCase())+' · GÜLTIG IM SCHULSTAAT 12.–16.07.2027</span><div class="sas-id-inline-qr" id="sas-permanent-card-qr" aria-label="Persönlicher Schülerausweis-QR-Code"><span class="sas-note">QR-Code wird geladen …</span></div></div>'
- +msg("Name und Klasse stammen aus der offiziellen Bürgerliste und können von Schülern hier nicht geändert werden. Während der Projektwoche vom 12. bis 16. Juli 2027 dient er im Schulstaat als projektinterner Identitätsnachweis. Er ersetzt außerhalb des Projekts keinen amtlichen Ausweis.")
+ box("Mein digitaler Schülerausweis",'<div class="sas-id '+theme.cls+'"'+theme.style+'><div class="sas-id-top"><strong>Schule als Staat</strong><span>SCHÜLERAUSWEIS</span></div><div><small>BÜRGERKENNUNG</small><h2>'+escapeHtml(citizen)+'</h2></div><span class="sas-id-bottom">PROJEKT 12.–16.07.2027</span><div class="sas-id-inline-qr" id="sas-permanent-card-qr" aria-label="Persönlicher Schülerausweis-QR-Code"><span class="sas-note">QR-Code wird geladen …</span></div></div>'
+ +(/^SAS-[0-9]{6}$/.test(citizen)?'<button type="button" class="sas-btn soft" data-action="copy-citizen">Bürgerkennung kopieren</button>':"")
+ +msg("Dieser Ausweis zeigt ausschließlich deine Bürgerkennung. Der QR-Code identifiziert das Konto im Projekt; er ist allein kein Nachweis der Identität einer Person.")
  +'<div class="sas-role-chips"><strong>Deine Berufe:</strong> '+((ctx.schoolRoles?.jobs||[]).length?
    (ctx.schoolRoles.jobs||[]).map(j=>badge(j.label)).join(""):'<span class="sas-note">Noch keine Berufe zugewiesen</span>')+'</div>'
- +form("card",input("Name auf der Karte","display_name","text",'minlength="2" maxlength="80" value="'+escapeAttr(name)+'" '+(identityLocked?"readonly":""))
-  +input("Klasse","class_label","text",'maxlength="24" value="'+escapeAttr(c?.class_label||"")+'" '+(identityLocked?"readonly":""))
+ +form("card",''
+ 
   +'<label class="sas-field"><span>Ausweisdesign</span><select name="design">'+["classic","blue","forest","mono","custom"].map(v=>'<option value="'+v+'"'+((v==='custom'?design.startsWith('custom:'):v===design)?' selected':'')+'>'+({"classic":"Klassisch","blue":"Blau","forest":"Grün","mono":"Monochrom","custom":"Eigene Farbe"}[v])+'</option>').join("")+'</select></label><label class="sas-field"><span>Eigene Farbe</span><span class="sas-color-control"><input type="color" name="color" value="'+escapeAttr(/^custom:#[0-9a-fA-F]{6}$/.test(design)?design.slice(7):"#4c8c69")+'"><span>Gold- und Silber-Sonderdesigns sind für normale Bürger gesperrt.</span></span></label>',"Ausweis speichern")),
  headerActions(linkPage("Design-Galerie","gallery")+linkPage("3D-Ausweis bestellen","cardshop"))+
  box("Schülerausweis verwenden",'<p class="sas-note">Für die Anwesenheitskontrolle und Guthabenausgabe bleiben eigene QR-Funktionen erhalten. Eine separate QR-Schulverifizierung ist nicht mehr vorgesehen.</p><div class="verify-qr-actions">'+btn("Anwesenheit zeigen","id-attendance-qr")+btn("Ausweis für Guthaben zeigen","id-credit-qr")+'</div><div id="student-id-qr-code" class="verify-qr-wrap" aria-live="polite"><span class="sas-note">Wähle eine QR-Funktion.</span></div>'+msg("Die Verwendung der Funktionen erfordert weiterhin die jeweiligen Berechtigungen.")));
@@ -63,7 +65,7 @@ return wrap(current,
 function renderGallery(){
  const currentDesign=data[0]?.design||"classic";
  return wrap(current,box("Designs für deinen Schülerausweis",'<p class="sas-note">Die Vorschau verwendet die Angaben aus deinem Bürgerkonto.</p><div class="sas-design-grid">'
- +["classic","blue","forest","mono","custom:#4c8c69"].map(v=>'<article class="sas-design-tile"><div class="sas-id '+cardTheme(v).cls+'"'+cardTheme(v).style+'><div class="sas-id-top"><strong>Schule als Staat</strong><span>SCHÜLERAUSWEIS</span></div><div><small>MITGLIED</small><h2>'+escapeHtml(ctx.profile.display_name||data[0]?.display_name||'Name nicht verfügbar')+'</h2></div><span class="sas-id-bottom">DESIGNVORSCHAU · PROJEKT 2027</span></div><h3>'+escapeHtml({"classic":"Klassisch","blue":"Blau","forest":"Waldgrün","mono":"Monochrom","custom:#4c8c69":"Eigene Farbe"}[v])+'</h3>'+btn(currentDesign===v?"Aktuell ausgewählt":"Design verwenden","choose-design",v,currentDesign===v?"muted":"primary")+'</article>').join("")+'</div>'));
+ +["classic","blue","forest","mono","custom:#4c8c69"].map(v=>'<article class="sas-design-tile"><div class="sas-id '+cardTheme(v).cls+'"'+cardTheme(v).style+'><div class="sas-id-top"><strong>Schule als Staat</strong><span>SCHÜLERAUSWEIS</span></div><div><small>MITGLIED</small><h2>'+escapeHtml(citizenLabel(ctx.user))+'</h2></div><span class="sas-id-bottom">DESIGNVORSCHAU · PROJEKT 2027</span></div><h3>'+escapeHtml({"classic":"Klassisch","blue":"Blau","forest":"Waldgrün","mono":"Monochrom","custom:#4c8c69":"Eigene Farbe"}[v])+'</h3>'+btn(currentDesign===v?"Aktuell ausgewählt":"Design verwenden","choose-design",v,currentDesign===v?"muted":"primary")+'</article>').join("")+'</div>'));
 }
 function renderVisa(){
 const personal=admin()?data:data.filter(x=>x.applicant_id===ctx.user.id);
@@ -163,7 +165,7 @@ async function readPage(page,context){
 const api=context.api,u=context.user.id,isAdmin=context.profile.role==="admin";
 let data=[],related=[];
 switch(page){
-case "idcard":case "gallery":{let a=await query(api.from('student_cards').select('*').eq('user_id',u).limit(1));data=a;break;}
+case "idcard":case "gallery":{let a=await query(api.from('student_cards').select('user_id,design').eq('user_id',u).limit(1));data=a;break;}
 case "visa":data=await query(isAdmin?api.from('visa_applications').select('*').order('submitted_at',{ascending:false}).limit(70):api.from('visa_applications').select('*').eq('applicant_id',u).order('submitted_at',{ascending:false}).limit(70));break;
 case "bulletin":case "blog":data=await query(api.from('portal_posts').select('*').eq('section',page==="blog"?"blog":"news").eq('published',true).order('created_at',{ascending:false}).limit(100));break;
 case "shops":case "map":data=await query(api.from('school_places').select('*').order('name').limit(300));break;
@@ -189,8 +191,8 @@ const v=(k)=>trim(values[k]);
 switch(kind){
 case "card":{
 const a={user_id:u,design:(v('design')==='custom'?'custom:'+v('color'):v('design')),updated_at:new Date().toISOString()};
-if(ctx.profile.role==="admin"){a.display_name=v('display_name');a.class_label=v('class_label');}
-await query(api.from('student_cards').upsert(a,{onConflict:'user_id'}));break;}
+ // Stored identity fields remain unchanged; only card design can be edited.
+await query(api.from('student_cards').update({design:a.design,updated_at:a.updated_at}).eq('user_id',u));break;}
 case "visa":{
 if(!values.acknowledged_privacy)throw Error("Bitte die Datenschutzhinweise bestätigen.");
 const a={applicant_id:u,first_name:v('first_name'),last_name:v('last_name'),origin_country:v('origin_country'),accommodation:v('accommodation'),address_line:v('address_line'),postal_city:v('postal_city'),preferred_language:v('preferred_language'),school_class:v('school_class'),planned_entry:v('planned_entry'),contact_email:v('contact_email'),acknowledged_privacy:true};
@@ -249,7 +251,7 @@ if(action==="job-open"){
 }
 if(action==="choose-design"){
  const existing=data[0];const a={user_id:u,design:id,updated_at:new Date().toISOString()};
- await query(api.from('student_cards').upsert(a,{onConflict:'user_id'}));return;}
+ await query(api.from('student_cards').update({design:a.design,updated_at:a.updated_at}).eq('user_id',u));return;}
 if(["visa-approve","visa-reject","booking-approve","booking-reject","lost-resolve","civic-delete","post-delete","place-delete","event-delete"].includes(action)&&!admin())throw Error("Administratorberechtigung erforderlich.");
 if(["place-delete","event-delete","civic-delete","lost-delete","post-delete","visa-delete"].includes(action)&&!confirm("Eintrag wirklich löschen?"))return;
 switch(action){

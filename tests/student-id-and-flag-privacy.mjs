@@ -3,14 +3,13 @@ import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 const read=p=>readFileSync(new URL("../"+p,import.meta.url),"utf8");
 
-test("verified student ID and gallery render the user's decrypted name before the pseudonym",()=>{
+test("student ID and gallery display citizen IDs and request only card design data",()=>{
  const app=read("app.js"),features=read("features.js");
- assert.match(app,/my_secure_school_name/);
- assert.match(app,/if\(typeof secureName===\x27string\x27&&secureName\.trim\(\)\)state\.profile\.display_name=secureName\.trim\(\)/);
- assert.match(features,/name=ctx\.profile\.display_name\|\|c\?\.display_name/);
- assert.match(features,/escapeHtml\(ctx\.profile\.display_name\|\|data\[0\]\?\.display_name/);
- assert.match(features,/identityLocked=ctx\.profile\.role!=="admin"/);
- assert.match(features,/api\.from\('student_cards'\)\.select\('\*'\)\.eq\('user_id',u\)\.limit\(1\)/);
+ assert.match(app,/my_short_login_id/);
+ assert.doesNotMatch(app,/my_secure_school_name/);
+ assert.match(features,/citizenLabel\(ctx.user\)/);
+ assert.match(features,/api\.from\('student_cards'\)\.select\('user_id,design'\)/);
+ assert.doesNotMatch(features,/class_label/);
 });
 
 test("voting gallery does not fetch author identity, even using untrusted client options",()=>{
@@ -23,12 +22,10 @@ test("voting gallery does not fetch author identity, even using untrusted client
  assert.doesNotMatch(sql,/GRANT SELECT \([^)]*submitted_by/);
 });
 
-test("student card is a project-internal identity document during the official school-state week",()=>{
- const features=read("features.js"),terms=read("nutzungsregeln.html");
- assert.match(features,/GÜLTIG IM SCHULSTAAT 12.–16\.07\.2027/);
- assert.match(features,/dient er im Schulstaat als projektinterner Identitätsnachweis/);
- assert.match(features,/Er ersetzt außerhalb des Projekts keinen amtlichen Ausweis/);
- assert.match(features,/DESIGNVORSCHAU · PROJEKT 2027/);
+test("student card is a project card with a permanent QR code",()=>{
+ const features=read("features.js");
+ assert.match(features,/PROJEKT 12.–16\.07\.2027/);
+ assert.match(features,/QR-Code identifiziert das Konto im Projekt/);
+ assert.match(features,/my_student_card_code/);
  assert.doesNotMatch(features,/NICHT ALS IDENTITÄTSNACHWEIS GÜLTIG|VORSCHAU · KEIN IDENTITÄTSNACHWEIS/);
- assert.match(terms,/innerhalb des Schulstaats als projektinterner Identitätsnachweis/);
 });

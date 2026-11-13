@@ -15,7 +15,7 @@ test("all seven current password fields have accessible show/hide controls",()=>
   assert.match(css,/sas-password-toggle:focus-visible/);
   assert.match(css,/sas-password-input>\.field\{width:100%;padding-right:54px/);
 });
-test("first-login copy correctly refers to eight-digit initial password",()=>{
-  assert.match(app,/Dein einmaliges achtstelliges Startpasswort/);
+test("first-login copy covers both first-issued and temporary passwords",()=>{
+  assert.match(app,/Bei der ersten Anmeldung oder nach einem Reset legst du ein eigenes Passwort fest/);
   assert.doesNotMatch(app,/siebenstelliger Zugangscode/);
 });

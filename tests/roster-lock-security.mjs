@@ -34,7 +34,7 @@ test("one-vote RPC checks active roster, admin and duplicate votes",()=>{
 });
 
 test("the login never invites public account creation",()=>{
-  assert.match(app,/Bürgerkennung oder Verwaltungs-E-Mail/);
+  assert.match(app,/<label for="account-email">Bürgerkennung<\/label>/);
   assert.match(app,/Eigenständige Registrierung ist deaktiviert/);
   assert.doesNotMatch(app,/Dein Konto wird von der Schule anhand der offiziellen Bürgerliste angelegt\./);
 });
