@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
+    branches: [main, privacy/kennungen-ohne-klarnamen-20261109]
   workflow_dispatch:
 
 permissions:
@@ -21,6 +21,8 @@ jobs:
       - name: JavaScript syntax and source invariants
         run: |
           node --check app.js
+          node --check admin-transactions.js
+          node --test tests/admin-transactions.mjs
           node --check features.js
           node --check physical-card-shop.js
           node --test tests/physical-card-shop.mjs
@@ -56,6 +58,7 @@ jobs:
           sh scripts/build-static.sh
           test -s _site/index.html
           test -s _site/app.js
+          test -s _site/admin-transactions.js
           test -s _site/config.js
           test -s _site/styles.css
           test -s _site/features.js

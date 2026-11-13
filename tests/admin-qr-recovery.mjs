@@ -15,7 +15,7 @@ test("QR recovery browser flow parses and keeps secrets in fragment only", () =>
   assert.match(app, /verifyOtp\(\{token_hash:resetMatch\[1\],type:"recovery"\}\)/);
   assert.match(app, /state\.recovering=false;await fetchData\(\)/);
   assert.match(html, /meta name="referrer" content="no-referrer"/);
-  assert.match(html, /app\.js\?v=20261113-qr-recovery-copy/);
+  assert.match(html, /app\.js\?v=20261113-qr-finance/);
 });
 
 test("Only administrators can request recovery after identity verification", () => {
