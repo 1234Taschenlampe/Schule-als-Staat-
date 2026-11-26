@@ -42,7 +42,7 @@ async function withBrowser(callback){
    }catch{res.writeHead(404);res.end();}
  });
  await new Promise(done=>server.listen(0,"127.0.0.1",done));
- const browser=await chromium.launch({headless:true,args:["--no-sandbox"]});
+ const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_PATH,args:["--no-sandbox"]});
  try{return await callback(browser,"http://127.0.0.1:"+server.address().port);}
  finally{await browser.close();await new Promise(done=>server.close(done));}
 }
@@ -52,11 +52,8 @@ async function openPage(browser,origin,width,loggedIn){
  const errors=[];
  page.on("pageerror",error=>errors.push(String(error)));
  await page.addInitScript(value=>{window.__mockLoggedIn=value;},loggedIn);
- await page.route("https://cdn.jsdelivr.net/**",route=>{
-   if(route.request().url().includes("supabase.min.js"))
-     return route.fulfill({status:200,contentType:"application/javascript",body:mockSdk});
-   return route.fulfill({status:200,contentType:"application/javascript",body:""});
- });
+ await page.addInitScript({content:mockSdk});
+ await page.route("https://**/*",route=>route.abort());
  await page.goto(origin,{waitUntil:"domcontentloaded",timeout:20000});
  if(loggedIn){
    await page.locator(".bottom-nav").waitFor({state:"visible",timeout:15000});

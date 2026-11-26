@@ -5,7 +5,7 @@ import {resolve} from "node:path";
 import {chromium} from "playwright";
 
 test("actual Chromium user flow: shop owner views inventory and downloads a safe CSV at phone and iPad widths",async()=>{
- const browser=await chromium.launch({headless:true,args:["--no-sandbox"]});
+ const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_PATH,args:["--no-sandbox"]});
  try{
   for(const width of [375,820,1024]){
    const page=await browser.newPage({viewport:{width,height:900},acceptDownloads:true});

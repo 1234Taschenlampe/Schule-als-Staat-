@@ -47,7 +47,7 @@ begin
  return jsonb_build_object('receipt_id',v_receipt.id,'ledger_id',v_ledger,
  'recipient',v_name,'amount_cents',p_amount_cents,'already_processed',false);
 end;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.admin_lookup_credit_card(p_code text)
  RETURNS jsonb
@@ -70,7 +70,7 @@ begin
  if v_result is null then raise exception 'Ausweis nicht gefunden.';end if;
  return v_result;
 end;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.admin_printed_card_data(p_login_id text)
  RETURNS jsonb
@@ -100,7 +100,7 @@ begin
  where r.user_id=v_user;
  return v_result;
 end;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.admin_printed_card_orders()
  RETURNS jsonb
@@ -120,7 +120,7 @@ begin
  join public.school_roster_members r on r.user_id=o.user_id;
  return v_result;
 end;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.admin_printed_card_status(p_login_id text, p_status text)
  RETURNS boolean
@@ -142,7 +142,7 @@ begin
  if not found then raise exception 'Keine Vormerkung vorhanden.';end if;
  return true;
 end;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.cancel_printed_card()
  RETURNS boolean
@@ -156,7 +156,7 @@ begin
  if not found then raise exception 'Nur eine noch nicht produzierte Vormerkung kann storniert werden.';end if;
  return true;
 end;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.lookup_student_card(p_code text)
  RETURNS jsonb
@@ -177,7 +177,7 @@ begin
  if v_result is null then raise exception 'Ausweis nicht gefunden.';end if;
  return v_result;
 end;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.my_printed_card_data()
  RETURNS jsonb
@@ -208,7 +208,7 @@ begin
  where r.user_id=v_uid and r.active;
  return v_result;
 end;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.my_student_card_code()
  RETURNS text
@@ -223,7 +223,7 @@ begin
  select short_code into v_code from public.student_card_codes where user_id=v_uid;
  return 'SAS-ID:'||v_code;
 end;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.request_printed_card()
  RETURNS jsonb
@@ -246,7 +246,7 @@ begin
  end if;
  return jsonb_build_object('status',v_status,'payment_required',false,'binding',false);
 end;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.scan_printed_card_attendance(p_code text, p_session_id uuid, p_identity_checked boolean)
  RETURNS jsonb
@@ -272,7 +272,7 @@ begin
  return jsonb_build_object('ok',true,'already_present',not v_present,
  'display_name',sas_private.decrypt_school_name(v_uid));
 end;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.scan_work_token(p_code text)
  RETURNS jsonb
@@ -304,7 +304,7 @@ begin
  end if;
  return jsonb_build_object('action',v_action,'work_day',v_day);
 end;
-$function$
+$function$;
 
 revoke all on function public.admin_credit_scanned_card(p_code text, p_amount_cents integer, p_operation_id uuid, p_note text) from public,anon,authenticated;
 grant execute on function public.admin_credit_scanned_card(p_code text, p_amount_cents integer, p_operation_id uuid, p_note text) to authenticated;
