@@ -1,8 +1,5 @@
 name: Overlord production read-only smoke
 on:
-  push:
-    branches: [main]
-    paths: [tests/overlord-live-readonly.mjs, .github/workflows/overlord-live-readonly.yml]
   workflow_dispatch:
 permissions:
   contents: read

@@ -17,7 +17,8 @@ test("native Android APK project with secure official origin and camera selectio
  assert.match(activity,/onShowFileChooser/);
  assert.match(activity,/onPermissionRequest/);
  assert.match(activity,/RESOURCE_VIDEO_CAPTURE/);
- assert.match(activity,/request\.getOrigin\(\)\.getScheme\(\)/);
+ assert.match(activity,/uri\.getPort\(\) == 443/);
+ assert.match(activity,/isPortalOrigin\(request\.getOrigin\(\)\)/);
  assert.doesNotMatch(activity,/addJavascriptInterface/);
  assert.match(manifest,/android:allowBackup="false"/);
  assert.match(manifest,/android:usesCleartextTraffic="false"/);

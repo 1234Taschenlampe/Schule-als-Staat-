@@ -56,3 +56,4 @@ done
 wait "$first"
 wait "$second"
 apply tests/postgres/payment-result.sql
+apply tests/postgres/modules.sql
