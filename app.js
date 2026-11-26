@@ -217,7 +217,7 @@
       '<a class="btn primary full" href="/">Erneut versuchen</a></div></section></div>';
   }
   function login(){
-    root.innerHTML='<div class="welcome"><section class="welcome-left"><div class="brand" style="padding:0"><div class="brand-mark">S/S</div><div><div class="brand-name" >Schule als Staat</div><div class="brand-sub" >RNG Wangen</div></div></div><div><div class="eyebrow" >PROJEKTWOCHE 2027</div><div class="welcome-hero">Das Schulportal.</div><p class="welcome-sub">Schülerausweis und organisatorische Informationen zur Projektwoche.</p></div><div class="small" >12.–16. Juli 2027 · RNG Wangen</div><a href="https://www.instagram.com/schule.als.staat_rng/" class="project-social" target="_blank" rel="noopener noreferrer" aria-label="Schule als Staat auf Instagram öffnen">Instagram · @schule.als.staat_rng ↗</a></section><section class="welcome-side"><div class="login-box">'+header("ZUGANG","Anmelden","")+'<form id="password-login-form"><div class="form-group"><label for="account-email">Bürgerkennung</label><input class="field" type="text" autocomplete="username" name="email" id="account-email" autocapitalize="none" spellcheck="false" placeholder="123456 oder SAS-123456" maxlength="160" required><p class="field-help">Die sechsstellige Bürgerkennung reicht aus, SAS- ist optional. Verwaltungskonten melden sich mit ihrem bisherigen Zugang ohne SAS-Präfix an.</p></div><div class="form-group"><label for="account-password">Passwort</label><span class="sas-password-input"><input class="field" type="password" autocomplete="current-password" name="password" id="account-password" maxlength="200" required><button type="button" class="sas-password-toggle" data-password-toggle="account-password" aria-controls="account-password" aria-label="Passwort anzeigen" title="Passwort anzeigen" aria-pressed="false"><svg class="sas-eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg><svg class="sas-eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 3 18 18M10.58 5.15A11.8 11.8 0 0 1 12 5c6.5 0 10 7 10 7a15 15 0 0 1-3.03 3.8M6.7 6.7C3.6 8.6 2 12 2 12s3.5 7 10 7a10.8 10.8 0 0 0 4.37-.9"/><path d="M10 10a3 3 0 0 0 4 4"/></svg></button></span></div><button type="submit" class="btn primary full">Mit Passwort anmelden</button></form><p class="field-help">Ein Schülerkonto wird ausschließlich anhand der offiziellen Schulliste ausgegeben. Deine Bürgerkennung und dein Startpasswort erhältst du persönlich. Auch die bisherige längere Kennung funktioniert weiterhin. Bei der ersten Anmeldung oder nach einem Reset legst du ein eigenes Passwort fest.</p><details class="alternate-auth"><summary>Bürgerkennung oder Passwort vergessen?</summary><p class="field-help">Geh persönlich zum IT-Support der Schule. Bring deinen Schülerausweis mit, falls du ihn hast. Das Team prüft deine Identität und kann deine Bürgerkennung nachschlagen oder dir ein vorläufiges Passwort geben.</p></details><p class="login-footer">Nur für gelistete Bürger und berechtigte Verwaltung. Gib deine Zugangsdaten niemals weiter. Schulwährung kann gegen Euro erworben werden; Guthaben hat damit einen realen finanziellen Bezug.</p></div></section></div>';
+    root.innerHTML='<div class="welcome"><section class="welcome-left"><div class="brand" style="padding:0"><div class="brand-mark">S/S</div><div><div class="brand-name" >Schule als Staat</div><div class="brand-sub" >RNG Wangen</div></div></div><div><div class="eyebrow" >PROJEKTWOCHE 2027</div><div class="welcome-hero">Das Schulportal.</div><p class="welcome-sub">Schülerausweis und organisatorische Informationen zur Projektwoche.</p></div><div class="small" >12.–16. Juli 2027 · RNG Wangen</div><a href="https://www.instagram.com/schule.als.staat_rng/" class="project-social" target="_blank" rel="noopener noreferrer" aria-label="Schule als Staat auf Instagram öffnen">Instagram · @schule.als.staat_rng ↗</a></section><section class="welcome-side"><div class="login-box">'+header("ZUGANG","Anmelden","")+'<form id="password-login-form"><div class="form-group"><label for="account-email">Bürgerkennung</label><input class="field" type="text" autocomplete="username" name="email" id="account-email" autocapitalize="none" spellcheck="false" placeholder="123456 oder SAS-123456" maxlength="160" required><p class="field-help">Die sechsstellige Bürgerkennung reicht aus, SAS- ist optional. Verwaltungskonten melden sich mit ihrem bisherigen Zugang ohne SAS-Präfix an.</p></div><div class="form-group"><label for="account-password">Passwort</label><span class="sas-password-input"><input class="field" type="password" autocomplete="current-password" name="password" id="account-password" maxlength="200" required><button type="button" class="sas-password-toggle" data-password-toggle="account-password" aria-controls="account-password" aria-label="Passwort anzeigen" title="Passwort anzeigen" aria-pressed="false"><svg class="sas-eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg><svg class="sas-eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 3 18 18M10.58 5.15A11.8 11.8 0 0 1 12 5c6.5 0 10 7 10 7a15 15 0 0 1-3.03 3.8M6.7 6.7C3.6 8.6 2 12 2 12s3.5 7 10 7a10.8 10.8 0 0 0 4.37-.9"/><path d="M10 10a3 3 0 0 0 4 4"/></svg></button></span></div><button type="submit" class="btn primary full">Mit Passwort anmelden</button><p class="sas-login-status" id="sas-login-status" role="status" hidden></p><label class="sas-connection-sound"><input type="checkbox" name="connection_sound">Verbindungston beim Anmelden</label></form><p class="field-help">Ein Schülerkonto wird ausschließlich anhand der offiziellen Schulliste ausgegeben. Deine Bürgerkennung und dein Startpasswort erhältst du persönlich. Auch die bisherige längere Kennung funktioniert weiterhin. Bei der ersten Anmeldung oder nach einem Reset legst du ein eigenes Passwort fest.</p><details class="alternate-auth"><summary>Bürgerkennung oder Passwort vergessen?</summary><p class="field-help">Geh persönlich zum IT-Support der Schule. Bring deinen Schülerausweis mit, falls du ihn hast. Das Team prüft deine Identität und kann deine Bürgerkennung nachschlagen oder dir ein vorläufiges Passwort geben.</p></details><p class="login-footer">Nur für gelistete Bürger und berechtigte Verwaltung. Gib deine Zugangsdaten niemals weiter. Schulwährung kann gegen Euro erworben werden; Guthaben hat damit einen realen finanziellen Bezug.</p></div></section></div>';
   }
   function legalReceiptFields(){
     return '<fieldset class="sas-legal-fieldset" aria-describedby="school-legal-help"><legend>Pflichtbestätigungen vor der Nutzung</legend>'+
@@ -803,6 +803,8 @@
       }
       if(form.id==="signup-form")throw Error("Eigenständige Registrierung ist deaktiviert. Bürgerkonten vergibt die Schulverwaltung.");
       if(form.id==="password-login-form"){
+         connectionStatus("Anmeldung wird geprüft …");
+         if(data.get("connection_sound")==="on")connectionTone();
          var rawLogin=String(data.get("email")||"").trim().toUpperCase();
          if(/^[0-9]{6}$/.test(rawLogin))rawLogin="SAS-"+rawLogin;
          var inputPassword=String(data.get("password")||"");
@@ -877,7 +879,7 @@
         await rpc("record_cash_sale",{p_amount_cents:amount(data.get("amount")),p_note:String(data.get("note")||"").slice(0,140)});
         await fetchData();render();showToast("Bargeldumsatz gebucht.");
       }
-    }catch(e){fail(e);}finally{state.busy=false;if(submit&&submit.isConnected)submit.disabled=false;}
+    }catch(e){if(form.id==="password-login-form")connectionStatus("");fail(e);}finally{state.busy=false;if(submit&&submit.isConnected)submit.disabled=false;}
   }
   root.addEventListener("click",function(e){
     var visibilityButton=e.target.closest("[data-password-toggle]");
@@ -980,7 +982,39 @@
     void stopScanner();
     if(document.getElementById("sas-support-link")){supportAccount=null;render();}
   });
+  // Reflect actual startup stages. Sound is opt-in and never required for login.
+  function connectionStatus(message){
+    var status=root.querySelector("#sas-boot-status, #sas-login-status");
+    if(status){status.textContent=message;status.hidden=!message;}
+  }
+  function connectionTone(){
+    try{
+      var Audio=window.AudioContext||window.webkitAudioContext;
+      if(!Audio)return;
+      var audio=new Audio();
+      function play(){
+        var t=audio.currentTime;
+        var gain=audio.createGain();
+        gain.gain.setValueAtTime(0,t);
+        gain.gain.linearRampToValueAtTime(0.035,t+0.025);
+        gain.gain.setValueAtTime(0.035,t+0.30);
+        gain.gain.linearRampToValueAtTime(0,t+0.48);
+        gain.connect(audio.destination);
+        var tone=audio.createOscillator();
+        tone.type="triangle";
+        tone.frequency.setValueAtTime(980,t);
+        tone.frequency.setValueAtTime(1450,t+0.11);
+        tone.frequency.setValueAtTime(720,t+0.23);
+        tone.frequency.setValueAtTime(1120,t+0.34);
+        tone.connect(gain);tone.start(t);tone.stop(t+0.5);
+        tone.onended=function(){void audio.close().catch(function(){});};
+      }
+      if(audio.state==="suspended")void audio.resume().then(play).catch(function(){void audio.close().catch(function(){});});
+      else play();
+    }catch(_){}
+  }
   async function loadSessionData(){
+    connectionStatus("Kontodaten werden geladen …");
     try{
       if(state.user.app_metadata?.sas_initial_password===true){
         state.deletionStatus=await rpc("my_school_deletion_status",{});
@@ -994,6 +1028,7 @@
     }
   }
   async function start(){
+    connectionStatus("Anmeldung wird geprüft …");
     if(!api)return render();
     var resetMatch=/^#sas-reset=([A-Za-z0-9_-]{32,256})$/.exec(location.hash);
     if(resetMatch){
@@ -1036,7 +1071,7 @@
   void start().catch(function(e){
     // Never print opaque API response objects, JWTs, internal SQL or stack traces
     // into the public interface. Provide a recoverable, usable failure state.
-    console.error("School portal startup failed",e);
+    console.error("School portal startup failed");
     root.innerHTML='<div class="welcome" style="min-height:100dvh"><section class="welcome-side" style="grid-column:1/-1"><div class="login-box">'+
       '<div class="eyebrow">VERBINDUNG</div><h1>Das Schulportal konnte nicht geladen werden.</h1>'+
       '<p class="lead">Die Daten konnten gerade nicht abgerufen werden. Bitte überprüfe die Verbindung und versuche es erneut.</p>'+
