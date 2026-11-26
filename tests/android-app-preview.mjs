@@ -33,7 +33,7 @@ test("admin-only SaaS shop application discoverability and real APK CI",()=>{
  assert.match(workflow,/gh release create/);
  assert.match(features,/NFC-Zahlungen sind nicht freigeschaltet/);
  assert.match(workflow,/assembleDebug/);
- assert.match(workflow,/upload-artifact@v4/);
+ assert.match(workflow,/upload-artifact@[a-f0-9]{40}/);
  assert.match(workflow,/app-debug\.apk/);
  assert.match(read("android-app/build.gradle"),/version '9\.4\.1'/);
  assert.match(read("android-app/app/build.gradle"),/targetSdk 36/);
