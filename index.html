@@ -40,7 +40,7 @@
   <script defer src="./admin-credit.js?v=20261109-it-support"></script>
   <script defer src="./portal-extras.js?v=20261109-it-support"></script>
   <script defer src="./flag-voting.js?v=20261109-colour-fix"></script>
-  <script defer src="./app.js?v=20261113-qr-recovery-copy"></script>
+  <script defer src="./app.js?v=20261126-connection"></script>
   <style>
     /* Normal document footer: only visible when scrolling to the page end. */
     #app{min-height:100dvh}
@@ -73,10 +73,23 @@
     .sas-legal-check{display:flex;align-items:flex-start;gap:12px;padding:12px 0;line-height:1.45;cursor:pointer}
     .sas-legal-check input{width:20px;height:20px;flex:0 0 20px;margin:1px 0 0;accent-color:#214b84}
     .sas-legal-check + .sas-legal-check{border-top:1px solid #edf0f3}
+    /* Connection feedback is visible only while the portal is starting or signing in. */
+    .boot.sas-connection{min-height:100vh;min-height:100dvh;padding:24px;display:grid;place-items:center;background:#f5f5f7;color:#1d1d1f}
+    .sas-connection-inner{width:min(100%,360px);text-align:left}
+    .sas-connection-inner h1{font-size:clamp(28px,6vw,36px);letter-spacing:-.8px;margin:18px 0 10px}
+    .sas-connection-inner p{font-size:15px;line-height:1.55;color:#535963;margin:0 0 18px}
+    .sas-connection-track{height:4px;background:#dce4ef;border-radius:4px;overflow:hidden;margin:22px 0}
+    .sas-connection-track span{display:block;width:35%;height:100%;background:#1769e0;border-radius:4px;animation:sas-connection-sweep 1.6s ease-in-out infinite alternate}
+    @keyframes sas-connection-sweep{from{transform:translateX(0)}to{transform:translateX(185%)}}
+    .sas-connection-retry{display:inline-flex;align-items:center;min-height:44px;font-size:13px;color:#1458bd;text-underline-offset:3px}
+    .sas-connection-sound{display:flex;align-items:center;gap:10px;min-height:44px;margin:8px 0 0;font-size:13px;color:#535963}
+    .sas-connection-sound input{width:18px;height:18px;accent-color:#1769e0;flex-shrink:0}
+    .sas-login-status{font-size:13px;line-height:1.5;color:#535963;margin:10px 0 0}
+    @media(prefers-reduced-motion:reduce){.sas-connection-track span{animation:none;transform:translateX(90%)}}
   </style>
 </head>
 <body>
-  <div id="app" aria-live="off"><div class="boot">Schule als Staat wird geladen …</div></div>
+  <div id="app" aria-live="off"><div class="boot sas-connection"><section class="sas-connection-inner" aria-label="Portalstart"><div class="brand-mark" aria-hidden="true">S/S</div><h1>Schule als Staat</h1><p id="sas-boot-status" role="status">Portaldateien werden geladen …</p><div class="sas-connection-track" aria-hidden="true"><span></span></div><a class="sas-connection-retry" href="">Seite neu laden</a><noscript><p>Für die Anmeldung muss JavaScript aktiviert sein.</p></noscript></section></div></div>
   <div id="toast-root" aria-live="polite" aria-atomic="true"></div>
   <footer class="sas-site-footer" aria-label="Rechtliche Informationen">
     <div class="sas-site-footer-inner">
