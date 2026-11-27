@@ -8,4 +8,6 @@ targetRules = ["generic-api-key"]
 description = "Supabase public browser key, not a server credential"
 condition = "AND"
 paths = ['''(^|/)config\.js$''']
-regexes = ['''^sb_publishable_[A-Za-z0-9_-]+$''']
+regexTarget = "line"
+regexes = ['''^\s*supabaseAnonKey:\s*"sb_publishable_[A-Za-z0-9_-]+",\s*
+'']
