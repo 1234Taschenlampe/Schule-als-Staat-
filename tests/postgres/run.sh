@@ -47,7 +47,9 @@ for file in supabase/migrations/*.sql; do
   [[ $file == */20261104_enforce_official_roster.sql ]] && continue
   apply "$file"
 done
+apply supabase/v26_onsite_visa.sql
 apply tests/postgres/roles.sql
+apply tests/postgres/onsite-visa.sql
 # Two independent connections settle the same fixture payment concurrently.
 for attempt in 1 2; do
   docker exec -i "$db" psql -Xq -v ON_ERROR_STOP=1 -U postgres < tests/postgres/settle.sql >/dev/null &

@@ -10,7 +10,7 @@ import { resolve, dirname } from "node:path";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const names = [
-  "index.html", "datenschutz.html", "nutzungsregeln.html", "styles.css", "features.css", "physical-card-shop.css", "tutorial.css",
+  "index.html", "visa-vorort.html", "visa-vorort.js", "visa-vorort.css", "datenschutz.html", "nutzungsregeln.html", "styles.css", "features.css", "physical-card-shop.css", "tutorial.css",
   "brand-emblem.css", "public-visa.css", "shop-plan.css", "portal-extras.css", "flag-voting.css", "flag-voting.js",
   "app.js", "features.js", "physical-card-shop.js", "roles.js", "attendance.js", "tutorial.js",
   "config.js", "work-hours.js", "sale-retry.js", "shop-management.js",
