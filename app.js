@@ -705,16 +705,33 @@
       }
       if(form.id==="signup-form")throw Error("Eigenständige Registrierung ist deaktiviert. Bürgerkonten vergibt die Schulverwaltung.");
       if(form.id==="password-login-form"){
-        var response=await api.auth.signInWithPassword({
-          email:(function(){
-            var raw=String(data.get("email")||"").trim();
-            if(/^SAS-[A-Z0-9]{10}$/i.test(raw))return raw.slice(4).toLowerCase()+"@accounts.schule-als-staat.invalid";
-            if(raw.indexOf("@")<0)throw Error("Bitte die vollständige Bürgerkennung SAS-XXXXXXXXXX eingeben.");
-            return raw;
-          })(),
-          password:String(data.get("password")||"")
-        });
-        if(response.error)throw response.error;
+        var raw=String(data.get("email")||"").trim(),password=String(data.get("password")||"");
+        var invalid="Kennung oder Passwort ist falsch.";
+        if(!password||password.length>200||raw.length>160)throw Error(invalid);
+        var citizen=raw.toUpperCase();
+        if(/^[0-9]{6}$/.test(citizen))citizen="SAS-"+citizen;
+        var internal=/^([a-z0-9]{10})@accounts\.schule-als-staat\.invalid$/i.exec(raw);
+        if(internal)citizen="SAS-"+internal[1].toUpperCase();
+        if(/^SAS-(?:[0-9]{6}|[A-Z0-9]{10})$/.test(citizen)){
+          var loginResult=await fetch(cfg.supabaseUrl+"/functions/v1/sas-login-short",{
+            method:"POST",headers:{"Content-Type":"application/json","apikey":cfg.supabaseAnonKey},
+            body:JSON.stringify({login_id:citizen,password:password}),cache:"no-store"
+          });
+          if(loginResult.status===429)throw Error("Zu viele Anmeldeversuche. Bitte warte kurz.");
+          if(loginResult.status>=500)throw Error("Anmeldung vorübergehend nicht verfügbar.");
+          if(!loginResult.ok)throw Error(invalid);
+          var tokens=await loginResult.json();
+          var established=await api.auth.setSession({access_token:tokens.access_token,refresh_token:tokens.refresh_token});
+          if(established.error)throw Error(invalid);
+        }else{
+          if(!/^[a-z0-9][a-z0-9._%+-]*@[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?\.[a-z]{2,63}$/i.test(raw))throw Error(invalid);
+          var response=await api.auth.signInWithPassword({email:raw,password:password});
+          if(response.error){
+            if(response.error.status===429)throw Error("Zu viele Anmeldeversuche. Bitte warte kurz.");
+            if(response.error.status>=500)throw Error("Anmeldung vorübergehend nicht verfügbar.");
+            throw Error(invalid);
+          }
+        }
       }
       if(form.id==="login-form"){
         var result=await api.auth.signInWithOtp({email:String(data.get("email")||"").trim(),options:{emailRedirectTo:location.origin+location.pathname+location.search,shouldCreateUser:false}});

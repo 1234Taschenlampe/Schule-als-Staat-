@@ -46,7 +46,7 @@ Deno.serve(async (request) => {
   try {
     const login = typeof input?.login_id === "string" ? input.login_id.trim().toUpperCase() : "";
     const password = typeof input?.password === "string" ? input.password : "";
-    if (!/^SAS-(?:[0-9]{6}|[A-Z2-9]{10})$/.test(login) || !password || password.length > 200) {
+    if (!/^SAS-(?:[0-9]{6}|[A-Z0-9]{10})$/.test(login) || !password || password.length > 200) {
       return reply(401, { error: invalid });
     }
     if (!quotaKey) return reply(503, { error: unavailable });

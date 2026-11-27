@@ -8,7 +8,7 @@ import { boundedText } from '../supabase/functions/_shared/body.js';
 const source = readFileSync(new URL('../supabase/functions/sas-login-short/index.ts', import.meta.url), 'utf8');
 const endpoint = stripTypeScriptTypes(source.replace(/^import .*supabase-js.*;$/m, '').replace(/^import .*boundedText.*;$/m, ''));
 
-async function login({ alias = 'SAS-123456', allowed = true, roster = null, secret = 'x'.repeat(32), quotaError = null, rawBody, headers = {} } = {}) {
+async function login({ alias = 'SAS-123456', allowed = true, roster = null, secret = 'x'.repeat(32), quotaError = null, password = 'synthetic password', rawBody, headers = {} } = {}) {
   const calls = [];
   let handler;
   runInNewContext(endpoint, {
@@ -37,7 +37,7 @@ async function login({ alias = 'SAS-123456', allowed = true, roster = null, secr
   const response = await handler(new Request('https://example.invalid/functions/v1/sas-login-short', {
     method: 'POST',
     headers,
-    body: rawBody ?? JSON.stringify({ login_id: alias, password: 'synthetic password' }),
+    body: rawBody ?? JSON.stringify({ login_id: alias, password }),
   }));
   return { status: response.status, body: await response.json(), calls };
 }
@@ -71,4 +71,13 @@ test('malformed JSON, invalid UTF-8 and declared oversized bodies are rejected b
     assert.equal(response.status, 400);
     assert.deepEqual(response.calls, []);
   }
+});
+
+test('invalid identifier and overlong passwords never reach the database', async () => {
+  for (const options of [{alias:'SAS-'+'A'.repeat(30)}, {alias:'<code>example</code>'}, {password:'x'.repeat(201)}]) {
+    const response = await login(options);
+    assert.equal(response.status, 401);
+    assert.deepEqual(response.calls, []);
+  }
+  assert.equal((await login({password:'x'.repeat(30)})).status,401);
 });
