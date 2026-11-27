@@ -1,3 +1,4 @@
+import {boundedText} from "../_shared/body.js";
 // All anonymous guest applications must pass Cloudflare Turnstile on the server.
 // The public SQL insert RPC is denied; only this Edge Function uses service_role.
 const allowedOrigin="https://schule-als-staat.schule-als-staat-jfe.workers.dev";
@@ -21,8 +22,8 @@ Deno.serve(async req=>{
  const secret=Deno.env.get("TURNSTILE_SECRET")||await getTurnstileSecret(url,key).catch(()=>"");
  if(!secret)return response(503,"ViSA-Bot-Schutz derzeit nicht freigeschaltet");
  try{
-  const raw=await req.text();
-  if(raw.length>6000)return response(413,"Request too large");
+  const raw=await boundedText(req,6000);
+  if(raw===null)return response(413,"Request too large");
   const body=JSON.parse(raw),token=body?.turnstileToken;
   if(typeof token!=="string"||token.length<10||token.length>2048)return response(403,"Bot-Schutz muss bestätigt werden");
   const form=new URLSearchParams({secret,response:token});
@@ -52,5 +53,5 @@ Deno.serve(async req=>{
    return response(429,"Anfrage momentan nicht möglich. Bitte später erneut versuchen.");
   }
   return response(200,"Falls deine Angaben akzeptiert wurden, folgt eine Bestätigungs-E-Mail.");
- }catch(e){console.error("Visa request rejected",String(e?.message||e));return response(503,"Antrag konnte derzeit nicht verarbeitet werden");}
+ }catch{console.error("Visa request rejected");return response(503,"Antrag konnte derzeit nicht verarbeitet werden");}
 });

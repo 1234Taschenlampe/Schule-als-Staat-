@@ -864,7 +864,7 @@
   void start().catch(function(e){
     // Never print opaque API response objects, JWTs, internal SQL or stack traces
     // into the public interface. Provide a recoverable, usable failure state.
-    console.error("School portal startup failed",e);
+    console.error("School portal startup failed");
     root.innerHTML='<div class="welcome" style="min-height:100dvh"><section class="welcome-side" style="grid-column:1/-1"><div class="login-box">'+
       '<div class="eyebrow">VERBINDUNG</div><h1>Das Schulportal konnte nicht geladen werden.</h1>'+
       '<p class="lead">Die Daten konnten gerade nicht abgerufen werden. Bitte überprüfe die Verbindung und versuche es erneut.</p>'+

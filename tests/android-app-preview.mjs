@@ -17,7 +17,8 @@ test("native Android APK project with secure official origin and camera selectio
  assert.match(activity,/onShowFileChooser/);
  assert.match(activity,/onPermissionRequest/);
  assert.match(activity,/RESOURCE_VIDEO_CAPTURE/);
- assert.match(activity,/request\.getOrigin\(\)\.getScheme\(\)/);
+ assert.match(activity,/uri\.getPort\(\) == 443/);
+ assert.match(activity,/isPortalOrigin\(request\.getOrigin\(\)\)/);
  assert.doesNotMatch(activity,/addJavascriptInterface/);
  assert.match(manifest,/android:allowBackup="false"/);
  assert.match(manifest,/android:usesCleartextTraffic="false"/);
@@ -33,7 +34,7 @@ test("admin-only SaaS shop application discoverability and real APK CI",()=>{
  assert.match(workflow,/gh release create/);
  assert.match(features,/NFC-Zahlungen sind nicht freigeschaltet/);
  assert.match(workflow,/assembleDebug/);
- assert.match(workflow,/upload-artifact@v4/);
+ assert.match(workflow,/upload-artifact@[a-f0-9]{40}/);
  assert.match(workflow,/app-debug\.apk/);
  assert.match(read("android-app/build.gradle"),/version '9\.4\.1'/);
  assert.match(read("android-app/app/build.gradle"),/targetSdk 36/);

@@ -159,17 +159,9 @@ GitHub Pages ist inzwischen ebenfalls vorbereitet und sein Build-Workflow lief e
 
 **Kostenregel:** Keine kostenpflichtigen Tarife, Abonnements, automatischen Upgrades, Zusatzdienste, gebührenpflichtigen Transaktionen oder Secrets als Repo-Dateien. Bei Quotenende stoppt die Funktion. Cloudflare Workers Free: bis zu 100.000 Requests/Tag. Jede reale Nutzung muss innerhalb der kostenlosen Kontingente bleiben.
 
-## Erstes Administratorkonto sicher aktivieren (16.10.2026)
+## Administratorkonto
 
-Die E-Mail-Adresse `jan.felix.eckert@gmail.com` ist serverseitig als vorgesehener Administrator hinterlegt. **Noch existiert für diese Adresse kein bestätigtes Supabase-Konto.** `supabase/v4_admin_bootstrap.sql` wurde bereits angewendet; die Funktion `claim_initial_admin` prüft immer die tatsächlich eingeloggte Nutzer-ID, exakt diese E-Mail-Adresse **und** `auth.users.email_confirmed_at`. Anonyme Nutzer können sie nicht aufrufen. Sie wird beim Login einmal automatisch ausgeführt.
-
-Zum Aktivieren: Webseite öffnen → **Neues Konto mit Passwort erstellen** → persönliche Gmail-Adresse und selbst gewähltes Passwort von mindestens zwölf Zeichen eintragen → Bestätigungslink in der Gmail-Mailbox aufrufen → auf der Website mit E-Mail und Passwort anmelden. Danach wird im Backend die Adminrolle beansprucht. Nie Passwörter in GitHub, Cloudflare oder ChatGPT veröffentlichen.
-
-**Wichtig:** Im Supabase-Dashboard unter **Authentication → URL Configuration** die echte HTTPS-Adresse der Website als Site URL bzw. Additional Redirect URLs freigeben, beispielsweise `https://schule-als-staat.schule-als-staat-jfe.workers.dev/**`. Diese Auth-Einstellung konnte nicht durch den bereitstehenden Supabase-Konnektor geändert werden. Außerdem muss in Supabase das Bestätigen von E-Mail-Adressen aktiv sein, damit nur nach tatsächlichem Inbox-Nachweis eine Adminrolle verliehen werden kann.
-
-Aktuell existiert in Supabase nur ein zuvor angelegtes, bestätigtes Konto mit einer anderen Mailadresse. Dieses Konto wird **nicht** automatisch zum Administrator gemacht. Frei erfundene Schüler- und Kassen-Adressen sind ausschließlich Offline-Fixtures unter `tests/fictional-identities.mjs` und keine Auth-Benutzer.
-
-Der alternative alte Magic-Link-Login erstellt ab jetzt **keine neuen Benutzerkonten** mehr; er ist nur für bereits vorhandene E-Mail-Konten. Für viele Schüler benötigt das Schulprojekt später ein sicheres, von der Schule genehmigtes Verfahren zur Kontoausgabe mit angemessener Anti-Spam-Kontrolle. Alle Vorgänge müssen innerhalb des kostenlosen Limits bleiben.
+Die Migration `20261126_designated_admin_uuid.sql` übernimmt die UUID des vorhandenen Administrators. Bei einer Neuinstallation prüft die Schulverwaltung die Identität und hinterlegt die Auth-UUID als Datenbankeigentümer in `sas_private.designated_admin`, bevor sie dem zugehörigen Profil die Rolle `admin` zuweist. Der Anmeldevorgang selbst vergibt keine Rolle.
 
 ## Wiederherstellung SaS ONE V3 (16.10.2026)
 

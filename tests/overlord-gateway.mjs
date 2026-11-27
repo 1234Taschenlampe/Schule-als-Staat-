@@ -27,7 +27,7 @@ function harness({role="admin",status=200,delay=0}={}){
   };
   vm.runInNewContext(source,{
     addEventListener:(type,fn)=>{if(type==="fetch")handler=fn},
-    fetch:fetchMock,Response,Request,Headers,TextEncoder,Uint8Array,Date,URL,
+    fetch:fetchMock,Response,Request,Headers,TextEncoder,TextDecoder,Uint8Array,Date,URL,
     Map,Set,Object,JSON,Array,Promise,Math,Error,AbortSignal,crypto:webcrypto,
     console
   },{filename:"bundle.js",timeout:6000});
@@ -87,7 +87,7 @@ test("admin monitoring verifies live Auth identity AND database role",async()=>{
 test("429 protects per-token repeated requests; upstream 500 and 503 are not cached",async()=>{
  const h=harness({status:500});
  let r=await h.call("/api/v1/rpc/poll_catalog",{method:"POST",auth:"Bearer "+jwt,body:"{}"});
- assert.equal(r.status,500);
+ assert.equal(r.status,500);assert.deepEqual(r.body,{error:"RPC request failed"});
  for(let i=0;i<89;i++){
    r=await h.call("/api/v1/rpc/shop_room_catalog",{method:"POST",auth:"Bearer "+jwt,body:"{}"});
    assert.equal(r.status,500);

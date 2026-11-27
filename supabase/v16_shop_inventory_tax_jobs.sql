@@ -229,11 +229,11 @@ grant execute on function public.my_school_job_title() to authenticated;
 create or replace function public.guard_single_designated_school_admin()
 returns trigger language plpgsql security definer set search_path=''
 as $$
-declare v_email text;
+
 begin
  if new.role='admin' then
-  select lower(email) into v_email from auth.users where id=new.id;
-  if v_email is distinct from 'jan.felix.eckert@gmx.de' then raise exception 'Administrator ist ausschließlich für das festgelegte Schulkonto erlaubt.';end if;
+  -- New installations pin the administrator UUID in the November migration.
+  if not exists(select 1 from public.profiles where id=new.id and role='admin') then raise exception 'Administrator ist ausschließlich für das festgelegte Schulkonto erlaubt.';end if;
   if exists(select 1 from public.profiles p where p.role='admin' and p.id<>new.id) then raise exception 'Nur ein Administrator erlaubt.';end if;
  end if;
  return new;
