@@ -6,24 +6,29 @@ on:
   pull_request:
     branches: [main]
   workflow_dispatch:
+  workflow_call:
 
 permissions:
   contents: read
 
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "22"
       - name: JavaScript syntax and source invariants
         run: |
           node --check app.js
+          node --check visa-vorort.js
           node --check features.js
           node --check physical-card-shop.js
           node --test tests/physical-card-shop.mjs
+          node --test tests/edge-body.mjs tests/browser-dependencies.mjs
           node --test tests/editorial-quality.mjs
           node --test tests/android-app-preview.mjs
           node --check shop-plan.js
@@ -42,6 +47,7 @@ jobs:
           node --check config.js
           node --test tests/v4-source-check.mjs
           node --test tests/v6-functional-source-check.mjs
+          node --test tests/login-quota.mjs tests/sale-retry.mjs
           node --test tests/ui-navigation.mjs
           node --test tests/student-preview.mjs
           node --test tests/flag-design-assets.mjs
@@ -53,6 +59,9 @@ jobs:
         run: |
           sh scripts/build-static.sh
           test -s _site/index.html
+          test -s _site/visa-vorort.html
+          test -s _site/visa-vorort.js
+          test -s _site/visa-vorort.css
           test -s _site/app.js
           test -s _site/config.js
           test -s _site/styles.css
@@ -72,3 +81,13 @@ jobs:
           test -s _site/tutorial.js
           test -s _site/tutorial.css
           test ! -e _site/portal/index.html
+      - name: Isolated PostgreSQL authorization regression
+        run: bash tests/postgres/run.sh
+      - name: Check browser dependency advisories
+        working-directory: tests/dependencies
+        run: npm audit --audit-level=high --ignore-scripts
+      - name: Verify security migrations and shop rendering with synthetic fixtures
+        run: |
+          npm install --no-save --no-audit --no-fund @electric-sql/pglite@0.3.14 playwright@1.56.1
+          node --test tests/sale-db.mjs
+          CHROME_PATH="$(command -v google-chrome)" node --test tests/shop-inventory-browser.mjs

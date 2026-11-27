@@ -426,11 +426,11 @@
   function settingsPage(){
     var account=accountDisplay(state.user.email);
     var memberOptions=(state.users||[]).map(function(u){return '<option value="'+esc(u.id)+'">'+esc(u.name)+' ('+esc(u.role)+')</option>';}).join("");
-    var adminPanel=state.profile.role!=="admin"?"":'<h2 class="section-title">Administration</h2><div class="grid two"><section class="card"><div class="card-header"><h2>Guthaben ausgeben</h2><span class="pill blue">Nur Admin</span></div><form id="credit-form"><div class="form-group"><label for="credit-user">Mitglied</label><select id="credit-user" name="user_id" class="field" required>'+memberOptions+'</select></div><div class="form-group"><label for="credit-amount">Betrag in '+esc(units)+'</label><input id="credit-amount" name="amount" class="field" type="number" min=".01" max="10000" step=".01" required></div><div class="form-group"><label for="credit-note">Grund</label><input class="field" id="credit-note" name="note" maxlength="140" placeholder="z. B. Startguthaben"></div><button class="btn primary full" type="submit">Guthaben zuweisen</button></form><p class="field-help">Jede Ausgabe wird im digitalen Buchungsverlauf dokumentiert.</p></section><section class="card"><div class="card-header"><h2>Kassenberechtigung</h2><span class="pill">Rollen</span></div><form id="permission-form"><div class="form-group"><label for="permission-user">Mitglied</label><select class="field" id="permission-user" name="user_id" required>'+memberOptions+'</select></div><div class="form-group"><label for="permission-role">Berechtigung</label><select class="field" id="permission-role" name="enabled"><option value="true">Kassenpersonal</option><option value="false">Normales Mitglied</option></select></div><button class="btn dark full" type="submit">Berechtigung speichern</button></form><p class="field-help">Administratorrollen können hier nicht vergeben oder entfernt werden.</p></section></div>';
+    var adminPanel=state.profile.role!=="admin"?"":'<h2 class="section-title">Administration</h2><section class="card"><h2>ViSA vor Ort</h2><p>Registrierungsstationen, Zahlungen und Erstattungen verwalten.</p><a class="btn dark" href="/visa-vorort.html?view=staff">ViSA-Verwaltung öffnen</a></section><div class="grid two"><section class="card"><div class="card-header"><h2>Guthaben ausgeben</h2><span class="pill blue">Nur Admin</span></div><form id="credit-form"><div class="form-group"><label for="credit-user">Mitglied</label><select id="credit-user" name="user_id" class="field" required>'+memberOptions+'</select></div><div class="form-group"><label for="credit-amount">Betrag in '+esc(units)+'</label><input id="credit-amount" name="amount" class="field" type="number" min=".01" max="10000" step=".01" required></div><div class="form-group"><label for="credit-note">Grund</label><input class="field" id="credit-note" name="note" maxlength="140" placeholder="z. B. Startguthaben"></div><button class="btn primary full" type="submit">Guthaben zuweisen</button></form><p class="field-help">Jede Ausgabe wird im digitalen Buchungsverlauf dokumentiert.</p></section><section class="card"><div class="card-header"><h2>Kassenberechtigung</h2><span class="pill">Rollen</span></div><form id="permission-form"><div class="form-group"><label for="permission-user">Mitglied</label><select class="field" id="permission-user" name="user_id" required>'+memberOptions+'</select></div><div class="form-group"><label for="permission-role">Berechtigung</label><select class="field" id="permission-role" name="enabled"><option value="true">Kassenpersonal</option><option value="false">Normales Mitglied</option></select></div><button class="btn dark full" type="submit">Berechtigung speichern</button></form><p class="field-help">Administratorrollen können hier nicht vergeben oder entfernt werden.</p></section></div>';
     var approvePanel=state.profile.role==="admin"?'<h2 class="section-title">Stimmberechtigungen</h2><section class="card"><h2>Teilnahme freischalten</h2><p class="details" style="margin-top:12px">Hier verwaltest du die Stimmberechtigung bestehender Bürgerkonten. Änderungen werden serverseitig geprüft.</p><form id="vote-permission-form"><div class="form-group"><label for="vote-user">Nutzer</label><select class="field" id="vote-user" name="user_id" required>'+(state.users||[]).map(function(u){return '<option value="'+esc(u.id)+'">'+esc(u.name)+' · '+esc(accountDisplay(u.email).value)+(u.vote_eligible?" · freigegeben":" · gesperrt")+'</option>';}).join("")+'</select></div><div class="form-group"><label for="vote-permission">Stimmrecht</label><select class="field" id="vote-permission" name="enabled"><option value="true">Freigeben</option><option value="false">Sperren</option></select></div><button type="submit" class="btn dark">Berechtigung speichern</button></form><p class="field-help">Eine nachträgliche Sperre löscht keine bereits abgegebenen Stimmen.</p></section>':"";
     var deletionPanel=state.profile.role!=="admin"?"":'<section class="card" style="margin-top:20px"><h2>Offene Datenlöschanträge</h2><p class="field-help">Nur Kennungen, keine Klarnamen. Nach Prüfung Daten in allen Projekttabellen und Backups löschen oder rechtlich notwendige Nachweise dokumentieren. Das Markieren als geprüft löscht noch nichts.</p>'+
       ((state.deletionRequests||[]).length?(state.deletionRequests||[]).map(function(q){return '<div class="settings-row"><div><strong>'+esc(q.login_id)+'</strong><p>Beantragt am '+esc(time(q.requested_at))+' · '+esc(q.status)+' · Grund: '+esc(({keine_angabe:"Keine Angabe",datenschutz:"Datenschutzbedenken",nicht_mehr_nutzen:"Nicht mehr nutzen",sonstiges:"Anderer Grund"})[q.reason_code]||"Keine Angabe")+'</p></div>'+(q.status==="beantragt"?'<form data-action="review-data-deletion"><input type="hidden" name="user_id" value="'+esc(q.user_id)+'"><button class="btn dark" type="submit">Prüfung beginnen</button></form>':'')+'</div>';}).join(""):'<p class="field-help">Keine offenen Anträge.</p>')+'</section>';
-    if(state.page==="admin")return header("VERWALTUNG","Administration.","Guthaben, Rollen und Stimmrecht für unseren Schulstaat verwalten.")+adminPanel+approvePanel+deletionPanel;
+    if(state.page==="admin")return header("VERWALTUNG","Administration.","Guthaben, Rollen und Stimmrecht für unseren Schulstaat verwalten.")+((state.profile.role!=="admin"&&state.schoolRoles?.operator)?'<a class="btn dark" href="/visa-vorort.html?view=staff">ViSA-Personal</a>':"")+adminPanel+approvePanel+deletionPanel;
     return header(state.page==="admin"?"VERWALTUNG":"MEIN BEREICH",state.page==="admin"?"Administration":"Einstellungen",state.page==="admin"?"Berechtigungen und Guthaben für unseren Schulstaat verwalten.":"Dein Profil, dein Passwort und deine Geräte.")+
       '<section class="card"><div class="card-header"><h2>Einführung in das Portal</h2><span class="pill blue">Interaktiv</span></div><p class="details">Der Rundgang erklärt die wichtigsten Bereiche. Er führt keine Zahlungen oder Anträge aus.</p><button class="btn" type="button" data-action="restart-tutorial">Einführung starten oder wiederholen</button></section>'+ 
       '<div class="grid two"><section class="card"><h2>Benutzerkonto</h2><div class="divider"></div><div class="settings-row"><div><strong>Name</strong><p>'+esc(state.profile.display_name)+'</p></div></div><div class="settings-row"><div><strong>'+account.label+'</strong><p>'+esc(account.value)+'</p></div></div><div class="settings-row"><div><strong>Rolle</strong><p>'+roleLabel()+'</p></div></div><div class="divider"></div>'+btn("Abmelden","logout","")+'</section><section class="card"><h2>Kameraberechtigung</h2><div class="divider"></div><p class="details">HTTPS-Status: '+(window.isSecureContext?"Sicherer Kontext":"Unsicherer Kontext")+'. Kamera wird nur auf deinen Wunsch aktiviert und niemals aufgezeichnet.</p>'+btn("Kamerazugriff testen","camera-test")+'<div class="divider"></div><p class="details">Kontoeinheit: '+esc(units)+'. Keine Euro-Bankgutschrift; die Schulwährung kann jedoch mit echten Euro erworben werden.</p></section></div>'+'<section class="card" style="margin-top:20px"><h2>Passwort ändern</h2><p class="field-help">Wähle ein individuelles, mindestens 12 Zeichen langes Passwort. Deine aktuelle Anmeldung muss gültig sein.</p><form id="password-change-form"><div class="form-group"><label for="change-pw">Neues Passwort</label><span class="sas-password-input"><input class="field" type="password" autocomplete="new-password" id="change-pw" name="password" minlength="12" required><button type="button" class="sas-password-toggle" data-password-toggle="change-pw" aria-controls="change-pw" aria-label="Passwort anzeigen" title="Passwort anzeigen" aria-pressed="false"><svg class="sas-eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg><svg class="sas-eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 3 18 18M10.58 5.15A11.8 11.8 0 0 1 12 5c6.5 0 10 7 10 7a15 15 0 0 1-3.03 3.8M6.7 6.7C3.6 8.6 2 12 2 12s3.5 7 10 7a10.8 10.8 0 0 0 4.37-.9"/><path d="M10 10a3 3 0 0 0 4 4"/></svg></button></span></div><div class="form-group"><label for="change-pw-repeat">Passwort wiederholen</label><span class="sas-password-input"><input class="field" type="password" autocomplete="new-password" id="change-pw-repeat" name="repeat" minlength="12" required><button type="button" class="sas-password-toggle" data-password-toggle="change-pw-repeat" aria-controls="change-pw-repeat" aria-label="Passwort anzeigen" title="Passwort anzeigen" aria-pressed="false"><svg class="sas-eye-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg><svg class="sas-eye-closed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 3 18 18M10.58 5.15A11.8 11.8 0 0 1 12 5c6.5 0 10 7 10 7a15 15 0 0 1-3.03 3.8M6.7 6.7C3.6 8.6 2 12 2 12s3.5 7 10 7a10.8 10.8 0 0 0 4.37-.9"/><path d="M10 10a3 3 0 0 0 4 4"/></svg></button></span></div><button type="submit" class="btn dark">Passwort aktualisieren</button></form></section>'+'<section class="card" style="margin-top:20px"><h2>Datenschutz und Datenlöschung</h2><p class="field-help">Du kannst kostenlos und ohne Begründung die Löschung deiner Projektdaten beantragen.</p><p><a href="/datenschutz.html" target="_blank" rel="noopener noreferrer">Datenschutz</a> · <a href="/nutzungsregeln.html" target="_blank" rel="noopener noreferrer">Nutzungsregeln</a></p><button class="btn dark" type="button" data-action="open-deletion">Datenlöschung beantragen</button></section>'+(state.page==="admin"?adminPanel+approvePanel+deletionPanel:"");
@@ -705,16 +705,44 @@
       }
       if(form.id==="signup-form")throw Error("Eigenständige Registrierung ist deaktiviert. Bürgerkonten vergibt die Schulverwaltung.");
       if(form.id==="password-login-form"){
-        var response=await api.auth.signInWithPassword({
-          email:(function(){
-            var raw=String(data.get("email")||"").trim();
-            if(/^SAS-[A-Z0-9]{10}$/i.test(raw))return raw.slice(4).toLowerCase()+"@accounts.schule-als-staat.invalid";
-            if(raw.indexOf("@")<0)throw Error("Bitte die vollständige Bürgerkennung SAS-XXXXXXXXXX eingeben.");
-            return raw;
-          })(),
-          password:String(data.get("password")||"")
-        });
-        if(response.error)throw response.error;
+        var stationName=String(data.get("email")||"").trim().toUpperCase().replace(/^VISA-STATION /,"VISA-STATION-");
+        if(/^VISA-(?:STATION-0[1-4]|[A-F0-9]{8}(?:-[A-F0-9]{4}){3}-[A-F0-9]{12})$/.test(stationName)){
+          var stationPassword=String(data.get("password")||"");
+          if(!/^[a-f0-9]{64}$/.test(stationPassword))throw Error("Kennung oder Passwort ist falsch.");
+          var stationResult=await fetch(cfg.supabaseUrl+"/functions/v1/onsite-visa",{method:"POST",headers:{"Content-Type":"application/json","apikey":cfg.supabaseAnonKey},body:JSON.stringify({action:"station_login",key:stationPassword,input:{username:stationName}}),cache:"no-store"});
+          if(!stationResult.ok)throw Error("Kennung oder Passwort ist falsch.");
+          var stationSession=await stationResult.json();
+          if(stationSession.role!=="visa_station"||!/^[a-f0-9]{64}$/.test(stationSession.session))throw Error("Stationsanmeldung fehlgeschlagen.");
+          sessionStorage.setItem("sas.visa.station",stationSession.session);
+          form.reset();location.assign("/visa-vorort.html?view=station");return;
+        }
+        var raw=String(data.get("email")||"").trim(),password=String(data.get("password")||"");
+        var invalid="Kennung oder Passwort ist falsch.";
+        if(!password||password.length>200||raw.length>160)throw Error(invalid);
+        var citizen=raw.toUpperCase();
+        if(/^[0-9]{6}$/.test(citizen))citizen="SAS-"+citizen;
+        var internal=/^([a-z0-9]{10})@accounts\.schule-als-staat\.invalid$/i.exec(raw);
+        if(internal)citizen="SAS-"+internal[1].toUpperCase();
+        if((/^SAS-[0-9]{6}$/.test(citizen)||/^SAS-[A-Z0-9]{10}$/.test(citizen))){
+          var loginResult=await fetch(cfg.supabaseUrl+"/functions/v1/sas-login-short",{
+            method:"POST",headers:{"Content-Type":"application/json","apikey":cfg.supabaseAnonKey},
+            body:JSON.stringify({login_id:citizen,password:password}),cache:"no-store"
+          });
+          if(loginResult.status===429)throw Error("Zu viele Anmeldeversuche. Bitte warte kurz.");
+          if(loginResult.status>=500)throw Error("Anmeldung vorübergehend nicht verfügbar.");
+          if(!loginResult.ok)throw Error(invalid);
+          var tokens=await loginResult.json();
+          var established=await api.auth.setSession({access_token:tokens.access_token,refresh_token:tokens.refresh_token});
+          if(established.error)throw Error(invalid);
+        }else{
+          if(!/^[a-z0-9][a-z0-9._%+-]*@[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?\.[a-z]{2,63}$/i.test(raw))throw Error(invalid);
+          var response=await api.auth.signInWithPassword({email:raw,password:password});
+          if(response.error){
+            if(response.error.status===429)throw Error("Zu viele Anmeldeversuche. Bitte warte kurz.");
+            if(response.error.status>=500)throw Error("Anmeldung vorübergehend nicht verfügbar.");
+            throw Error(invalid);
+          }
+        }
       }
       if(form.id==="login-form"){
         var result=await api.auth.signInWithOtp({email:String(data.get("email")||"").trim(),options:{emailRedirectTo:location.origin+location.pathname+location.search,shouldCreateUser:false}});
@@ -759,7 +787,7 @@
       }
       if(form.id==="cash-form"){
         if(!adminOrCashier())throw Error("Keine Kassenberechtigung");
-        await rpc("record_cash_sale",{p_amount_cents:amount(data.get("amount")),p_note:String(data.get("note")||"").slice(0,140)});
+        await window.SAS_SALE_RETRY(rpc,state.user.id,"record_cash_sale_idempotent",{p_amount_cents:amount(data.get("amount")),p_note:String(data.get("note")||"").slice(0,140)});
         await fetchData();render();showToast("Bargeldumsatz gebucht.");
       }
     }catch(e){fail(e);}finally{state.busy=false;if(submit&&submit.isConnected)submit.disabled=false;}
@@ -864,7 +892,7 @@
   void start().catch(function(e){
     // Never print opaque API response objects, JWTs, internal SQL or stack traces
     // into the public interface. Provide a recoverable, usable failure state.
-    console.error("School portal startup failed",e);
+    console.error("School portal startup failed");
     root.innerHTML='<div class="welcome" style="min-height:100dvh"><section class="welcome-side" style="grid-column:1/-1"><div class="login-box">'+
       '<div class="eyebrow">VERBINDUNG</div><h1>Das Schulportal konnte nicht geladen werden.</h1>'+
       '<p class="lead">Die Daten konnten gerade nicht abgerufen werden. Bitte überprüfe die Verbindung und versuche es erneut.</p>'+

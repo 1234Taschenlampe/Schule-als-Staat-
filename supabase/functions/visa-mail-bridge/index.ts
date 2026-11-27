@@ -1,3 +1,4 @@
+import {boundedText} from "../_shared/body.js";
 // Limited gateway for a Raspberry Pi mail dispatcher.
 // Configure VISA_MAIL_WORKER_SECRET on Supabase, use the same secret only on the Pi.
 // No public or browser endpoint can read queued e-mail verification tokens.
@@ -24,8 +25,8 @@ Deno.serve(async req=>{
  const auth=req.headers.get("authorization")||"";
  if(!secureEqual(auth,"Bearer "+secret))return toJson(401,{error:"Unauthorized"});
  try{
-  const body=await req.text();
-  if(body.length>1024)return toJson(413,{error:"Too large"});
+  const body=await boundedText(req,1024);
+  if(body===null)return toJson(413,{error:"Too large"});
   const data=JSON.parse(body);
   if(data.action==="claim"){
    const items=await rpc("visa_mail_claim",{p_limit:Math.min(20,Math.max(1,Number(data.limit)||10))});
@@ -38,5 +39,5 @@ Deno.serve(async req=>{
    return toJson(200,{recorded});
   }
   return toJson(400,{error:"Unknown operation"});
- }catch(err){console.error("Mail bridge failed",err?.message);return toJson(500,{error:"Mail queue temporarily unavailable"});}
+ }catch(err){console.error("Mail bridge failed");return toJson(500,{error:"Mail queue temporarily unavailable"});}
 });

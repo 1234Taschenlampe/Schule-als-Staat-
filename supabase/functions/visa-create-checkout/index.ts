@@ -1,3 +1,4 @@
+import {boundedText} from "../_shared/body.js";
 // Public entry point, but every monetary decision is server-side.
 // Required Edge secrets: STRIPE_SECRET_KEY (test/live), and Supabase service role (provided by Supabase).
 const ROOT="https://schule-als-staat.schule-als-staat-jfe.workers.dev/";
@@ -19,8 +20,8 @@ Deno.serve(async req=>{
  const stripeKey=Deno.env.get("STRIPE_SECRET_KEY");
  if(!stripeKey || !/^sk_(test|live)_/.test(stripeKey))return respond(503,{error:"Zahlungen sind noch nicht freigeschaltet."});
  try{
-  const raw=await req.text();
-  if(raw.length>2048)return respond(413,{error:"Request too large"});
+  const raw=await boundedText(req,2048);
+  if(raw===null)return respond(413,{error:"Request too large"});
   const {token}=JSON.parse(raw);
   if(typeof token!=="string"||!/^[0-9a-f]{64}$/.test(token))return respond(400,{error:"Ungültiger Verifizierungslink."});
   const context=await rpc("visa_checkout_context",{p_token:token});
@@ -52,7 +53,7 @@ Deno.serve(async req=>{
   if(u.protocol!=="https:"||u.hostname!=="checkout.stripe.com")return respond(502,{error:"Unerwartetes Zahlungsziel."});
   return respond(200,{url:session.url});
  }catch(e){
-  console.error("Visa checkout refused",String(e?.message||e));
+  console.error("Visa checkout refused");
   return respond(503,{error:"Zahlung zurzeit nicht verfügbar. Es wurde nichts abgebucht."});
  }
 });

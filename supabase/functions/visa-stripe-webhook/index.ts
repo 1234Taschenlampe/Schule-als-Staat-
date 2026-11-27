@@ -1,3 +1,4 @@
+import {boundedText} from "../_shared/body.js";
 // Stripe is the authority for real-money settlement. Never trust a browser redirect.
 const textHeaders={"content-type":"application/json","cache-control":"no-store"};
 const reply=(status,message)=>new Response(JSON.stringify({message}),{status,headers:textHeaders});
@@ -26,7 +27,7 @@ async function callRpc(name,data){
   method:"POST",headers:{"apikey":key,"authorization":"Bearer "+key,"content-type":"application/json"},
   body:JSON.stringify(data)
  });
- if(!r.ok){const e=await r.text();throw Error("DB rejected verified event "+r.status+" "+e.slice(0,240));}
+ if(!r.ok){throw Error("DB rejected verified event "+r.status);}
  return await r.json();
 }
 Deno.serve(async request=>{
@@ -34,8 +35,9 @@ Deno.serve(async request=>{
  const secret=Deno.env.get("STRIPE_WEBHOOK_SECRET");
  const stripeKey=Deno.env.get("STRIPE_SECRET_KEY");
  if(!secret||!stripeKey)return reply(503,"Webhook not configured");
- const raw=await request.text();
- if(raw.length>160000)return reply(413,"Too large");
+ let raw;
+ try{raw=await boundedText(request,160000);}catch{return reply(400,"Invalid request body");}
+ if(raw===null)return reply(413,"Too large");
  if(!(await validSignature(raw,request.headers.get("stripe-signature")||"",secret)))
   return reply(400,"Invalid Stripe signature");
  try{
@@ -57,7 +59,7 @@ Deno.serve(async request=>{
   });
   return reply(200,"Confirmed");
  }catch(error){
-  console.error("Visa Stripe webhook processing failed",error?.message);
+  console.error("Visa Stripe webhook processing failed");
   return reply(500,"Retry later");
  }
 });

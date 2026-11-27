@@ -10,10 +10,10 @@ import { resolve, dirname } from "node:path";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const names = [
-  "index.html", "datenschutz.html", "nutzungsregeln.html", "styles.css", "features.css", "physical-card-shop.css", "tutorial.css",
+  "index.html", "visa-vorort.html", "visa-vorort.js", "visa-vorort.css", "datenschutz.html", "nutzungsregeln.html", "styles.css", "features.css", "physical-card-shop.css", "tutorial.css",
   "brand-emblem.css", "public-visa.css", "shop-plan.css", "portal-extras.css", "flag-voting.css", "flag-voting.js",
   "app.js", "features.js", "physical-card-shop.js", "roles.js", "attendance.js", "tutorial.js",
-  "config.js", "work-hours.js", "shop-management.js",
+  "config.js", "work-hours.js", "sale-retry.js", "shop-management.js",
   "admin-credit.js", "public-visa.js", "shop-plan.js", "mobile-ui.css", "portal-extras.js"
 ];
 const flagImageNames = Array.from({length:7}, (_,i)=>"assets/flags/entwurf-"+String(i+1).padStart(2,"0")+".webp");
@@ -49,11 +49,11 @@ const worker = [
   "if(path==='/rng-floorplan.pdf'){",
   "try{",
   "const upstream=await fetch('https://www.rng-wangen.de/wp-content/uploads/2024/07/230625_digitaler-uebersichtsplan.pdf',{",
-  "method:event.request.method,headers:{Accept:'application/pdf'},redirect:'follow',cf:{cacheEverything:true,cacheTtl:86400}",
+  "method:event.request.method,headers:{Accept:'application/pdf'},redirect:'error',signal:AbortSignal.timeout(10000),cf:{cacheEverything:true,cacheTtl:86400}",
   "});",
   "if(!upstream.ok)return new Response('Schulplan vorübergehend nicht abrufbar',{status:502});",
   "const contentType=upstream.headers.get('content-type')||'';",
-  "if(!/pdf|octet-stream/i.test(contentType))return new Response('Kein PDF vom Schulserver erhalten',{status:502});",
+  "if(!['application/pdf','application/octet-stream'].includes(contentType.split(';')[0].trim().toLowerCase()))return new Response('Kein PDF vom Schulserver erhalten',{status:502});",
   "return new Response(event.request.method==='HEAD'?null:upstream.body,{status:200,headers:{",
   "'Content-Type':'application/pdf','Cache-Control':'public,max-age=86400',",
   "'Content-Disposition':'inline; filename=\"rng-schulplan.pdf\"','X-Content-Type-Options':'nosniff'",

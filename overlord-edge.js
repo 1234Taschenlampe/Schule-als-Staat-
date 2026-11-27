@@ -28,10 +28,19 @@ function overlordLimit(key,max,now){
   const map=overlordState.buckets;
   const previous=map.get(key);
   const item=previous && previous.expires>now?previous:{count:0,expires:now+OVERLORD_WINDOW_MS};
-  ++item.count;map.set(key,item);
+
   // Bound in-memory state in long-running isolates.
-  if(map.size>4096)for(const [k,v] of map){if(v.expires<=now)map.delete(k);}
-  if(map.size>8192)map.clear();
+  if(!previous && map.size>=8192){
+    // Entries are ordered by creation. Move renewed windows to the end.
+    for(const [k,v] of map){
+      if(v.expires>now)break;
+      map.delete(k);
+    }
+    if(map.size>=8192)return false;
+  }
+  if(item!==previous)map.delete(key);
+  ++item.count;
+  map.set(key,item);
   return item.count<=max;
 }
 async function overlordIdentity(token){
@@ -49,14 +58,33 @@ async function overlordIsAdmin(bearer){
   const url=OVERLORD_SUPABASE_URL;
   const headers={apikey:OVERLORD_PUBLISHABLE_KEY,authorization:bearer,accept:"application/json"};
   // Supabase Auth validates the JWT, not an untrusted decoded browser claim.
-  const who=await fetch(url+"/auth/v1/user",{headers,redirect:"error"});
+  const who=await fetch(url+"/auth/v1/user",{headers,redirect:"error",signal:AbortSignal.timeout(10000)});
   if(!who.ok)return false;
   const user=await who.json();
   if(!/^[0-9a-f-]{36}$/i.test(String(user?.id||"")))return false;
-  const result=await fetch(url+"/rest/v1/profiles?select=role&id=eq."+encodeURIComponent(user.id),{headers,redirect:"error"});
+  const result=await fetch(url+"/rest/v1/profiles?select=role&id=eq."+encodeURIComponent(user.id),{headers,redirect:"error",signal:AbortSignal.timeout(10000)});
   if(!result.ok)return false;
   const profiles=await result.json();
   return Array.isArray(profiles)&&profiles.length===1&&profiles[0].role==="admin";
+}
+async function overlordAdmit(request,bearer,now){
+  const ip=(request.headers.get("cf-connecting-ip")||"unidentified").slice(0,55);
+  if(!overlordLimit("i:"+ip,OVERLORD_LIMIT_PER_IP,now)){
+    overlordState.throttled++;
+    return overlordJson({error:"Too many requests"},429,{"retry-after":"60"});
+  }
+  let key;
+  try{key=await overlordIdentity(bearer);}catch{return overlordJson({error:"Gateway unavailable"},503);}
+  if(!overlordLimit("u:"+key,OVERLORD_LIMIT_PER_USER,now)){
+    overlordState.throttled++;
+    return overlordJson({error:"Too many requests"},429,{"retry-after":"60"});
+  }
+  if(overlordState.active>=OVERLORD_MAX_INFLIGHT){
+    overlordState.throttled++;
+    return overlordJson({error:"Gateway busy"},503,{"retry-after":"2"});
+  }
+  overlordState.active++;
+  return null;
 }
 async function overlordHandle(request) {
   const path=new URL(request.url).pathname, method=request.method, now=Date.now();
@@ -75,9 +103,11 @@ async function overlordHandle(request) {
   if(path==="/api/v1/overlord/metrics"){
     if(method!=="GET")return overlordJson({error:"Method not allowed"},405,{allow:"GET"});
     if(!bearer){overlordState.rejected++;return overlordJson({error:"Authentication required"},401);}
+    const limited=await overlordAdmit(request,bearer,now);
+    if(limited)return limited;
     try{
       if(!await overlordIsAdmin(bearer)){overlordState.rejected++;return overlordJson({error:"Forbidden"},403);}
-    }catch{overlordState.errors++;return overlordJson({error:"Authorization service unavailable"},503);}
+    }catch{overlordState.errors++;return overlordJson({error:"Authorization service unavailable"},503);}finally{overlordState.active--;}
     const s=overlordState;
     return overlordJson({
       service:"sas-overlord",version:1,scope:"current-worker-isolate",
@@ -103,25 +133,30 @@ async function overlordHandle(request) {
   }
   let params;
   try {
-    const body=await request.text();
-    if(body.length>OVERLORD_MAX_BODY_BYTES){overlordState.rejected++;return overlordJson({error:"Payload too large"},413);}
+    const reader=request.body?.getReader();
+    if(!reader)throw Error("missing body");
+    const buffer=new Uint8Array(OVERLORD_MAX_BODY_BYTES);
+    let used=0;
+    try{
+      for(;;){
+        const {done,value}=await reader.read();
+        if(done)break;
+        if(value.length>buffer.length-used){
+          void reader.cancel().catch(()=>{});
+          overlordState.rejected++;
+          return overlordJson({error:"Payload too large"},413);
+        }
+        buffer.set(value,used);
+        used+=value.length;
+      }
+    }finally{reader.releaseLock();}
+    const body=new TextDecoder("utf-8",{fatal:true}).decode(buffer.subarray(0,used));
     params=JSON.parse(body);
     if(!params || Array.isArray(params)||typeof params!=="object" || Object.keys(params).length)
       throw Error("unexpected parameter");
   }catch{overlordState.rejected++;return overlordJson({error:"RPC accepts only empty JSON body"},400);}
-  const ip=(request.headers.get("cf-connecting-ip")||"unidentified").slice(0,55);
-  let key;
-  try{key=await overlordIdentity(bearer);}catch{return overlordJson({error:"Gateway unavailable"},503);}
-  if(!overlordLimit("u:"+key,OVERLORD_LIMIT_PER_USER,now)||
-     !overlordLimit("i:"+ip,OVERLORD_LIMIT_PER_IP,now)){
-    overlordState.throttled++;
-    return overlordJson({error:"Too many requests"},429,{"retry-after":"60"});
-  }
-  if(overlordState.active>=OVERLORD_MAX_INFLIGHT){
-    overlordState.throttled++;
-    return overlordJson({error:"Gateway busy"},503,{"retry-after":"2"});
-  }
-  overlordState.active++;
+  const limited=await overlordAdmit(request,bearer,now);
+  if(limited)return limited;
   try{
     const target=OVERLORD_SUPABASE_URL+"/rest/v1/rpc/"+match[1];
     const upstream=await fetch(target,{
@@ -133,7 +168,12 @@ async function overlordHandle(request) {
     overlordState.forwarded++;
     overlordState.lastUpstreamAt=Date.now();overlordState.lastUpstreamStatus=upstream.status;
     if(upstream.status>=500)overlordState.upstream5xx++;
-    // Return the upstream body/status. Never cache personal RPC data.
+    if(!upstream.ok){
+      if(upstream.body)void upstream.body.cancel().catch(()=>{});
+      return overlordJson({error:"RPC request failed"},upstream.status,
+        upstream.status===429?{"retry-after":"30"}:{});
+    }
+    // Never cache personal RPC data.
     const safeHeaders={"content-type":"application/json; charset=utf-8",
       "cache-control":"no-store","x-content-type-options":"nosniff"};
     if(upstream.status===429)safeHeaders["retry-after"]="30";

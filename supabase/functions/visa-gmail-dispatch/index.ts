@@ -248,7 +248,7 @@ Deno.serve(async (request) => {
     return json(200, { claimed: claimed.length, sent, retried, ackFailed });
   } catch (e) {
     const diagnostic = String(e?.message || e).slice(0,140);
-    console.error("ViSA dispatch failed:", diagnostic);
+    console.error("ViSA dispatch failed");
     // Only authenticated check-mode callers receive a classified Google error.
     // No token, client secret or Google response payload is returned.
     if (mode === "check" && provider === "gmail") {
