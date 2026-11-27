@@ -1,3 +1,9 @@
+# Verbindlicher Datenbank- und Security-Standard (27.11.2026)
+
+- Vor Änderungen an Auth, Datenbank, Zahlungen, Rollen, Schnittstellen oder Gastzugang [docs/DATABASE_GOVERNANCE_SECURITY.md](docs/DATABASE_GOVERNANCE_SECURITY.md) anwenden. Issue #59 bleibt bis zur nachgewiesenen Abnahme offen.
+- Änderungen in getrennten Branches prüfen; statische Tests sind keine Live-Abnahme. Keine produktiven Migrationen ohne Restore-/Rollback-Nachweis und keine echten Schülerdaten in Tests.
+- Die öffentliche Auslieferungsgrenze wird mit `node --test tests/deployment-boundary.mjs` geprüft. Neue Assets bewusst in Build und Allowlist aufnehmen.
+
 # Canonical V6 direction (supersedes any V3 restoration notes below)
 
 - **Cloudflare is the SOLE official host:** https://schule-als-staat.schule-als-staat-jfe.workers.dev/ — do not publish a second independent GitHub Pages copy. Keep GitHub Pages redirect-only for old links. Repo remains the source of truth; update Cloudflare Worker after approved frontend changes; commits alone do not auto-deploy to Worker.
