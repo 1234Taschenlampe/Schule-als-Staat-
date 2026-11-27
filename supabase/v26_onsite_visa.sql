@@ -81,10 +81,10 @@ begin
  select * into s from sas_onsite.stations where key_hash=extensions.digest(p_key,'sha256') and active for update;
  if not found then raise exception 'Ungültiger Zugang.' using errcode='42501'; end if;
  select * into strict cfg from sas_onsite.settings where singleton;
- if not cfg.enabled then raise exception 'ViSA nicht freigegeben.' using errcode='42501'; end if;
  if p_action='station_quote' then
-  return jsonb_build_object('daily_price_cents',cfg.daily_price_cents,'valid_from','2027-07-12','valid_to','2027-07-16');
+  return jsonb_build_object('enabled',cfg.enabled,'station',s.label,'daily_price_cents',cfg.daily_price_cents,'valid_from','2027-07-12','valid_to','2027-07-16');
  end if;
+ if not cfg.enabled then raise exception 'ViSA nicht freigegeben.' using errcode='42501'; end if;
  if coalesce(p_input->>'guest_key','') !~ '^[a-f0-9]{64}$' then raise exception 'Ungültiger Gastschlüssel.'; end if;
  guest_hash:=extensions.digest(p_input->>'guest_key','sha256');
  req:=(p_input->>'request_id')::uuid;

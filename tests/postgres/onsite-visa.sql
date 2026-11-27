@@ -6,6 +6,14 @@ grant all on visa_fixture to authenticated,service_role;
 select set_config('request.jwt.claim.sub',(select id::text from auth.users where email='fixture-4@example.invalid'),true);
 set local role authenticated;
 insert into visa_fixture values('station',public.onsite_visa_staff('station_add','{"label":"Teststation"}'));
+reset role;
+set local role service_role;
+do $ begin
+ if public.onsite_visa_access('station_quote',(select v->>'station_key' from visa_fixture where k='station'),'{}')->>'enabled'<>'false' then raise exception 'Disabled station login failed'; end if;
+ begin perform public.onsite_visa_access('station_create',(select v->>'station_key' from visa_fixture where k='station'),'{}');raise exception 'Disabled station accepted registration';exception when insufficient_privilege then null;end;
+end $;
+reset role;
+set local role authenticated;
 select public.onsite_visa_staff('configure','{"enabled":true,"daily_price_cents":200}');
 reset role;
 set local role service_role;

@@ -32,6 +32,7 @@ async function guarded(fn){
  finally{busy=false;document.querySelectorAll("button").forEach(b=>b.disabled=false);}
 }
 function stationForm(){
+ if(!quote.enabled){main.replaceChildren(element('h2',quote.station||'Station angemeldet'),element('p','Registrierung noch nicht freigegeben. Keine Zahlung entgegennehmen.'));main.append(button('Status aktualisieren',()=>{void guarded(async g=>{const q=await call('station_quote',stationKey);if(g!==generation)return;quote=q;stationForm();});}),button('Station abmelden',()=>switchMode('station')));return;}
  main.innerHTML='<h2>Gast registrieren</h2><p>Der Preis wird durch die Verwaltung festgelegt. Bezahlen und persönlich verifizieren beim Personal.</p><form id="visa-create"><label>Erster Besuchstag<input type="date" name="from" min="2027-07-12" max="2027-07-16" value="2027-07-12" required></label><label>Letzter Besuchstag<input type="date" name="to" min="2027-07-12" max="2027-07-16" value="2027-07-12" required></label><button class="btn primary" type="submit">Antrag und QR-Code erstellen</button></form>';
  main.prepend(element("p","Tagespreis: "+euro(quote.daily_price_cents)));
  main.append(button("Station abmelden",()=>switchMode("station")));
@@ -55,7 +56,7 @@ function stationForm(){
 }
 function stationLogin(){
  main.innerHTML='<h2>Station anmelden</h2><form><label>Stationsschlüssel<input type="password" name="key" maxlength="64" autocomplete="off" required></label><button class="btn primary" type="submit">Station öffnen</button></form>';
- main.querySelector("form").addEventListener("submit",e=>{e.preventDefault();void guarded(async g=>{const key=String(new FormData(e.target).get("key")).trim();const q=await call("station_quote",key);if(g!==generation)return;stationKey=key;quote=q;stationForm();notify("Station bereit.");});});
+ main.querySelector("form").addEventListener("submit",e=>{e.preventDefault();void guarded(async g=>{const key=String(new FormData(e.target).get("key")).trim();const q=await call("station_quote",key);if(g!==generation)return;stationKey=key;quote=q;stationForm();notify("Station angemeldet.");});});
 }
 function guestForm(){
  main.innerHTML='<h2>Mein ViSA</h2><p>Nur für vor Ort registrierte Gäste.</p><form><label>Persönlicher Gastschlüssel<input name="key" type="password" maxlength="64" autocomplete="off" required></label><button class="btn primary" type="submit">ViSA anzeigen</button></form><div id="visa-guest-result"></div>';

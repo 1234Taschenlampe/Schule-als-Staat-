@@ -712,7 +712,7 @@
         if(/^[0-9]{6}$/.test(citizen))citizen="SAS-"+citizen;
         var internal=/^([a-z0-9]{10})@accounts\.schule-als-staat\.invalid$/i.exec(raw);
         if(internal)citizen="SAS-"+internal[1].toUpperCase();
-        if(/^SAS-(?:[0-9]{6}|[A-Z0-9]{10})$/.test(citizen)){
+        if((/^SAS-[0-9]{6}$/.test(citizen)||/^SAS-[A-Z0-9]{10}$/.test(citizen))){
           var loginResult=await fetch(cfg.supabaseUrl+"/functions/v1/sas-login-short",{
             method:"POST",headers:{"Content-Type":"application/json","apikey":cfg.supabaseAnonKey},
             body:JSON.stringify({login_id:citizen,password:password}),cache:"no-store"

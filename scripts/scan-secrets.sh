@@ -9,17 +9,21 @@ trap 'rm -rf "$snapshot"' EXIT
 
 # Include tracked files only. Never scan runner credentials or build caches.
 git ls-files -z | tar --null --verbatim-files-from --no-recursion -T - -cf - | tar -xf - -C "$snapshot"
+reports=$(mktemp -d)
+chmod 700 "$reports"
+trap 'rm -rf "$snapshot" "$reports"' EXIT
 status=0
 scan() {
   local label=$1 result=0
   shift
   # Suppress all scanner output, including paths and context around findings.
-  "$scanner" "$@" --redact=100 --no-banner --ignore-gitleaks-allow --gitleaks-ignore-path "$snapshot/no-baseline" --config "$snapshot/default.toml" >/dev/null 2>&1 || result=$?
+  "$scanner" "$@" --redact=100 --no-banner --ignore-gitleaks-allow --gitleaks-ignore-path "$snapshot/no-baseline" --config "$snapshot/default.toml" --report-format json --report-path "$reports/findings.json" >/dev/null 2>&1 || result=$?
   case "$result" in
     0) echo "$label: passed" ;;
-    17) echo "$label: findings detected. Review privately and rotate active secrets." >&2; status=1 ;;
+    17) echo "$label: findings detected. Review privately and rotate active secrets." >&2; python3 -c 'import json,sys,re,collections; data=json.load(open(sys.argv[1])); counts=collections.Counter(x.get("RuleID","") for x in data); print("Redacted rule counts:",json.dumps({k:v for k,v in counts.items() if re.fullmatch(r"[a-z0-9_-]{1,80}",k)}))' "$reports/findings.json" || true; status=1 ;;
     *) echo "$label: scanner failed (exit $result)." >&2; status=1 ;;
   esac
+  rm -f "$reports/findings.json"
 }
 printf '[extend]\nuseDefault = true\n' > "$snapshot/default.toml"
 scan "Git history" git --exit-code 17 --log-opts="--all --full-history" .
