@@ -1,11 +1,2 @@
 [extend]
 useDefault = true
-
-# Only the public browser key, in its exact expected configuration field.
-[[allowlists]]
-targetRules = ["generic-api-key"]
-description = "Verified Supabase publishable browser key"
-condition = "AND"
-paths = ['''(^|/)config\.js$''']
-regexTarget = "line"
-regexes = ['''^\s*supabaseAnonKey:\s*"sb_publishable_[A-Za-z0-9_-]+",\s*$''']
