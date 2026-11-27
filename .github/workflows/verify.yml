@@ -42,6 +42,7 @@ jobs:
           node --check config.js
           node --test tests/v4-source-check.mjs
           node --test tests/v6-functional-source-check.mjs
+          node --test tests/login-quota.mjs tests/sale-retry.mjs
           node --test tests/ui-navigation.mjs
           node --test tests/student-preview.mjs
           node --test tests/flag-design-assets.mjs
