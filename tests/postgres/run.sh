@@ -48,6 +48,7 @@ for file in supabase/migrations/*.sql; do
   apply "$file"
 done
 apply supabase/v26_onsite_visa.sql
+apply supabase/v27_onsite_station_sessions.sql
 apply tests/postgres/roles.sql
 apply tests/postgres/onsite-visa.sql
 # Two independent connections settle the same fixture payment concurrently.

@@ -13,7 +13,7 @@ Deno.serve(async req=>{
   const raw=await boundedText(req,2048);
   if(raw===null)return reply(400,{error:"Ungültige Anfrage."});
   const body=JSON.parse(raw);
-  if(!["station_quote","station_create","guest_status"].includes(body.action)||typeof body.key!=="string"||!/^[a-f0-9]{64}$/.test(body.key))return reply(400,{error:"Ungültige Anfrage."});
+  if(!["station_login","station_quote","station_create","station_logout","guest_status"].includes(body.action)||typeof body.key!=="string"||!/^[a-f0-9]{64}$/.test(body.key))return reply(400,{error:"Ungültige Anfrage."});
   const {data,error}=await admin.rpc("onsite_visa_access",{p_action:body.action,p_key:body.key,p_input:body.input??{}});
   if(error)return reply(error.code==="42501"?403:error.code==="54000"?429:400,{error:"Anfrage nicht möglich. Zugang, Zeitraum oder Freigabe prüfen."});
   return reply(200,data);

@@ -8,16 +8,20 @@ set local role authenticated;
 insert into visa_fixture values('station',public.onsite_visa_staff('station_add','{"label":"Teststation"}'));
 reset role;
 set local role service_role;
+insert into visa_fixture values('session',public.onsite_visa_access('station_login',(select v->>'station_key' from visa_fixture where k='station'),jsonb_build_object('username',(select v->>'username' from visa_fixture where k='station'))));
 do $$ begin
- if public.onsite_visa_access('station_quote',(select v->>'station_key' from visa_fixture where k='station'),'{}')->>'enabled'<>'false' then raise exception 'Disabled station login failed'; end if;
- begin perform public.onsite_visa_access('station_create',(select v->>'station_key' from visa_fixture where k='station'),'{}');raise exception 'Disabled station accepted registration';exception when insufficient_privilege then null;end;
+ if (select v->>'role' from visa_fixture where k='session')<>'visa_station' then raise exception 'Wrong station role'; end if;
+ begin perform public.onsite_visa_access('station_quote',(select v->>'station_key' from visa_fixture where k='station'),'{}'); raise exception 'Password accepted as session'; exception when insufficient_privilege then null;end;
+ begin perform public.onsite_visa_access('station_login',(select v->>'station_key' from visa_fixture where k='station'),'{"username":"VISA-STATION-01"}');raise exception 'Wrong username accepted';exception when insufficient_privilege then null;end;
+ if public.onsite_visa_access('station_quote',(select v->>'session' from visa_fixture where k='session'),'{}')->>'enabled'<>'false' then raise exception 'Disabled station login failed'; end if;
+ begin perform public.onsite_visa_access('station_create',(select v->>'session' from visa_fixture where k='session'),'{}');raise exception 'Disabled station accepted registration';exception when insufficient_privilege then null;end;
 end $$;
 reset role;
 set local role authenticated;
 select public.onsite_visa_staff('configure','{"enabled":true,"daily_price_cents":200}');
 reset role;
 set local role service_role;
-insert into visa_fixture values('pass',public.onsite_visa_access('station_create',(select v->>'station_key' from visa_fixture where k='station'),jsonb_build_object('request_id','11111111-2222-4333-8444-555555555555','guest_key',repeat('a',64),'valid_from','2027-07-12','valid_to','2027-07-14')));
+insert into visa_fixture values('pass',public.onsite_visa_access('station_create',(select v->>'session' from visa_fixture where k='session'),jsonb_build_object('request_id','11111111-2222-4333-8444-555555555555','guest_key',repeat('a',64),'valid_from','2027-07-12','valid_to','2027-07-14')));
 do $$ begin
  if (select v->>'price_cents' from visa_fixture where k='pass')<>'600' then raise exception 'Price calculation failed'; end if;
  if public.onsite_visa_access('guest_status',repeat('a',64),'{}')->>'status'<>'pending' then raise exception 'Unpaid guest active';end if;
@@ -56,6 +60,10 @@ reset role;
 set local role service_role;
 do $$ begin
  if public.onsite_visa_access('guest_status',repeat('a',64),'{}')->>'status'<>'refunded' then raise exception 'Refund did not revoke pass';end if;
+end $$;
+select public.onsite_visa_access('station_logout',(select v->>'session' from visa_fixture where k='session'),'{}');
+do $$ begin
+ begin perform public.onsite_visa_access('station_quote',(select v->>'session' from visa_fixture where k='session'),'{}');raise exception 'Logged out session accepted';exception when insufficient_privilege then null;end;
 end $$;
 reset role;
 do $$ begin

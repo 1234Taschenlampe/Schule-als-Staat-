@@ -2,7 +2,7 @@
 "use strict";
 const main=document.getElementById("visa-main"), message=document.getElementById("visa-message"), cfg=window.NV_CONFIG||{};
 const api=window.supabase?.createClient(cfg.supabaseUrl,cfg.supabaseAnonKey);
-let mode="", stationKey="", quote=null, draft=null, current=null, scanner=null, generation=0, busy=false;
+let staffRole="", mode="", stationKey="", quote=null, draft=null, current=null, scanner=null, generation=0, busy=false;
 const statusLabels={pending:"Zahlung und Verifizierung ausstehend",booked:"Freigeschaltet, noch nicht gültig",active:"Gültig",expired:"Abgelaufen",refunded:"Erstattet und gesperrt"};
 const euro=n=>new Intl.NumberFormat("de-DE",{style:"currency",currency:"EUR"}).format(Number(n)/100);
 const randomKey=()=>Array.from(crypto.getRandomValues(new Uint8Array(32)),x=>x.toString(16).padStart(2,"0")).join("");
@@ -32,10 +32,10 @@ async function guarded(fn){
  finally{busy=false;document.querySelectorAll("button").forEach(b=>b.disabled=false);}
 }
 function stationForm(){
- if(!quote.enabled){main.replaceChildren(element('h2',quote.station||'Station angemeldet'),element('p','Registrierung noch nicht freigegeben. Keine Zahlung entgegennehmen.'));main.append(button('Status aktualisieren',()=>{void guarded(async g=>{const q=await call('station_quote',stationKey);if(g!==generation)return;quote=q;stationForm();});}),button('Station abmelden',()=>switchMode('station')));return;}
+ if(!quote.enabled){main.replaceChildren(element('h2',quote.station||'Station angemeldet'),element('p','Registrierung noch nicht freigegeben. Keine Zahlung entgegennehmen.'));main.append(button('Status aktualisieren',()=>{void guarded(async g=>{const q=await call('station_quote',stationKey);if(g!==generation)return;quote=q;stationForm();});}),button('Station abmelden',()=>void logoutStation()));return;}
  main.innerHTML='<h2>Gast registrieren</h2><p>Der Preis wird durch die Verwaltung festgelegt. Bezahlen und persönlich verifizieren beim Personal.</p><form id="visa-create"><label>Erster Besuchstag<input type="date" name="from" min="2027-07-12" max="2027-07-16" value="2027-07-12" required></label><label>Letzter Besuchstag<input type="date" name="to" min="2027-07-12" max="2027-07-16" value="2027-07-12" required></label><button class="btn primary" type="submit">Antrag und QR-Code erstellen</button></form>';
  main.prepend(element("p","Tagespreis: "+euro(quote.daily_price_cents)));
- main.append(button("Station abmelden",()=>switchMode("station")));
+ main.append(button("Station abmelden",()=>void logoutStation()));
  main.querySelector("form").addEventListener("submit",e=>{e.preventDefault();void guarded(async g=>{
   const data=new FormData(e.target), from=String(data.get("from")),to=String(data.get("to"));
   if(!draft)draft={request_id:crypto.randomUUID(),guest_key:randomKey(),valid_from:from,valid_to:to};
@@ -54,9 +54,20 @@ function stationForm(){
   main.append(button("Nächster Gast – Daten löschen",()=>{draft=null;notify("");stationForm();}));
  });});
 }
-function stationLogin(){
- main.innerHTML='<h2>Station anmelden</h2><form><label>Stationsschlüssel<input type="password" name="key" maxlength="64" autocomplete="off" required></label><button class="btn primary" type="submit">Station öffnen</button></form>';
- main.querySelector("form").addEventListener("submit",e=>{e.preventDefault();void guarded(async g=>{const key=String(new FormData(e.target).get("key")).trim();const q=await call("station_quote",key);if(g!==generation)return;stationKey=key;quote=q;stationForm();notify("Station angemeldet.");});});
+async function logoutStation(){
+ const token=stationKey;stationKey="";sessionStorage.removeItem("sas.visa.station");
+ try{if(token)await call("station_logout",token);}finally{location.replace("/");}
+}
+async function openStation(){
+ const token=sessionStorage.getItem("sas.visa.station")||"";
+ if(!validKey(token)){location.replace("/");return;}
+ try{
+  const q=await call("station_quote",token);
+  if(q.role!=="visa_station")throw Error("Keine Stationsberechtigung.");
+  stationKey=token;quote=q;
+  document.getElementById("visa-heading").textContent=q.station;
+  stationForm();
+ }catch{sessionStorage.removeItem("sas.visa.station");main.replaceChildren(element("p","Stationssitzung abgelaufen. Bitte erneut im Schulportal anmelden."));}
 }
 function guestForm(){
  main.innerHTML='<h2>Mein ViSA</h2><p>Nur für vor Ort registrierte Gäste.</p><form><label>Persönlicher Gastschlüssel<input name="key" type="password" maxlength="64" autocomplete="off" required></label><button class="btn primary" type="submit">ViSA anzeigen</button></form><div id="visa-guest-result"></div>';
@@ -78,7 +89,7 @@ function staffForm(){
   await stopScan();scanner=new window.Html5Qrcode("visa-scan");
   await scanner.start({facingMode:"environment"},{fps:8,qrbox:220},raw=>{if(g!==generation||!scanner)return;void stopScan().then(()=>guarded(g2=>lookup(raw,g2)));},()=>{});
  });}),button("Kamera stoppen",()=>{void stopScan();}));
- main.querySelector("#visa-admin").append(button("Admin-Finanzübersicht",()=>{void guarded(adminReport);}));
+ if(staffRole==="admin")main.querySelector("#visa-admin").append(button("Admin-Finanzübersicht",()=>{void guarded(adminReport);}));
 }
 async function adminReport(g){
  const data=await staff("report");if(g!==generation)return;
@@ -88,13 +99,26 @@ async function adminReport(g){
  config.elements.price.value=data.daily_price_cents??"";config.elements.enabled.checked=data.enabled;
  config.addEventListener("submit",e=>{e.preventDefault();void guarded(async g2=>{const f=new FormData(config);await staff("configure",{daily_price_cents:Number(f.get("price")),enabled:f.has("enabled")});await adminReport(g2);});});target.append(config);
  const add=document.createElement("form");add.innerHTML='<label>Stationsbezeichnung<input name="label" maxlength="60" required></label><button class="btn" type="submit">Stationsschlüssel erstellen</button>';
- add.addEventListener("submit",e=>{e.preventDefault();void guarded(async g2=>{const r=await staff("station_add",{label:new FormData(add).get("label")});if(g2!==generation)return;await adminReport(g2);const reveal=element("div","");reveal.append(element("p","Einmaliger Stationsschlüssel – vertraulich an die Station übergeben:"),element("code",r.station_key,"visa-code"),button("Schlüssel ausblenden",()=>reveal.remove()));main.querySelector("#visa-admin").prepend(reveal);});});target.append(add);
+ add.addEventListener("submit",e=>{e.preventDefault();void guarded(async g2=>{const r=await staff("station_add",{label:new FormData(add).get("label")});if(g2!==generation)return;await adminReport(g2);const reveal=element("div","");reveal.append(element("p","Benutzername: "+r.username),element("p","Stationspasswort – vertraulich an die Station übergeben:"),element("code",r.station_key,"visa-code"),button("Schlüssel ausblenden",()=>reveal.remove()));main.querySelector("#visa-admin").prepend(reveal);});});target.append(add);
  for(const s of data.stations){const row=element("div","","visa-row");textLine(row,s.label,s.active?"Aktiv":"Gesperrt");if(s.active)row.append(button("Station sperren",()=>{void guarded(async g2=>{await staff("station_revoke",{station_id:s.id});await adminReport(g2);});}));target.append(row);}
  target.append(element("h3","Letzte 100 Anträge"));
  for(const p of data.recent){const row=element("div","","visa-row");textLine(row,p.id,euro(p.price_cents));textLine(row,"Status",statusLabels[p.status]||p.status);if(p.paid_at&&p.status!=="refunded"){const f=document.createElement("form");f.innerHTML='<label>Erstattungsgrund<input name="reason" minlength="3" maxlength="200" required></label><label><input name="returned" type="checkbox" required> Bargeld tatsächlich zurückgegeben</label><button type="submit" class="btn">Erstattung buchen und ViSA sperren</button>';f.addEventListener("submit",e=>{e.preventDefault();void guarded(async g2=>{const v=new FormData(f);await staff("refund",{id:p.id,reason:v.get("reason"),cash_returned:v.has("returned")});await adminReport(g2);});});row.append(f);}target.append(row);}
 }
-function switchMode(next){generation++;void stopScan();mode=next;stationKey="";quote=null;draft=null;current=null;notify("");if(next==="station")stationLogin();else if(next==="staff")staffForm();else guestForm();}
-document.querySelectorAll("[data-mode]").forEach(b=>b.addEventListener("click",()=>switchMode(b.dataset.mode)));
+async function start(){
+ const view=new URLSearchParams(location.search).get("view");
+ if(view==="station"){await openStation();return;}
+ if(view==="staff"){
+  try{
+   const grant=await staff("access");staffRole=grant.role;
+   if(!["admin","operator"].includes(staffRole))throw Error("Keine Berechtigung.");
+   document.getElementById("visa-heading").textContent="ViSA · Personal";
+   staffForm();return;
+  }catch{main.replaceChildren(element("p","Nur für angemeldetes, berechtigtes Personal."));return;}
+ }
+ if(view==="guest"){document.getElementById("visa-heading").textContent="Mein ViSA";guestForm();return;}
+ main.replaceChildren(element("p","Bitte im Schulportal mit einem berechtigten Konto anmelden."));
+}
 window.addEventListener("pagehide",()=>{stationKey="";draft=null;void stopScan();main.replaceChildren();});
-switchMode("guest");
+window.addEventListener("pageshow",e=>{if(e.persisted)location.reload();});
+void start();
 })();
