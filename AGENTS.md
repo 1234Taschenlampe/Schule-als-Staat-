@@ -10,6 +10,14 @@
 - Student identity documents and detailed Visa addresses require school authorization/privacy compliance before real rollout.
 - **0 EUR total, no paid upgrades or usage.** `docs/V6_IMPLEMENTATION.md` is the status matrix.
 
+## Security and simplicity (binding)
+
+- Prefer the shortest **readable, auditable** implementation; consolidate duplicated checks, do not minify source or add unnecessary frameworks. Preserve every legitimate existing feature.
+- Browser, QR contents, identifiers and request payloads are untrusted. Supabase Auth and database permissions/RLS are authoritative. Deny by default, grant narrowly, and validate ownership and input on the server for every sensitive operation. Keep privileged keys and private identity data out of clients and logs.
+- Keep money, stock, roles and votes transactionally consistent. Use database constraints and idempotent operations; never trust client prices, balances or role claims.
+- Maintain a single implementation of each security invariant. Rate limits and the gateway complement authorization; they never replace it. Use safe output rendering and minimize collected data and exposed endpoints.
+- Require negative cross-account tests, replay/concurrency tests and secret scanning before production. Never disable a failing security check or declare zero risk. Revoke verified exposed credentials before release; preserve a rollback path and zero-cost policy.
+
 # Agent guidelines: Schule als Staat V4
 
 ## Goal
