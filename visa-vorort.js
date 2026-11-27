@@ -32,14 +32,39 @@ async function guarded(fn){
  finally{busy=false;document.querySelectorAll("button").forEach(b=>b.disabled=false);}
 }
 function stationForm(){
- if(!quote.enabled){main.replaceChildren(element('h2',quote.station||'Station angemeldet'),element('p','Registrierung noch nicht freigegeben. Keine Zahlung entgegennehmen.'));main.append(button('Status aktualisieren',()=>{void guarded(async g=>{const q=await call('station_quote',stationKey);if(g!==generation)return;quote=q;stationForm();});}),button('Station abmelden',()=>void logoutStation()));return;}
- main.innerHTML='<h2>Gast registrieren</h2><p>Der Preis wird durch die Verwaltung festgelegt. Bezahlen und persönlich verifizieren beim Personal.</p><form id="visa-create"><label>Erster Besuchstag<input type="date" name="from" min="2027-07-12" max="2027-07-16" value="2027-07-12" required></label><label>Letzter Besuchstag<input type="date" name="to" min="2027-07-12" max="2027-07-16" value="2027-07-12" required></label><button class="btn primary" type="submit">Antrag und QR-Code erstellen</button></form>';
- main.prepend(element("p","Tagespreis: "+euro(quote.daily_price_cents)));
- main.append(button("Station abmelden",()=>void logoutStation()));
- main.querySelector("form").addEventListener("submit",e=>{e.preventDefault();void guarded(async g=>{
-  const data=new FormData(e.target), from=String(data.get("from")),to=String(data.get("to"));
-  if(!draft)draft={request_id:crypto.randomUUID(),guest_key:randomKey(),valid_from:from,valid_to:to};
-  if(draft.valid_from!==from||draft.valid_to!==to)throw Error("Antrag bereits begonnen. Bitte ursprünglichen Zeitraum verwenden oder Station neu starten.");
+ const demo=quote.enabled!==true;
+ main.innerHTML='<div class="visa-station-header"><h2>Gast registrieren</h2><span id="visa-mode"></span></div><p id="visa-station-note"></p><form id="visa-create"><div class="visa-presets"><button class="btn" type="button" data-days="1">Ein Tag</button><button class="btn" type="button" data-days="5">Ganze Woche</button></div><div class="visa-dates"><label>Erster Besuchstag<input type="date" name="from" min="2027-07-12" max="2027-07-16" value="2027-07-12" required></label><label>Letzter Besuchstag<input type="date" name="to" min="2027-07-12" max="2027-07-16" value="2027-07-12" required></label></div><div class="visa-total"><span id="visa-days"></span><strong id="visa-price"></strong></div><button class="btn primary" type="submit" id="visa-submit"></button></form>';
+ main.querySelector("#visa-mode").textContent=demo?"Testmodus":"Betrieb freigegeben";
+ main.querySelector("#visa-station-note").textContent=demo?"Du kannst die Registrierung ausprobieren. Keine echte Zahlung, kein gültiges ViSA.":"Bezahlen und persönlich verifizieren beim Personal.";
+ main.querySelector("#visa-submit").textContent=demo?"Testantrag erstellen":"Antrag und QR-Code erstellen";
+ const form=main.querySelector("form"),from=form.elements.from,to=form.elements.to;
+ const price=quote.daily_price_cents;
+ const days=()=>Math.round((Date.parse(to.value)-Date.parse(from.value))/86400000)+1;
+ const valid=()=>from.value>="2027-07-12"&&to.value<="2027-07-16"&&days()>=1&&days()<=5;
+ function update(){
+  to.min=from.value;
+  if(to.value<from.value)to.value=from.value;
+  main.querySelector("#visa-days").textContent=valid()?days()+(days()===1?" Besuchstag":" Besuchstage"):"Zeitraum wählen";
+  main.querySelector("#visa-price").textContent=valid()&&Number.isInteger(price)?euro(price*days()):"Preis noch nicht festgelegt";
+ }
+ form.addEventListener("input",update);
+ form.querySelectorAll("[data-days]").forEach(b=>b.addEventListener("click",()=>{from.value="2027-07-12";to.value=b.dataset.days==="5"?"2027-07-16":from.value;update();}));
+ update();
+ const actions=element("div","","visa-actions");
+ actions.append(button("Status aktualisieren",()=>{void guarded(async g=>{const q=await call("station_quote",stationKey);if(g!==generation)return;if(q.role!=="visa_station")throw Error("Keine Stationsberechtigung.");quote=q;draft=null;stationForm();});}),button("Station abmelden",()=>void logoutStation()));main.append(actions);
+ form.addEventListener("submit",e=>{e.preventDefault();void guarded(async g=>{
+  if(!valid())throw Error("Bitte einen gültigen Besuchszeitraum wählen.");
+  if(demo){
+   const dates=from.value+" bis "+to.value,amount=Number.isInteger(price)?euro(price*days()):"Noch nicht festgelegt";
+   main.replaceChildren(element("h2","Testantrag"),element("p","Nur Vorschau. Kein gültiges ViSA, keine Zahlung, keine Speicherung."));
+   textLine(main,"Zeitraum",dates);textLine(main,"Preis",amount);
+   const qr=element("div","");qr.id="visa-qr";main.append(qr);
+   if(window.QRCode)new window.QRCode(qr,{text:"VISA-TEST:NICHT-GUELTIG",width:196,height:196});
+   codeLine(main,"VISA-TEST:NICHT-GUELTIG");main.append(button("Nächster Gast",()=>{notify("");stationForm();}));return;
+  }
+  const first=from.value,last=to.value;
+  if(!draft)draft={request_id:crypto.randomUUID(),guest_key:randomKey(),valid_from:first,valid_to:last};
+  if(draft.valid_from!==first||draft.valid_to!==last)throw Error("Antrag bereits begonnen. Bitte ursprünglichen Zeitraum verwenden oder Station neu starten.");
   const pass=await call("station_create",stationKey,draft);if(g!==generation)return;
   main.replaceChildren(element("h2","Antrag erstellt"));
   textLine(main,"Zu zahlen",euro(pass.price_cents));textLine(main,"Zeitraum",pass.valid_from+" bis "+pass.valid_to);
