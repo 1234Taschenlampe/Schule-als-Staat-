@@ -1,13 +1,11 @@
 [extend]
 useDefault = true
 
-# Supabase explicitly publishes this browser key. Only the generic rule,
-# the exact config.js location and the publishable key format are exempted.
+# Only the public browser key, in its exact expected configuration field.
 [[allowlists]]
 targetRules = ["generic-api-key"]
-description = "Supabase public browser key, not a server credential"
+description = "Verified Supabase publishable browser key"
 condition = "AND"
 paths = ['''(^|/)config\.js$''']
 regexTarget = "line"
-regexes = ['''^\s*supabaseAnonKey:\s*"sb_publishable_[A-Za-z0-9_-]+",\s*
-'']
+regexes = ['''^\s*supabaseAnonKey:\s*"sb_publishable_[A-Za-z0-9_-]+",\s*$''']
