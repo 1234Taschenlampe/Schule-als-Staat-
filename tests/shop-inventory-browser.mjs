@@ -5,7 +5,7 @@ import {resolve} from "node:path";
 import {chromium} from "playwright";
 
 test("actual Chromium user flow: shop owner views inventory and downloads a safe CSV at phone and iPad widths",async()=>{
- const browser=await chromium.launch({headless:true,args:["--no-sandbox"]});
+ const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_PATH,args:["--no-sandbox"]});
  try{
   for(const width of [375,820,1024]){
    const page=await browser.newPage({viewport:{width,height:900},acceptDownloads:true});
@@ -22,7 +22,8 @@ test("actual Chromium user flow: shop owner views inventory and downloads a safe
      data:name==="shop_catalog"?{
       shop:store,products:[
        {id:"p1",name:"Brezel",price_cents:120,stock:3,active:true},
-       {id:"p2",name:'=HYPERLINK("https://example.test","bad")',price_cents:150,stock:20,active:true}
+       {id:"p2",name:'=HYPERLINK("https://example.test","bad")',price_cents:150,stock:20,active:true},
+       {id:'p3" data-injected="true',name:'<img src="x" onerror="window.injected=true">',price_cents:100,stock:0,active:true}
       ],sales:[],tax:{enabled:false,rate_basis_points:0}
      }:null,error:null})};
     await window.SAS_SHOPS.show({target:document.getElementById("host"),api,user:{id:ownerId},profile:{role:"member"},schoolRoles:{operator:false}});
@@ -31,6 +32,9 @@ test("actual Chromium user flow: shop owner views inventory and downloads a safe
    await page.locator(".sas-stock-stats").waitFor();
    assert.match(await page.locator(".sas-stock-stats").innerText(),/23/);
    assert.match(await page.locator(".sas-stock-summary").innerText(),/Bestand/);
+   assert.match(await page.locator(".sas-list").first().innerText(), /<img src="x" onerror=/);
+   assert.equal(await page.locator("#host img, #host [data-injected]").count(), 0);
+   assert.equal(await page.evaluate(() => window.injected), undefined);
    const downloadPromise=page.waitForEvent("download");
    await page.getByRole("button",{name:"Inventurliste als CSV speichern"}).click();
    const download=await downloadPromise;

@@ -759,7 +759,7 @@
       }
       if(form.id==="cash-form"){
         if(!adminOrCashier())throw Error("Keine Kassenberechtigung");
-        await rpc("record_cash_sale",{p_amount_cents:amount(data.get("amount")),p_note:String(data.get("note")||"").slice(0,140)});
+        await window.SAS_SALE_RETRY(rpc,state.user.id,"record_cash_sale_idempotent",{p_amount_cents:amount(data.get("amount")),p_note:String(data.get("note")||"").slice(0,140)});
         await fetchData();render();showToast("Bargeldumsatz gebucht.");
       }
     }catch(e){fail(e);}finally{state.busy=false;if(submit&&submit.isConnected)submit.disabled=false;}
