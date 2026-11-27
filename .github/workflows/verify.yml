@@ -51,7 +51,7 @@ jobs:
           node --check dist/schule-als-staat-worker.js
       - name: Verify static hosting bundle
         run: |
-          sh scripts/build-static.sh
+          node --test tests/deployment-boundary.mjs
           test -s _site/index.html
           test -s _site/app.js
           test -s _site/config.js
