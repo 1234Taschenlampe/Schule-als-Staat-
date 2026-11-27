@@ -1,5 +1,6 @@
 // SAS identifiers are public aliases. Supabase Auth verifies every supplied password.
 import { createClient } from "npm:@supabase/supabase-js@2.118.0";
+import { boundedText } from "../_shared/body.js";
 
 const url = Deno.env.get("SUPABASE_URL")!;
 const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
@@ -13,28 +14,6 @@ const encoder = new TextEncoder();
 const quotaKey = quotaSecret.length >= 32
   ? crypto.subtle.importKey("raw", encoder.encode(quotaSecret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"])
   : null;
-
-async function readSmallJson(request: Request) {
-  if (!request.body) throw new SyntaxError("Missing body");
-  const reader = request.body.getReader();
-  const decoder = new TextDecoder("utf-8", { fatal: true });
-  let total = 0;
-  let raw = "";
-  try {
-    for (;;) {
-      const { value, done } = await reader.read();
-      if (done) return JSON.parse(raw + decoder.decode());
-      total += value.byteLength;
-      if (total > 2048) {
-        await reader.cancel();
-        throw new SyntaxError("Body too large");
-      }
-      raw += decoder.decode(value, { stream: true });
-    }
-  } finally {
-    reader.releaseLock();
-  }
-}
 
 const unavailable = "Anmeldung vorübergehend nicht verfügbar.";
 
@@ -56,8 +35,15 @@ Deno.serve(async (request) => {
   }
   if (request.method !== "POST") return reply(405, { error: "Nicht erlaubt." });
 
+  let input;
   try {
-    const input = await readSmallJson(request);
+    const raw = await boundedText(request, 2048);
+    if (raw === null) return reply(400, { error: "Ungültige Anfrage." });
+    input = JSON.parse(raw);
+  } catch {
+    return reply(400, { error: "Ungültige Anfrage." });
+  }
+  try {
     const login = typeof input?.login_id === "string" ? input.login_id.trim().toUpperCase() : "";
     const password = typeof input?.password === "string" ? input.password : "";
     if (!/^SAS-(?:[0-9]{6}|[A-Z2-9]{10})$/.test(login) || !password || password.length > 200) {
@@ -89,8 +75,7 @@ Deno.serve(async (request) => {
     const session = await authResult.json();
     if (!session.access_token || !session.refresh_token) return reply(503, { error: unavailable });
     return reply(200, { access_token: session.access_token, refresh_token: session.refresh_token });
-  } catch (error) {
-    if (error instanceof SyntaxError) return reply(400, { error: "Ungültige Anfrage." });
+  } catch {
     return reply(503, { error: unavailable });
   }
 });

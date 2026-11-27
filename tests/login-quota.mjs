@@ -3,11 +3,12 @@ import { readFileSync } from 'node:fs';
 import { stripTypeScriptTypes } from 'node:module';
 import { test } from 'node:test';
 import { runInNewContext } from 'node:vm';
+import { boundedText } from '../supabase/functions/_shared/body.js';
 
 const source = readFileSync(new URL('../supabase/functions/sas-login-short/index.ts', import.meta.url), 'utf8');
-const endpoint = stripTypeScriptTypes(source.replace(/^import .*supabase-js.*;$/m, ''));
+const endpoint = stripTypeScriptTypes(source.replace(/^import .*supabase-js.*;$/m, '').replace(/^import .*boundedText.*;$/m, ''));
 
-async function login({ alias = 'SAS-123456', allowed = true, roster = null, secret = 'x'.repeat(32), quotaError = null } = {}) {
+async function login({ alias = 'SAS-123456', allowed = true, roster = null, secret = 'x'.repeat(32), quotaError = null, rawBody, headers = {} } = {}) {
   const calls = [];
   let handler;
   runInNewContext(endpoint, {
@@ -31,11 +32,12 @@ async function login({ alias = 'SAS-123456', allowed = true, roster = null, secr
       calls.push('auth');
       return new Response(null, { status: 400 });
     },
-    Headers, Request, Response, TextDecoder, TextEncoder, crypto,
+    Headers, Request, Response, TextDecoder, TextEncoder, crypto, boundedText,
   });
   const response = await handler(new Request('https://example.invalid/functions/v1/sas-login-short', {
     method: 'POST',
-    body: JSON.stringify({ login_id: alias, password: 'synthetic password' }),
+    headers,
+    body: rawBody ?? JSON.stringify({ login_id: alias, password: 'synthetic password' }),
   }));
   return { status: response.status, body: await response.json(), calls };
 }
@@ -61,4 +63,12 @@ test('oversized bodies are rejected before any database access', async () => {
   const response = await login({ alias: 'X'.repeat(2200) });
   assert.equal(response.status, 400);
   assert.deepEqual(response.calls, []);
+});
+
+test('malformed JSON, invalid UTF-8 and declared oversized bodies are rejected before quota or roster access', async () => {
+  for (const options of [{ rawBody: '{' }, { rawBody: new Uint8Array([0xff]) }, { headers: { 'content-length': '2049' } }]) {
+    const response = await login(options);
+    assert.equal(response.status, 400);
+    assert.deepEqual(response.calls, []);
+  }
 });

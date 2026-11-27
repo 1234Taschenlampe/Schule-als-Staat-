@@ -15,8 +15,12 @@ jobs:
     if: github.ref == 'refs/heads/main'
     uses: ./.github/workflows/secret-scan.yml
 
+  application-preflight:
+    if: github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/verify.yml
+
   deploy:
-    needs: security-preflight
+    needs: [security-preflight, application-preflight]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 10
