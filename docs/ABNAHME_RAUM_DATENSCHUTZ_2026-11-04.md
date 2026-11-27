@@ -21,7 +21,7 @@ Die geschützten Identitäten werden intern aus der Datenbank gewählt, nie ausg
 Der Test erstellt keine Konten, Stimmen, Zahlungen oder Buchungen.
 
 **Noch nicht nachgewiesen:** Reale HTTPS-Logins mit unabhängigen Geräten/Passwörtern,
-Erneuerung von Tokens und Änderung von Passwort bzw. OTP im Browser, MFA-Wiederherstellung für Admins,
+Erneuerung von Sitzungstokens, Änderung von Passwort bzw. OTP im Browser sowie das Ungültigmachen bestehender Admin-Sitzungen,
 belastbare Prüfung sämtlicher `SECURITY DEFINER`-RPCs und ein externer Penetrationstest.
 
 ## B. Raumplan – die letzte fachliche Unklarheit

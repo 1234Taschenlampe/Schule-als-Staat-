@@ -20,7 +20,7 @@ scan() {
   "$scanner" "$@" --redact=100 --no-banner --ignore-gitleaks-allow --gitleaks-ignore-path "$snapshot/no-baseline" --config "$reports/scan.toml" --report-format json --report-path "$reports/findings.json" >/dev/null 2>&1 || result=$?
   case "$result" in
     0) echo "$label: passed" ;;
-    17) echo "$label: findings detected. Review privately and rotate active secrets." >&2; python3 -c 'import json,sys,re,collections; data=json.load(open(sys.argv[1])); counts=collections.Counter(x.get("RuleID","") for x in data); print("Redacted rule counts:",json.dumps({k:v for k,v in counts.items() if re.fullmatch(r"[a-z0-9_-]{1,80}",k)}))' "$reports/findings.json" || true; status=1 ;;
+    17) echo "$label: findings detected. Review privately and rotate active secrets." >&2; python3 -c 'import json,sys,re,collections; data=json.load(open(sys.argv[1])); counts=collections.Counter(x.get("RuleID","") for x in data); print("Redacted rule counts:",json.dumps({k:v for k,v in counts.items() if re.fullmatch(r"[a-z0-9_-]{1,80}",k)})); print("Tracked finding locations:",json.dumps([{"file":p,"line":x.get("StartLine")} for x in data for p in [x.get("File","").removeprefix(sys.argv[2]+"/")] if re.fullmatch(r"(?:[a-zA-Z0-9_.-]+/)*[a-zA-Z0-9_.-]+",p) and len(p)<180 and isinstance(x.get("StartLine"),int)]))' "$reports/findings.json" "$snapshot" || true; status=1 ;;
     *) echo "$label: scanner failed (exit $result)." >&2; status=1 ;;
   esac
   rm -f "$reports/findings.json"
