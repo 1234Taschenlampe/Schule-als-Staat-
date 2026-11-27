@@ -1,0 +1,4 @@
+# The endpoint authenticates random, hashed, scoped station/visitor credentials itself.
+# Staff payment actions are NOT routed through this endpoint.
+[functions.onsite-visa]
+verify_jwt = false
