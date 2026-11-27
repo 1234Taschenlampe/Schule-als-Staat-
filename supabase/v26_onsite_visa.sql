@@ -1,16 +1,16 @@
 -- On-site visitor admissions. No public registration, school-account provisioning,
 -- wallet grants or external payments. Disabled until the school approves live use.
 begin;
-create schema sas_onsite;
+create schema if not exists sas_onsite;
 revoke all on schema sas_onsite from public, anon, authenticated;
-create table sas_onsite.settings (
+create table if not exists sas_onsite.settings (
   singleton boolean primary key default true check(singleton),
   enabled boolean not null default false,
   daily_price_cents integer check(daily_price_cents between 1 and 10000),
   check(not enabled or daily_price_cents is not null)
 );
-insert into sas_onsite.settings default values;
-create table sas_onsite.stations (
+insert into sas_onsite.settings default values on conflict (singleton) do nothing;
+create table if not exists sas_onsite.stations (
   id uuid primary key default gen_random_uuid(),
   label text not null check(length(label) between 1 and 60),
   key_hash bytea not null unique,
@@ -18,6 +18,9 @@ create table sas_onsite.stations (
   created_by uuid not null references auth.users(id),
   created_at timestamptz not null default now()
 );
+alter table sas_onsite.settings enable row level security;
+alter table sas_onsite.stations enable row level security;
+revoke all on sas_onsite.settings, sas_onsite.stations from public, anon, authenticated;
 create table sas_onsite.passes (
   id uuid primary key default gen_random_uuid(),
   station_id uuid not null references sas_onsite.stations(id),
