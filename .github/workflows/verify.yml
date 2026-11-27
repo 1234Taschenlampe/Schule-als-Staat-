@@ -73,3 +73,8 @@ jobs:
           test -s _site/tutorial.js
           test -s _site/tutorial.css
           test ! -e _site/portal/index.html
+      - name: Verify security migrations and shop rendering with synthetic fixtures
+        run: |
+          npm install --no-save --no-audit --no-fund @electric-sql/pglite@0.3.14 playwright@1.56.1
+          node --test tests/sale-db.mjs
+          CHROME_PATH="$(command -v google-chrome)" node --test tests/shop-inventory-browser.mjs
